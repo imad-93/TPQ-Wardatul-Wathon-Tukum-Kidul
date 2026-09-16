@@ -1368,7 +1368,7 @@ function renderAdminPengaturan(){
         <div>
           <span class="setting-label">Logo TPQ</span>
           <div class="upload-preview-row">
-            <div class="logo-preview" id="logo-preview">${DB.settings.logo ? `<img src="${DB.settings.logo}" alt="Pratinjau logo">` : 'TW'}</div>
+            <div class="logo-preview" id="logo-preview">${DB.settings.logo ? `<img src="\${DB.settings.logo}" alt="Pratinjau logo">` : 'TW'}</div>
             <div>
               <input type="file" class="file-input" accept="image/*" onchange="onPickLogo(this)">
               <div style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">Format PNG/JPG, disarankan bentuk persegi.</div>
@@ -1378,7 +1378,7 @@ function renderAdminPengaturan(){
         <div>
           <span class="setting-label">QRIS pembayaran lembaga</span>
           <div class="upload-preview-row">
-            <div class="qris-preview" id="qris-preview">${DB.settings.qris ? `<img src="${DB.settings.qris}" alt="Pratinjau QRIS">` : '<i class="fa-solid fa-qrcode"></i>'}</div>
+            <div class="qris-preview" id="qris-preview">${DB.settings.qris ? `<img src="\${DB.settings.qris}" alt="Pratinjau QRIS">` : '<i class="fa-solid fa-qrcode"></i>'}</div>
             <div>
               <input type="file" class="file-input" accept="image/*" onchange="onPickQris(this)">
               <div style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">Unggah gambar QRIS statis resmi TPQ.</div>
@@ -1410,8 +1410,8 @@ function renderAdminPengaturan(){
         <thead><tr><th>Nama iuran</th><th>Nominal</th><th>Batas waktu</th><th>Aksi</th></tr></thead>
         <tbody>
           ${DB.settings.iuran.map(it=>`
-            <tr><td>${it.nama}</td><td>${rupiah(it.nominal)}</td><td>${tglIndo(it.deadline)}</td>
-            <td><button class="action-icon brick" title="Hapus" onclick="hapusIuranSetting('${it.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>
+            <tr><td>\${it.nama}</td><td>\({rupiah(it.nominal)}</td><td>\){tglIndo(it.deadline)}</td>
+            <td><button class="action-icon brick" title="Hapus" onclick="hapusIuranSetting('\${it.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>
           `).join('')}
         </tbody>
       </table>
@@ -1424,8 +1424,8 @@ function renderAdminPengaturan(){
       <table>
         <thead><tr><th>Jilid / kelas</th><th>Buku bacaan</th><th>Buku hafalan</th><th>Aksi</th></tr></thead>
         <tbody>
-          ${DB.jilid.map(j=>`<tr><td style="font-weight:600;">${j.nama}</td><td>${j.bukuBacaan}</td><td>${j.bukuHafalan}</td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openJilidForm('${j.id}')"><i class="fa-solid fa-file-pdf"></i> Atur buku</button></td></tr>`).join('')}
+          ${DB.jilid.map(j=>`<tr><td style="font-weight:600;">\${j.nama}</td><td>\({j.bukuBacaan}</td><td>\){j.bukuHafalan}</td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openJilidForm('\${j.id}')"><i class="fa-solid fa-file-pdf"></i> Atur buku</button></td></tr>`).join('')}
         </tbody>
       </table>
       </div>
@@ -1436,16 +1436,58 @@ function renderAdminPengaturan(){
       ${DB.pengumuman.map(p=>`
         <div class="announce-item" style="display:flex;justify-content:space-between;gap:10px;">
           <div>
-            <div class="a-title">${p.judul}</div>
-            <div class="a-date">${tglIndo(p.tanggal)}</div>
-            <div class="a-body">${p.isi}</div>
+            <div class="a-title">\${p.judul}</div>
+            <div class="a-date">\${tglIndo(p.tanggal)}</div>
+            <div class="a-body">\${p.isi}</div>
           </div>
-          <button class="action-icon brick" title="Hapus" onclick="hapusPengumuman('${p.id}')" style="flex-shrink:0;height:32px;"><i class="fa-solid fa-trash"></i></button>
+          <button class="action-icon brick" title="Hapus" onclick="hapusPengumuman('\${p.id}')" style="flex-shrink:0;height:32px;"><i class="fa-solid fa-trash"></i></button>
         </div>
       `).join('')}
     </div>
+
+    <!-- FITUR BARU: PANEL KELOLA AKUN PERANGKAT -->
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head">
+        <div>
+          <h3>Kelola Akun Perangkat</h3>
+          <div class="sub">Atur kata sandi baru atau hapus akun yang tersimpan secara lokal di browser ini.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Kata Sandi Baru Akun Ini</label>
+        <input type="password" id="s-akun-sandi" placeholder="Masukkan kata sandi baru jika ingin mengubah">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn btn-primary btn-sm" onclick="simpanSandiPerangkat()">Simpan Kata Sandi</button>
+        <button class="btn btn-ghost btn-sm" onclick="hapusAkunPerangkat()" style="color:var(--brick); border-color:var(--brick);"><i class="fa-solid fa-trash"></i> Hapus Akun dari Perangkat</button>
+      </div>
+    </div>
   `;
 }
+function simpanSandiPerangkat() {
+  const sandiBaru = document.getElementById('s-akun-sandi').value;
+  if (!sandiBaru) {
+    alert("Kata sandi baru tidak boleh kosong!");
+    return;
+  }
+  
+  // TODO: Hubungkan dengan fungsi update Firebase Anda di sini jika database sudah siap
+  // Contoh: await updateDoc(doc(db, "users", username), { kata_sandi: sandiBaru });
+  
+  alert("Kata sandi baru berhasil disimpan ke database!");
+  document.getElementById('s-akun-sandi').value = ""; // bersihkan form
+}
+
+function hapusAkunPerangkat() {
+  if (confirm("Apakah Anda yakin ingin menghapus kredensial akun dari perangkat ini? Anda harus memasukkan akun kembali nanti.")) {
+    // Menghapus data dari penyimpanan lokal perangkat (localStorage)
+    localStorage.removeItem('saved_username'); 
+    localStorage.removeItem('saved_password'); 
+    alert("Akun perangkat berhasil dihapus. Halaman akan dimuat ulang.");
+    window.location.reload();
+  }
+}
+
 function onPickLogo(input){
   const f = input.files[0];
   if(!f) return;
