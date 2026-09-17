@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#166534">
 <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
-<link rel="manifest" href="./manifest.json">
 <title>TPQ Wardatul Wathon</title>
 <style>
 :root{
@@ -179,9 +178,6 @@ import {
   getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc,
   addDoc, collection, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
 /* =========================================================
    FIREBASE CONFIG & INIT
@@ -195,7 +191,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
   authDomain: "tpqwardah.firebaseapp.com",
   projectId: "tpqwardah",
-  storageBucket: "tpqwardah.firebasestorage.app",
   messagingSenderId: "308318249706",
   appId: "1:308318249706:web:ad1f631acee81a2fe6ad93",
   measurementId: "G-ZVC3M0L8XJ"
@@ -211,7 +206,6 @@ const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const auth = getAuth(primaryApp);
 const secondaryAuth = getAuth(secondaryApp);
 const db = getFirestore(primaryApp);
-const storage = getStorage(primaryApp);
 
 /* =========================================================
    GLOBAL STATE
@@ -249,6 +243,13 @@ function formatTanggal(timestamp){
     return new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(date);
   }catch{ return "-"; }
 }
+function assetUrl(value){
+  const url = String(value || "").trim();
+  if(!url) return "";
+  if(/firebasestorage\.googleapis\.com|firebasestorage\.app/i.test(url)) return "";
+  return url;
+}
+
 function showToast(message, isError=false){
   const toast = $("toast");
   toast.textContent = message;
@@ -322,11 +323,6 @@ async function updateCollectionData(collectionName, id, data){
 }
 async function deleteCollectionData(collectionName, id){
   await deleteDoc(doc(db, collectionName, id));
-}
-async function uploadFile(path, file){
-  const fileRef = ref(storage, path);
-  await uploadBytes(fileRef, file, { contentType: file.type });
-  return await getDownloadURL(fileRef);
 }
 
 /* =========================================================
@@ -970,8 +966,8 @@ async function renderJilidAdmin(){
           </div>
           <hr style="border:0;border-top:1px solid var(--border);margin:15px 0">
           <div style="display:grid;gap:8px">
-            <div><b>📖 Buku Baca</b><div class="muted" style="font-size:12px">${item.pdfBacaUrl ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
-            <div><b>🧠 Buku Hafalan</b><div class="muted" style="font-size:12px">${item.pdfHafalanUrl ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
+            <div><b>📖 Buku Baca</b><div class="muted" style="font-size:12px">${assetUrl(item.pdfBacaUrl) ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
+            <div><b>🧠 Buku Hafalan</b><div class="muted" style="font-size:12px">${assetUrl(item.pdfHafalanUrl) ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
           </div>
           <div class="actions" style="margin-top:15px">
             <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
@@ -998,15 +994,14 @@ function openJilidForm(item=null){
       <div class="form-group"><label>Nama Jilid / Kelas</label><input id="jilidNama" value="${escapeHTML(item?.nama || "")}" placeholder="Contoh: Jilid 1" required></div>
       <div class="form-group"><label>Keterangan</label><textarea id="jilidKeterangan" rows="3">${escapeHTML(item?.keterangan || "")}</textarea></div>
       <div class="form-group">
-        <label>PDF Buku Baca</label>
-        <input id="jilidPdfBaca" type="file" accept="application/pdf">
-        ${item?.pdfBacaUrl ? `<div class="notice" style="margin-top:8px">PDF baca sudah tersedia. Pilih file baru untuk menggantinya.</div>` : ""}
+        <label>URL PDF Buku Baca</label>
+        <input id="jilidPdfBacaUrl" type="url" value="${escapeHTML(assetUrl(item?.pdfBacaUrl))}" placeholder="./assets/buku/jilid-1-baca.pdf">
       </div>
       <div class="form-group">
-        <label>PDF Buku Hafalan</label>
-        <input id="jilidPdfHafalan" type="file" accept="application/pdf">
-        ${item?.pdfHafalanUrl ? `<div class="notice" style="margin-top:8px">PDF hafalan sudah tersedia. Pilih file baru untuk menggantinya.</div>` : ""}
+        <label>URL PDF Buku Hafalan</label>
+        <input id="jilidPdfHafalanUrl" type="url" value="${escapeHTML(assetUrl(item?.pdfHafalanUrl))}" placeholder="./assets/buku/jilid-1-hafalan.pdf">
       </div>
+      <div class="notice">PDF tidak diupload ke Firebase Storage. Simpan file PDF di folder <b>assets/buku</b> pada repository GitHub, lalu masukkan URL/path file di atas.</div>
       <div class="form-group">
         <label>Status</label>
         <select id="jilidAktif">
@@ -1024,35 +1019,22 @@ function openJilidForm(item=null){
       try{
         const nama = $("jilidNama").value.trim();
         const keterangan = $("jilidKeterangan").value.trim();
+        const pdfBacaUrl = $("jilidPdfBacaUrl").value.trim();
+        const pdfHafalanUrl = $("jilidPdfHafalanUrl").value.trim();
         const aktif = $("jilidAktif").value === "true";
-        const bacaFile = $("jilidPdfBaca").files[0];
-        const hafalanFile = $("jilidPdfHafalan").files[0];
-        validatePdf(bacaFile, "buku baca");
-        validatePdf(hafalanFile, "buku hafalan");
-
         let targetId = item?.id;
         if(!targetId){
-          const created = await addCollectionData("jilid", { nama, keterangan, aktif, pdfBacaUrl:null, pdfHafalanUrl:null });
+          const created = await addCollectionData("jilid", { nama, keterangan, aktif, pdfBacaUrl:pdfBacaUrl || null, pdfHafalanUrl:pdfHafalanUrl || null });
           targetId = created.id;
+        }else{
+          await updateCollectionData("jilid", targetId, { nama, keterangan, aktif, pdfBacaUrl:pdfBacaUrl || null, pdfHafalanUrl:pdfHafalanUrl || null });
         }
-
-        const updates = { nama, keterangan, aktif };
-        if(bacaFile) updates.pdfBacaUrl = await uploadFile(`buku/${targetId}/baca-${Date.now()}.pdf`, bacaFile);
-        if(hafalanFile) updates.pdfHafalanUrl = await uploadFile(`buku/${targetId}/hafalan-${Date.now()}.pdf`, hafalanFile);
-        await updateCollectionData("jilid", targetId, updates);
-
         closeModal();
         showToast("Jilid / kelas berhasil disimpan.");
         renderJilidAdmin();
       }catch(error){ alert("Gagal menyimpan: " + error.message); }
     })();
   });
-}
-
-function validatePdf(file, label){
-  if(!file) return;
-  if(file.type !== "application/pdf") throw new Error(`File ${label} harus berformat PDF.`);
-  if(file.size > 50 * 1024 * 1024) throw new Error(`Ukuran PDF ${label} maksimal 50 MB.`);
 }
 
 /* =========================================================
@@ -1371,10 +1353,14 @@ async function renderSettingsAdmin(){
     </div>
     <div class="card" style="margin-top:18px">
       <h3>QRIS Pembayaran</h3>
-      <p class="muted">Upload gambar QRIS yang akan ditampilkan kepada wali ketika melakukan pembayaran.</p>
-      ${appSettings.qrisUrl ? `<img src="${escapeHTML(appSettings.qrisUrl)}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diupload.</div>`}
-      <input id="qrisFile" type="file" accept="image/png,image/jpeg,image/webp">
-      <button class="btn" id="uploadQris" style="margin-top:12px">Upload QRIS</button>
+      <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub, bukan Firebase Storage.</p>
+      ${assetUrl(appSettings.qrisUrl) ? `<img src="${escapeHTML(assetUrl(appSettings.qrisUrl))}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
+      <div class="form-group" style="margin-top:12px">
+        <label>URL / Path QRIS</label>
+        <input id="qrisUrl" type="url" value="${escapeHTML(assetUrl(appSettings.qrisUrl))}" placeholder="./assets/qris/qris.png">
+      </div>
+      <button class="btn" id="saveQris" style="margin-top:4px">Simpan URL QRIS</button>
+      <div class="notice" style="margin-top:12px">Simpan gambar QRIS di <b>assets/qris</b> pada repository GitHub, lalu masukkan path seperti <b>./assets/qris/qris.png</b>.</div>
     </div>`;
 
   $("settingsForm").addEventListener("submit", async e=>{
@@ -1395,17 +1381,13 @@ async function renderSettingsAdmin(){
     })();
   });
 
-  $("uploadQris").addEventListener("click", withButtonLoading($("uploadQris"), "Mengupload...", async ()=>{
-    const file = $("qrisFile").files[0];
-    if(!file){ alert("Pilih gambar QRIS terlebih dahulu."); return; }
-    if(!["image/png","image/jpeg","image/webp"].includes(file.type)){ alert("Format QRIS harus PNG, JPG atau WEBP."); return; }
-    if(file.size > 5 * 1024 * 1024){ alert("Ukuran QRIS maksimal 5 MB."); return; }
+  $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async ()=>{
+    const qrisUrl = $("qrisUrl").value.trim();
     try{
-      const url = await uploadFile("settings/qris/qris", file);
-      await setDoc(doc(db,"settings","app"), { qrisUrl:url, updatedAt: serverTimestamp() }, { merge:true });
-      showToast("QRIS berhasil diupload.");
+      await setDoc(doc(db,"settings","app"), { qrisUrl:qrisUrl || null, updatedAt: serverTimestamp() }, { merge:true });
+      showToast("URL QRIS berhasil disimpan.");
       renderSettingsAdmin();
-    }catch(error){ alert("Upload gagal: " + error.message); }
+    }catch(error){ alert("Gagal menyimpan URL QRIS: " + error.message); }
   }));
 }
 
@@ -1538,8 +1520,8 @@ async function renderPembelajaranWaliView(santri){
       <p class="muted">Ustadzah Pendamping: <b>${escapeHTML(ustadzah?.nama || "Belum ditentukan")}</b></p>
     </div>
     <div class="grid" style="margin-top:18px">
-      ${renderBelajarCardWali("📖 Baca", baca, jilid?.pdfBacaUrl, santri.id, "baca")}
-      ${renderBelajarCardWali("🧠 Hafalan", hafalan, jilid?.pdfHafalanUrl, santri.id, "hafalan")}
+      ${renderBelajarCardWali("📖 Baca", baca, assetUrl(jilid?.pdfBacaUrl), santri.id, "baca")}
+      ${renderBelajarCardWali("🧠 Hafalan", hafalan, assetUrl(jilid?.pdfHafalanUrl), santri.id, "hafalan")}
     </div>
     <div class="card" style="margin-top:18px">
       <h3>📚 Riwayat Pembelajaran</h3>
@@ -1577,7 +1559,6 @@ function renderBelajarCardWali(title, progress, pdfUrl, santriId, tipe){
       <div>Halaman terakhir: <b>${progress?.halaman || 1}</b></div>
       <div style="margin-top:10px">${progress?.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</div>
       ${progress?.pesan ? `<div class="notice" style="margin-top:12px"><b>Pesan Ustadzah</b><p style="margin-bottom:0;white-space:pre-wrap">${escapeHTML(progress.pesan)}</p></div>` : ""}
-      ${progress?.audioUrl ? `<div style="margin-top:12px"><audio controls src="${escapeHTML(progress.audioUrl)}" style="width:100%"></audio></div>` : ""}
       <button class="btn btn-sm" style="margin-top:12px" data-open-pdf data-url="${escapeAttr(pdfUrl||"")}" data-page="${progress?.halaman||1}" data-label="${title}">${title.includes("Baca")?"📖":"🧠"} Buka Buku</button>
     </div>`;
 }
@@ -1592,10 +1573,10 @@ async function renderRiwayatWaliRows(santriId){
       <td>${index+1}</td>
       <td>${item.tipe==="hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
       <td><b>Halaman ${Number(item.halaman||1)}</b><br>
-        <button class="btn btn-sm" style="margin-top:5px" data-open-pdf data-url="${escapeAttr(item.tipe==="hafalan" ? jilidBySantri?.pdfHafalanUrl : jilidBySantri?.pdfBacaUrl)}" data-page="${Number(item.halaman||1)}" data-label="${item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca"}">👁 Lihat</button>
+        <button class="btn btn-sm" style="margin-top:5px" data-open-pdf data-url="${escapeAttr(item.tipe==="hafalan" ? assetUrl(jilidBySantri?.pdfHafalanUrl) : assetUrl(jilidBySantri?.pdfBacaUrl))}" data-page="${Number(item.halaman||1)}" data-label="${item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca"}">👁 Lihat</button>
       </td>
       <td>${item.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</td>
-      <td>${item.pesan ? escapeHTML(item.pesan) : "-"}${item.audioUrl ? `<br><audio controls src="${escapeHTML(item.audioUrl)}" style="width:180px;max-width:100%;margin-top:5px"></audio>` : ""}</td>
+      <td>${item.pesan ? escapeHTML(item.pesan) : "-"}</td>
       <td>${formatTanggal(item.createdAt)}</td>
     </tr>`).join("");
 }
@@ -1616,11 +1597,11 @@ async function renderRiwayatKeuanganWaliRows(santriId){
 
 async function waliTampilkanQRIS(){
   const settings = (await getCollectionData("settings")).find(x=>x.id==="app");
-  if(!settings?.qrisUrl){ alert("QRIS belum tersedia. Silakan hubungi admin."); return; }
+  if(!assetUrl(settings?.qrisUrl)){ alert("QRIS belum tersedia. Silakan hubungi admin."); return; }
   openModal("QRIS Pembayaran", `
     <div style="text-align:center">
       <p class="muted">Silakan scan QRIS berikut untuk melakukan pembayaran.</p>
-      <img src="${escapeHTML(settings.qrisUrl)}" alt="QRIS Pembayaran" style="width:350px;max-width:100%;border-radius:12px;border:1px solid var(--border)">
+      <img src="${escapeHTML(assetUrl(settings.qrisUrl))}" alt="QRIS Pembayaran" style="width:350px;max-width:100%;border-radius:12px;border:1px solid var(--border)">
       <p class="muted" style="margin-top:12px">Setelah pembayaran, silakan konfirmasi kepada ustadzah/admin sesuai prosedur TPQ.</p>
     </div>`);
 }
@@ -1653,7 +1634,7 @@ async function renderPdfEditorUstadzah(santri){
 }
 
 async function openPembelajaranEditor(santri, jilid, tipe){
-  const pdfUrl = tipe === "hafalan" ? jilid.pdfHafalanUrl : jilid.pdfBacaUrl;
+  const pdfUrl = tipe === "hafalan" ? assetUrl(jilid.pdfHafalanUrl) : assetUrl(jilid.pdfBacaUrl);
   if(!pdfUrl){ alert(tipe==="hafalan" ? "Buku PDF hafalan belum diatur admin." : "Buku PDF baca belum diatur admin."); return; }
   const progress = await getProgressSantri(santri.id, tipe);
   const halaman = Math.max(1, Number(progress?.halaman || 1));
@@ -1689,10 +1670,7 @@ async function openPembelajaranEditor(santri, jilid, tipe){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-info" id="btnSimpanPesan">💾 Simpan Pesan</button>
-          <button class="btn" id="btnRecord">🎙 Mulai Rekam</button>
         </div>
-        <div id="recordStatus" class="muted" style="margin-top:10px"></div>
-        ${progress?.audioUrl ? `<div style="margin-top:15px"><label>Rekaman Sebelumnya</label><audio controls src="${escapeHTML(progress.audioUrl)}" style="width:100%;margin-top:7px"></audio></div>` : ""}
       </div>
     </div>`;
 
@@ -1711,23 +1689,21 @@ async function openPembelajaranEditor(santri, jilid, tipe){
 
   const saveWith = (status)=>saveProgress({
     santriId: santri.id, tipe, halaman: currentPageNum, status,
-    pesan: $("pesanPembelajaran").value.trim(), audioUrl: progress?.audioUrl || null
+    pesan: $("pesanPembelajaran").value.trim()
   });
   $("btnSavePage").addEventListener("click", ()=>saveWith(progress?.status || "mengulang"));
   $("btnNaik").addEventListener("click", ()=>saveWith("naik"));
   $("btnMengulang").addEventListener("click", ()=>saveWith("mengulang"));
   $("btnSimpanPesan").addEventListener("click", ()=>saveWith(progress?.status || "mengulang"));
-
-  setupAudioRecorder({ santriId: santri.id, tipe, halamanGetter: ()=>currentPageNum, progress });
 }
 
-async function saveProgress({ santriId, tipe, halaman, status, pesan, audioUrl }){
+async function saveProgress({ santriId, tipe, halaman, status, pesan }){
   try{
     const data = await getCollectionData("progress");
     const existing = data.find(x=>x.santriId===santriId && x.tipe===tipe);
     const payload = {
       santriId, tipe, halaman: Math.max(1, Number(halaman||1)), status: status || "mengulang",
-      pesan: pesan || "", audioUrl: audioUrl || null,
+      pesan: pesan || "",
       ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || "",
       updatedAt: serverTimestamp()
     };
@@ -1735,69 +1711,13 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan, audioUrl }
     else await addCollectionData("progress", payload);
     await addCollectionData("riwayat", {
       santriId, tipe, halaman: payload.halaman, status: payload.status, pesan: payload.pesan,
-      audioUrl: payload.audioUrl, ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
+      ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
     });
     showToast("Hasil pembelajaran berhasil disimpan.");
   }catch(error){
     console.error(error);
     alert("Gagal menyimpan pembelajaran: " + error.message);
   }
-}
-
-function setupAudioRecorder({ santriId, tipe, halamanGetter, progress }){
-  const button = $("btnRecord");
-  const status = $("recordStatus");
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    button.disabled = true;
-    status.textContent = "Browser tidak mendukung rekaman suara.";
-    return;
-  }
-  button.addEventListener("click", async ()=>{
-    if(!activeRecorder || activeRecorder.state === "inactive"){
-      try{
-        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-        activeAudioChunks = [];
-        activeRecorder = new MediaRecorder(stream);
-        activeRecorder.ondataavailable = event => { if(event.data.size > 0) activeAudioChunks.push(event.data); };
-        activeRecorder.onstop = async ()=>{
-          stream.getTracks().forEach(track=>track.stop());
-          const blob = new Blob(activeAudioChunks, { type: activeRecorder.mimeType || "audio/webm" });
-          status.textContent = "Mengupload rekaman...";
-          try{
-            const extension = blob.type.includes("mp4") ? "mp4" : "webm";
-            const audioUrl = await uploadFile(`audio/${santriId}/${tipe}-${Date.now()}.${extension}`, blob);
-            const data = await getCollectionData("progress");
-            const existing = data.find(x=>x.santriId===santriId && x.tipe===tipe);
-            const payload = {
-              santriId, tipe, halaman: Number(halamanGetter()), status: existing?.status || "mengulang",
-              pesan: existing?.pesan || "", audioUrl, ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
-            };
-            if(existing) await updateCollectionData("progress", existing.id, payload);
-            else await addCollectionData("progress", payload);
-            status.textContent = "Rekaman berhasil disimpan.";
-            showToast("Pesan suara berhasil disimpan.");
-          }catch(error){
-            console.error(error);
-            status.textContent = "Upload rekaman gagal.";
-            alert("Gagal menyimpan rekaman: " + error.message);
-          }
-        };
-        activeRecorder.start();
-        button.textContent = "⏹ Berhenti Rekam";
-        button.classList.add("btn-danger");
-        status.textContent = "Sedang merekam...";
-      }catch(error){
-        console.error(error);
-        alert("Tidak dapat menggunakan mikrofon. Pastikan izin mikrofon diberikan.");
-      }
-      return;
-    }
-    if(activeRecorder.state === "recording"){
-      activeRecorder.stop();
-      button.textContent = "🎙 Mulai Rekam";
-      button.classList.remove("btn-danger");
-    }
-  });
 }
 
 /* =========================================================
@@ -1824,16 +1744,6 @@ async function renderProfil(){
   }));
 }
 
-/* =========================================================
-   PWA SERVICE WORKER (optional; safe no-op if sw.js is absent)
-========================================================= */
-if("serviceWorker" in navigator){
-  window.addEventListener("load", ()=>{
-    navigator.serviceWorker.register("./sw.js").catch(error=>{
-      console.warn("Service Worker tidak terdaftar (opsional):", error.message);
-    });
-  });
-}
 </script>
 </body>
 </html>
