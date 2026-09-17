@@ -1,1261 +1,2181 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#166534">
-<meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
-<link rel="manifest" href="./manifest.json">
-<title>TPQ Wardatul Wathon</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-:root{
- --p:#166534;--p2:#15803d;--bg:#f6f8f7;--card:#fff;
- --text:#172033;--muted:#64748b;--line:#e2e8f0;
- --red:#dc2626;--blue:#2563eb;--orange:#d97706
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
-.login{min-height:100vh;display:flex;align-items:center;justify-content:center;
-padding:20px;background:linear-gradient(135deg,#14532d,#166534,#22c55e)}
-.login-card{width:100%;max-width:420px;background:white;padding:30px;
-border-radius:24px;box-shadow:0 20px 60px #0004}
-.logo{width:68px;height:68px;margin:auto auto 16px;border-radius:20px;
-display:flex;align-items:center;justify-content:center;background:var(--p);
-color:white;font-size:30px}
-.center{text-align:center}
-.form{margin-top:20px}
-.field{margin-bottom:14px}
-label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
-input,select,textarea{width:100%;border:1px solid var(--line);
-border-radius:10px;padding:11px;background:#fff;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--p)}
-.btn{border:0;border-radius:10px;background:var(--p);color:white;
-padding:10px 14px;font-weight:700}
-.btn:hover{background:#14532d}
-.btn.full{width:100%}
-.btn.gray{background:#e2e8f0;color:#172033}
-.btn.red{background:var(--red)}
-.btn.blue{background:var(--blue)}
-.btn.orange{background:var(--orange)}
-.btn.sm{padding:7px 10px;font-size:12px}
-.link{border:0;background:none;color:var(--p);font-weight:700}
-.layout{min-height:100vh}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;
-background:#14532d;color:white;padding:18px 14px;z-index:50}
-.brand{display:flex;gap:10px;align-items:center;padding:8px 5px 22px}
-.brand-icon{width:42px;height:42px;border-radius:12px;background:#22c55e;
-display:flex;align-items:center;justify-content:center}
-.brand small{display:block;color:#bbf7d0;margin-top:2px}
-.nav{display:grid;gap:5px}
-.nav button{width:100%;border:0;background:transparent;color:#dcfce7;
-text-align:left;padding:11px;border-radius:9px}
-.nav button:hover,.nav button.active{background:#ffffff18;color:#fff}
-.main{margin-left:250px}
-.top{height:68px;background:#fff;border-bottom:1px solid var(--line);
-display:flex;align-items:center;justify-content:space-between;padding:0 24px;
-position:sticky;top:0;z-index:30}
-.page{max-width:1450px;margin:auto;padding:24px}
-.mobile{display:none}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
-.card{background:var(--card);border:1px solid var(--line);
-border-radius:15px;padding:18px}
-.stat{font-size:28px;font-weight:800;margin-top:5px}
-.muted{color:var(--muted)}
-.toolbar{display:flex;align-items:center;justify-content:space-between;
-gap:10px;flex-wrap:wrap;margin-bottom:15px}
-.actions{display:flex;gap:5px;flex-wrap:wrap}
-.table-box{overflow:auto;background:#fff;border:1px solid var(--line);
-border-radius:15px}
-table{width:100%;border-collapse:collapse;min-width:700px}
-th,td{padding:12px;border-bottom:1px solid var(--line);
-font-size:14px;text-align:left}
-th{background:#f8fafc}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;
-font-size:11px;font-weight:800}
-.green{background:#dcfce7;color:#166534}
-.yellow{background:#fef3c7;color:#92400e}
-.redbg{background:#fee2e2;color:#991b1b}
-.modal{position:fixed;inset:0;background:#0008;z-index:100;
-display:flex;align-items:center;justify-content:center;padding:15px}
-.modal-box{width:100%;max-width:700px;max-height:90vh;overflow:auto;
-background:white;border-radius:18px;padding:22px}
-.modal-head{display:flex;justify-content:space-between;align-items:center}
-.close{border:0;width:34px;height:34px;border-radius:50%}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.pdf{width:100%;height:65vh;border:1px solid var(--line);border-radius:10px}
-.notice{background:#f0fdf4;border-left:4px solid var(--p);
-padding:13px;margin-bottom:10px;border-radius:8px}
-.empty{text-align:center;padding:35px;color:var(--muted)}
-.toast{position:fixed;right:18px;bottom:18px;z-index:200;
-background:#172033;color:#fff;padding:12px 16px;border-radius:10px}
-@media(max-width:900px){
- .sidebar{transform:translateX(-100%);transition:.2s}
- .sidebar.open{transform:translateX(0)}
- .main{margin-left:0}
- .mobile{display:inline-block}
- .grid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:600px){
- .page{padding:15px}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}
-}
-</style>
+  <meta name="theme-color" content="#166534">
+  <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
+
+  <link rel="manifest" href="./manifest.json">
+
+  <title>TPQ Wardatul Wathon</title>
+
+  <style>
+    :root{
+      --primary:#166534;
+      --primary-dark:#14532d;
+      --primary-light:#22c55e;
+      --bg:#f4f7f5;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --danger:#dc2626;
+      --warning:#d97706;
+      --info:#2563eb;
+      --success:#16a34a;
+      --sidebar:250px;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea{
+      font:inherit;
+    }
+
+    button{
+      cursor:pointer;
+    }
+
+    .hidden{
+      display:none!important;
+    }
+
+    /* =========================
+       LOGIN
+    ========================= */
+
+    #loginScreen{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:
+        radial-gradient(circle at top left,#22c55e 0,#166534 35%,#052e16 100%);
+    }
+
+    .login-card{
+      width:100%;
+      max-width:430px;
+      background:white;
+      border-radius:24px;
+      padding:30px;
+      box-shadow:0 25px 80px rgba(0,0,0,.25);
+    }
+
+    .login-logo{
+      width:72px;
+      height:72px;
+      margin:0 auto 18px;
+      border-radius:20px;
+      background:var(--primary);
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:32px;
+    }
+
+    .login-title{
+      text-align:center;
+      margin:0;
+    }
+
+    .login-subtitle{
+      text-align:center;
+      color:var(--muted);
+      margin-top:7px;
+    }
+
+    .form-group{
+      margin-bottom:15px;
+    }
+
+    .form-group label{
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    input,
+    select,
+    textarea{
+      width:100%;
+      padding:11px 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:white;
+      color:var(--text);
+      outline:none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(22,101,52,.1);
+    }
+
+    .btn{
+      border:0;
+      border-radius:10px;
+      padding:10px 15px;
+      background:var(--primary);
+      color:white;
+      font-weight:700;
+      transition:.15s;
+    }
+
+    .btn:hover{
+      background:var(--primary-dark);
+    }
+
+    .btn-full{
+      width:100%;
+    }
+
+    .btn-danger{
+      background:var(--danger);
+    }
+
+    .btn-warning{
+      background:var(--warning);
+    }
+
+    .btn-info{
+      background:var(--info);
+    }
+
+    .btn-success{
+      background:var(--success);
+    }
+
+    .btn-light{
+      background:#e2e8f0;
+      color:var(--text);
+    }
+
+    .btn-sm{
+      padding:7px 10px;
+      font-size:12px;
+    }
+
+    .setup-link{
+      border:0;
+      background:none;
+      color:var(--primary);
+      font-weight:700;
+      margin-top:15px;
+    }
+
+    .login-error{
+      min-height:20px;
+      color:var(--danger);
+      text-align:center;
+      font-size:13px;
+      margin-top:12px;
+    }
+
+    /* =========================
+       APP
+    ========================= */
+
+    .app{
+      min-height:100vh;
+    }
+
+    .sidebar{
+      position:fixed;
+      left:0;
+      top:0;
+      bottom:0;
+      width:var(--sidebar);
+      background:var(--primary-dark);
+      color:white;
+      z-index:100;
+      padding:16px 13px;
+      overflow-y:auto;
+      transition:.2s;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:7px 6px 20px;
+    }
+
+    .brand-icon{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      background:var(--primary-light);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      flex-shrink:0;
+    }
+
+    .brand-name{
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .brand-role{
+      display:block;
+      margin-top:3px;
+      color:#bbf7d0;
+      font-size:11px;
+    }
+
+    .nav{
+      display:grid;
+      gap:5px;
+    }
+
+    .nav button{
+      border:0;
+      background:transparent;
+      color:#dcfce7;
+      width:100%;
+      text-align:left;
+      border-radius:9px;
+      padding:11px 12px;
+    }
+
+    .nav button:hover,
+    .nav button.active{
+      background:rgba(255,255,255,.13);
+      color:white;
+    }
+
+    .main{
+      margin-left:var(--sidebar);
+      min-height:100vh;
+    }
+
+    .topbar{
+      height:68px;
+      background:white;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 24px;
+      position:sticky;
+      top:0;
+      z-index:50;
+    }
+
+    .top-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .page-title{
+      font-weight:800;
+    }
+
+    .user-area{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+    }
+
+    .page{
+      padding:24px;
+      max-width:1500px;
+      margin:auto;
+    }
+
+    .mobile-menu{
+      display:none;
+    }
+
+    /* =========================
+       CARDS
+    ========================= */
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:15px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:15px;
+      padding:18px;
+    }
+
+    .stat-card{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .stat-icon{
+      font-size:25px;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:8px;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:800;
+      margin-top:3px;
+    }
+
+    .section-title{
+      margin:0 0 4px;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+
+    .table-container{
+      background:white;
+      border:1px solid var(--border);
+      border-radius:15px;
+      overflow:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:700px;
+    }
+
+    th,
+    td{
+      padding:12px;
+      border-bottom:1px solid var(--border);
+      font-size:14px;
+      text-align:left;
+    }
+
+    th{
+      background:#f8fafc;
+      font-size:12px;
+      color:#475569;
+    }
+
+    tr:last-child td{
+      border-bottom:0;
+    }
+
+    .empty{
+      text-align:center;
+      padding:35px;
+      color:var(--muted);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:4px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .badge-green{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .badge-yellow{
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+    .badge-red{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .badge-blue{
+      background:#dbeafe;
+      color:#1e40af;
+    }
+
+    /* =========================
+       MODAL
+    ========================= */
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:500;
+      background:rgba(0,0,0,.65);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:15px;
+    }
+
+    .modal-box{
+      width:100%;
+      max-width:720px;
+      max-height:90vh;
+      overflow:auto;
+      background:white;
+      border-radius:18px;
+      padding:22px;
+    }
+
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:15px;
+      margin-bottom:18px;
+    }
+
+    .modal-header h3{
+      margin:0;
+    }
+
+    .modal-close{
+      width:34px;
+      height:34px;
+      border:0;
+      border-radius:50%;
+      background:#e2e8f0;
+      font-size:20px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    /* =========================
+       NOTICE
+    ========================= */
+
+    .notice{
+      border-left:4px solid var(--primary);
+      background:#f0fdf4;
+      padding:14px;
+      border-radius:8px;
+      margin-bottom:10px;
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    .toast{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      background:#172033;
+      color:white;
+      padding:12px 16px;
+      border-radius:10px;
+      z-index:1000;
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media(max-width:1000px){
+      .grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media(max-width:800px){
+      .sidebar{
+        transform:translateX(-100%);
+      }
+
+      .sidebar.open{
+        transform:translateX(0);
+      }
+
+      .main{
+        margin-left:0;
+      }
+
+      .mobile-menu{
+        display:inline-flex;
+      }
+
+      .topbar{
+        padding:0 15px;
+      }
+
+      .user-name{
+        display:none;
+      }
+    }
+
+    @media(max-width:600px){
+      .page{
+        padding:15px;
+      }
+
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .row{
+        grid-template-columns:1fr;
+      }
+
+      .login-card{
+        padding:24px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="login" class="login">
- <div class="login-card">
-  <div class="logo">📖</div>
-  <h2 class="center">TPQ Wardatul Wathon</h2>
-  <p class="center muted">Tukum Kidul • Lumajang</p>
+<!-- =====================================================
+     LOGIN
+===================================================== -->
 
-  <form id="loginForm" class="form">
-   <div class="field">
-    <label>Email</label>
-    <input id="email" type="email" autocomplete="username" required>
-   </div>
-   <div class="field">
-    <label>Password</label>
-    <input id="password" type="password" autocomplete="current-password" required>
-   </div>
-   <button class="btn full">Masuk</button>
-  </form>
+<section id="loginScreen">
 
-  <div class="center" style="margin-top:15px">
-   <button id="setupBtn" class="link">Setup Admin Pertama</button>
+  <div class="login-card">
+
+    <div class="login-logo">
+      📖
+    </div>
+
+    <h1 class="login-title">
+      TPQ Wardatul Wathon
+    </h1>
+
+    <div class="login-subtitle">
+      Tukum Kidul • Lumajang
+    </div>
+
+    <form id="loginForm" style="margin-top:25px">
+
+      <div class="form-group">
+        <label for="loginEmail">
+          Email
+        </label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="username"
+          placeholder="email@contoh.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">
+          Password
+        </label>
+
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Password"
+          required
+        >
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-full"
+      >
+        Masuk
+      </button>
+
+    </form>
+
+    <div class="login-error" id="loginError"></div>
+
+    <div style="text-align:center">
+      <button
+        type="button"
+        class="setup-link"
+        id="setupAdminButton"
+      >
+        Setup Admin Pertama
+      </button>
+    </div>
+
   </div>
 
-  <p id="loginError" class="center" style="color:#dc2626"></p>
- </div>
-</div>
+</section>
 
-<div id="app" class="hidden">
- <aside id="sidebar" class="sidebar">
-  <div class="brand">
-   <div class="brand-icon">📖</div>
-   <div>
-    <b>TPQ Wardatul Wathon</b>
-    <small id="roleText"></small>
-   </div>
+
+<!-- =====================================================
+     APPLICATION
+===================================================== -->
+
+<section id="app" class="app hidden">
+
+  <aside id="sidebar" class="sidebar">
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        📖
+      </div>
+
+      <div>
+        <div class="brand-name">
+          TPQ Wardatul Wathon
+        </div>
+
+        <span
+          id="brandRole"
+          class="brand-role"
+        >
+          Portal
+        </span>
+      </div>
+
+    </div>
+
+    <nav
+      id="navigation"
+      class="nav"
+    ></nav>
+
+  </aside>
+
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div class="top-left">
+
+        <button
+          type="button"
+          class="btn btn-light mobile-menu"
+          id="mobileMenuButton"
+        >
+          ☰
+        </button>
+
+        <span
+          id="pageTitle"
+          class="page-title"
+        >
+          Dashboard
+        </span>
+
+      </div>
+
+      <div class="user-area">
+
+        <span
+          id="userName"
+          class="user-name"
+        >
+          -
+        </span>
+
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          id="logoutButton"
+        >
+          Keluar
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <section
+      id="page"
+      class="page"
+    ></section>
+
+  </main>
+
+</section>
+
+
+<!-- =====================================================
+     MODAL
+===================================================== -->
+
+<div
+  id="modal"
+  class="modal hidden"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h3 id="modalTitle">
+        Modal
+      </h3>
+
+      <button
+        type="button"
+        class="modal-close"
+        id="modalClose"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div id="modalContent"></div>
+
   </div>
-  <nav id="nav" class="nav"></nav>
- </aside>
 
- <main class="main">
-  <header class="top">
-   <div>
-    <button class="btn gray mobile" onclick="toggleMenu()">☰</button>
-    <b id="title">Dashboard</b>
-   </div>
-   <div>
-    <span id="displayName"></span>
-    <button class="btn red sm" onclick="logout()">Keluar</button>
-   </div>
-  </header>
-  <section id="page" class="page"></section>
- </main>
 </div>
 
-<div id="modal" class="modal hidden">
- <div class="modal-box">
-  <div class="modal-head">
-   <h3 id="modalTitle"></h3>
-   <button class="close" onclick="closeModal()">×</button>
-  </div>
-  <div id="modalBody"></div>
- </div>
-</div>
 
-<div id="toast" class="toast hidden"></div>
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div
+  id="toast"
+  class="toast hidden"
+></div>
+
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
 
 <script type="module">
 
-import {initializeApp}
-from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import {
+    initializeApp
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
-import {
- getAuth,onAuthStateChanged,signInWithEmailAndPassword,
- createUserWithEmailAndPassword,signOut
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-import {
- getFirestore,collection,doc,getDoc,getDocs,addDoc,setDoc,
- updateDoc,deleteDoc,query,where,orderBy,serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-const firebaseConfig={
- apiKey:"AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
- authDomain:"tpqwardah.firebaseapp.com",
- projectId:"tpqwardah",
- storageBucket:"tpqwardah.firebasestorage.app",
- messagingSenderId:"308318249706",
- appId:"1:308318249706:web:ad1f631acee81a2fe6ad93",
- measurementId:"G-ZVC3M0L8XJ"
-};
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+  /* =====================================================
+     FIREBASE CONFIG
+  ===================================================== */
 
-let user=null;
-let profile=null;
-let pageName="dashboard";
+  const firebaseConfig = {
 
-const $=id=>document.getElementById(id);
+    apiKey:
+      "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
 
-function esc(v){
- return String(v??"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  '"':"&quot;","'":"&#039;"
- }[c]));
-}
+    authDomain:
+      "tpqwardah.firebaseapp.com",
 
-function money(n){
- return new Intl.NumberFormat("id-ID",{
-  style:"currency",currency:"IDR",maximumFractionDigits:0
- }).format(Number(n||0));
-}
+    projectId:
+      "tpqwardah",
 
-function notify(text){
- $("toast").textContent=text;
- $("toast").classList.remove("hidden");
- setTimeout(()=>$("toast").classList.add("hidden"),2500);
-}
+    storageBucket:
+      "tpqwardah.firebasestorage.app",
 
-function openModal(title,html){
- $("modalTitle").textContent=title;
- $("modalBody").innerHTML=html;
- $("modal").classList.remove("hidden");
-}
+    messagingSenderId:
+      "308318249706",
 
-function closeModal(){
- $("modal").classList.add("hidden");
-}
+    appId:
+      "1:308318249706:web:ad1f631acee81a2fe6ad93",
 
-window.closeModal=closeModal;
+    measurementId:
+      "G-ZVC3M0L8XJ"
 
-function errorText(e){
- const m={
-  "auth/invalid-credential":"Email atau password salah.",
-  "auth/email-already-in-use":"Email sudah digunakan.",
-  "auth/invalid-email":"Email tidak valid.",
-  "auth/weak-password":"Password minimal 6 karakter.",
-  "auth/operation-not-allowed":"Login Email/Password belum diaktifkan di Firebase.",
-  "auth/network-request-failed":"Koneksi internet bermasalah."
- };
- return m[e.code]||e.message||"Terjadi kesalahan.";
-}
+  };
 
-/* =========================
-   SETUP ADMIN
-========================= */
 
-$("setupBtn").addEventListener("click",()=>{
- openModal("Setup Admin Pertama",`
-  <form id="setupForm">
-   <div class="field">
-    <label>Nama Admin</label>
-    <input id="adminName" value="Administrator" required>
-   </div>
-   <div class="field">
-    <label>Email Admin</label>
-    <input id="adminEmail" type="email" required>
-   </div>
-   <div class="field">
-    <label>Password</label>
-    <input id="adminPassword" type="password" minlength="6" required>
-   </div>
-   <button class="btn full">Buat Akun Admin</button>
-  </form>
- `);
+  /* =====================================================
+     INIT
+  ===================================================== */
 
- $("setupForm").addEventListener("submit",async e=>{
-  e.preventDefault();
+  const firebaseApp =
+    initializeApp(firebaseConfig);
 
-  try{
-   const name=$("adminName").value.trim();
-   const email=$("adminEmail").value.trim();
-   const password=$("adminPassword").value;
+  const auth =
+    getAuth(firebaseApp);
 
-   const cred=await createUserWithEmailAndPassword(
-    auth,email,password
-   );
+  const db =
+    getFirestore(firebaseApp);
 
-   await setDoc(doc(db,"users",cred.user.uid),{
-    uid:cred.user.uid,nama:name,email,role:"admin",
-    createdAt:serverTimestamp()
-   });
 
-   await setDoc(doc(db,"admin",cred.user.uid),{
-    uid:cred.user.uid,nama:name,email,role:"admin",
-    createdAt:serverTimestamp()
-   });
+  /* =====================================================
+     GLOBAL STATE
+  ===================================================== */
 
-   closeModal();
-   notify("Akun admin berhasil dibuat.");
+  let currentUser = null;
+  let currentProfile = null;
+  let currentPage = "dashboard";
 
-  }catch(e){
-   alert(errorText(e));
-  }
- });
-});
 
-/* =========================
-   LOGIN
-========================= */
+  /* =====================================================
+     HELPER
+  ===================================================== */
 
-$("loginForm").addEventListener("submit",async e=>{
- e.preventDefault();
- $("loginError").textContent="";
+  const $ = id =>
+    document.getElementById(id);
 
- try{
-  await signInWithEmailAndPassword(
-   auth,$("email").value.trim(),$("password").value
-  );
- }catch(e){
-  $("loginError").textContent=errorText(e);
- }
-});
 
-window.logout=()=>signOut(auth);
-window.toggleMenu=()=>$("sidebar").classList.toggle("open");
+  function escapeHTML(value){
 
-/* =========================
-   AUTH
-========================= */
+    return String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
 
-onAuthStateChanged(auth,async u=>{
- if(!u){
-  user=null;profile=null;
-  $("login").classList.remove("hidden");
-  $("app").classList.add("hidden");
-  return;
- }
-
- try{
-  const snap=await getDoc(doc(db,"users",u.uid));
-
-  if(!snap.exists()){
-   alert("Akun belum memiliki profil aplikasi.");
-   await signOut(auth);
-   return;
   }
 
-  user=u;
-  profile=snap.data();
 
-  $("login").classList.add("hidden");
-  $("app").classList.remove("hidden");
-  $("displayName").textContent=profile.nama||u.email;
-  $("roleText").textContent="Portal "+profile.role;
+  function showToast(message){
 
-  makeNav();
-  navigate("dashboard");
+    const toast = $("toast");
 
- }catch(e){
-  alert(errorText(e));
- }
-});
+    toast.textContent = message;
 
-/* =========================
-   NAV
-========================= */
+    toast.classList.remove("hidden");
 
-function makeNav(){
- let a=[["dashboard","🏠","Dashboard"]];
+    setTimeout(() => {
 
- if(profile.role==="admin"){
-  a.push(
-   ["santri","👨‍🎓","Data Santri"],
-   ["ustadzah","👩‍🏫","Data Ustadzah"],
-   ["wali","👨‍👩‍👧","Data Wali"],
-   ["kelas","📚","Jilid / Kelas"],
-   ["pengumuman","📢","Pengumuman"],
-   ["keuangan","💰","Keuangan"],
-   ["settings","⚙️","Pengaturan"]
+      toast.classList.add("hidden");
+
+    },2500);
+
+  }
+
+
+  function openModal(title,content){
+
+    $("modalTitle").textContent =
+      title;
+
+    $("modalContent").innerHTML =
+      content;
+
+    $("modal").classList.remove("hidden");
+
+  }
+
+
+  function closeModal(){
+
+    $("modal").classList.add("hidden");
+
+  }
+
+
+  function firebaseError(error){
+
+    const messages = {
+
+      "auth/invalid-credential":
+        "Email atau password salah.",
+
+      "auth/invalid-email":
+        "Format email tidak valid.",
+
+      "auth/email-already-in-use":
+        "Email tersebut sudah digunakan.",
+
+      "auth/weak-password":
+        "Password minimal 6 karakter.",
+
+      "auth/operation-not-allowed":
+        "Login Email/Password belum diaktifkan di Firebase.",
+
+      "auth/network-request-failed":
+        "Koneksi internet bermasalah."
+
+    };
+
+    return messages[error.code]
+      || error.message
+      || "Terjadi kesalahan.";
+
+  }
+
+
+  /* =====================================================
+     MODAL EVENTS
+  ===================================================== */
+
+  $("modalClose")
+    .addEventListener(
+      "click",
+      closeModal
+    );
+
+
+  $("modal")
+    .addEventListener("click",event=>{
+
+      if(event.target === $("modal")){
+
+        closeModal();
+
+      }
+
+    });
+
+
+  /* =====================================================
+     SETUP ADMIN PERTAMA
+  ===================================================== */
+
+  $("setupAdminButton")
+    .addEventListener(
+      "click",
+      openAdminSetup
+    );
+
+
+  function openAdminSetup(){
+
+    openModal(
+
+      "Setup Admin Pertama",
+
+      `
+      <form id="adminSetupForm">
+
+        <div class="form-group">
+
+          <label>
+            Nama Admin
+          </label>
+
+          <input
+            id="adminName"
+            value="Administrator"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            Email Admin
+          </label>
+
+          <input
+            id="adminEmail"
+            type="email"
+            placeholder="admin@tpqwardah.com"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            Password
+          </label>
+
+          <input
+            id="adminPassword"
+            type="password"
+            minlength="6"
+            placeholder="Minimal 6 karakter"
+            required
+          >
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="btn btn-full"
+        >
+          Buat Akun Admin
+        </button>
+
+      </form>
+      `
+    );
+
+
+    $("adminSetupForm")
+      .addEventListener(
+        "submit",
+        createFirstAdmin
+      );
+
+  }
+
+
+  async function createFirstAdmin(event){
+
+    event.preventDefault();
+
+    const name =
+      $("adminName").value.trim();
+
+    const email =
+      $("adminEmail").value.trim();
+
+    const password =
+      $("adminPassword").value;
+
+
+    try{
+
+      const credential =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+
+      const uid =
+        credential.user.uid;
+
+
+      /*
+       * PROFILE USER
+       */
+
+      await setDoc(
+        doc(db,"users",uid),
+        {
+
+          uid,
+
+          nama:name,
+
+          email,
+
+          role:"admin",
+
+          aktif:true,
+
+          createdAt:
+            serverTimestamp(),
+
+          updatedAt:
+            serverTimestamp()
+
+        }
+      );
+
+
+      /*
+       * PROFILE ADMIN
+       */
+
+      await setDoc(
+        doc(db,"admin",uid),
+        {
+
+          uid,
+
+          nama:name,
+
+          email,
+
+          role:"admin",
+
+          aktif:true,
+
+          createdAt:
+            serverTimestamp(),
+
+          updatedAt:
+            serverTimestamp()
+
+        }
+      );
+
+
+      closeModal();
+
+      showToast(
+        "Akun admin berhasil dibuat."
+      );
+
+
+    }catch(error){
+
+      alert(
+        firebaseError(error)
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOGIN
+  ===================================================== */
+
+  $("loginForm")
+    .addEventListener(
+      "submit",
+      login
+    );
+
+
+  async function login(event){
+
+    event.preventDefault();
+
+    $("loginError").textContent = "";
+
+    const email =
+      $("loginEmail").value.trim();
+
+    const password =
+      $("loginPassword").value;
+
+
+    try{
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }catch(error){
+
+      $("loginError").textContent =
+        firebaseError(error);
+
+    }
+
+  }
+
+
+  /* =====================================================
+     LOGOUT
+  ===================================================== */
+
+  $("logoutButton")
+    .addEventListener(
+      "click",
+      async()=>{
+
+        await signOut(auth);
+
+      }
+    );
+
+
+  /* =====================================================
+     MOBILE MENU
+  ===================================================== */
+
+  $("mobileMenuButton")
+    .addEventListener(
+      "click",
+      ()=>{
+
+        $("sidebar")
+          .classList.toggle("open");
+
+      }
+    );
+
+
+  /* =====================================================
+     AUTH STATE
+  ===================================================== */
+
+  onAuthStateChanged(
+    auth,
+    async user=>{
+
+      if(!user){
+
+        currentUser = null;
+
+        currentProfile = null;
+
+        $("loginScreen")
+          .classList.remove("hidden");
+
+        $("app")
+          .classList.add("hidden");
+
+        return;
+
+      }
+
+
+      try{
+
+        const profileSnapshot =
+          await getDoc(
+            doc(
+              db,
+              "users",
+              user.uid
+            )
+          );
+
+
+        if(!profileSnapshot.exists()){
+
+          alert(
+            "Akun berhasil login tetapi profil aplikasi belum dibuat."
+          );
+
+          await signOut(auth);
+
+          return;
+
+        }
+
+
+        const profile =
+          profileSnapshot.data();
+
+
+        if(
+          !["admin","ustadzah","wali"]
+            .includes(profile.role)
+        ){
+
+          alert(
+            "Role akun tidak valid."
+          );
+
+          await signOut(auth);
+
+          return;
+
+        }
+
+
+        if(profile.aktif === false){
+
+          alert(
+            "Akun ini sedang dinonaktifkan."
+          );
+
+          await signOut(auth);
+
+          return;
+
+        }
+
+
+        currentUser =
+          user;
+
+        currentProfile =
+          profile;
+
+
+        $("loginScreen")
+          .classList.add("hidden");
+
+        $("app")
+          .classList.remove("hidden");
+
+
+        $("userName")
+          .textContent =
+            profile.nama
+            || user.email;
+
+
+        $("brandRole")
+          .textContent =
+            "Portal "
+            + profile.role;
+
+
+        buildNavigation();
+
+        navigate("dashboard");
+
+
+      }catch(error){
+
+        console.error(error);
+
+        alert(
+          "Gagal membaca profil pengguna: "
+          + error.message
+        );
+
+        await signOut(auth);
+
+      }
+
+    }
   );
- }
 
- if(profile.role==="ustadzah"){
-  a.push(
-   ["kelasSantri","👨‍🎓","Santri Kelas"],
-   ["pengumuman","📢","Pengumuman"]
-  );
- }
 
- if(profile.role==="wali"){
-  a.push(
-   ["belajar","📖","Baca & Hafalan"],
-   ["keuanganWali","💰","Keuangan"],
-   ["pengumuman","📢","Pengumuman"]
-  );
- }
+  /* =====================================================
+     NAVIGATION
+  ===================================================== */
 
- $("nav").innerHTML=a.map(x=>`
-  <button data-page="${x[0]}" onclick="navigate('${x[0]}')">
-   ${x[1]} ${x[2]}
-  </button>
- `).join("");
-}
+  const pageTitles = {
 
-const titles={
- dashboard:"Dashboard",santri:"Data Santri",
- ustadzah:"Data Ustadzah",wali:"Data Wali",
- kelas:"Jilid / Kelas",pengumuman:"Pengumuman",
- keuangan:"Keuangan",settings:"Pengaturan",
- kelasSantri:"Santri Kelas",belajar:"Baca & Hafalan",
- keuanganWali:"Riwayat Keuangan"
-};
+    dashboard:
+      "Dashboard",
 
-window.navigate=async p=>{
- pageName=p;
- $("title").textContent=titles[p]||"Dashboard";
+    santri:
+      "Data Santri",
 
- document.querySelectorAll("#nav button").forEach(b=>{
-  b.classList.toggle("active",b.dataset.page===p)
- });
+    wali:
+      "Data Wali",
 
- $("sidebar").classList.remove("open");
+    ustadzah:
+      "Data Ustadzah",
 
- const fn={
-  dashboard:dashboard,
-  santri:adminSantri,
-  ustadzah:adminUstadzah,
-  wali:adminWali,
-  kelas:adminKelas,
-  pengumuman:showPengumuman,
-  keuangan:adminKeuangan,
-  settings:settings,
-  kelasSantri:ustadzahSantri,
-  belajar:waliBelajar,
-  keuanganWali:waliKeuangan
- }[p];
+    kelas:
+      "Jilid / Kelas",
 
- try{
-  await (fn||dashboard)();
- }catch(e){
-  $("page").innerHTML=
-   `<div class="card"><b>Gagal memuat data</b><p>${esc(e.message)}</p></div>`;
- }
-};
+    pengumuman:
+      "Pengumuman",
 
-/* =========================
-   DASHBOARD
-========================= */
+    keuangan:
+      "Keuangan",
 
-async function size(c){
- return (await getDocs(collection(db,c))).size;
-}
+    settings:
+      "Pengaturan",
 
-async function dashboard(){
+    kelasSantri:
+      "Santri Kelas",
 
- if(profile.role==="admin"){
-  const [a,b,c,d]=await Promise.all([
-   size("santri"),size("ustadzah"),size("wali"),size("jilid")
-  ]);
+    pembelajaran:
+      "Pembelajaran",
 
-  $("page").innerHTML=`
-   <h2>Dashboard Admin</h2>
-   <p class="muted">Selamat datang, ${esc(profile.nama)}.</p>
-   <div class="grid">
-    ${stat("👨‍🎓","Santri",a)}
-    ${stat("👩‍🏫","Ustadzah",b)}
-    ${stat("👨‍👩‍👧","Wali",c)}
-    ${stat("📚","Kelas / Jilid",d)}
-   </div>
-  `;
-  return;
- }
+    keuanganUstadzah:
+      "Keuangan Santri",
 
- if(profile.role==="ustadzah"){
-  const q=query(collection(db,"santri"),
-   where("ustadzahId","==",user.uid));
-  const s=await getDocs(q);
+    belajar:
+      "Baca & Hafalan",
 
-  $("page").innerHTML=`
-   <h2>Dashboard Ustadzah</h2>
-   <div class="grid">
-    ${stat("👨‍🎓","Santri Binaan",s.size)}
-    ${stat("📖","Modul","Baca")}
-    ${stat("🧠","Modul","Hafalan")}
-    ${stat("💰","Modul","Keuangan")}
-   </div>
-  `;
-  return;
- }
+    keuanganWali:
+      "Riwayat Keuangan",
 
- const q=query(collection(db,"santri"),
-  where("waliId","==",user.uid));
- const s=await getDocs(q);
+    profil:
+      "Profil"
 
- $("page").innerHTML=`
-  <h2>Dashboard Wali</h2>
-  <div class="grid">
-   ${stat("👨‍🎓","Santri",s.size)}
-   ${stat("📖","Pembelajaran","Baca & Hafalan")}
-   ${stat("💰","Keuangan","Tagihan")}
-   ${stat("📢","Informasi","Pengumuman")}
-  </div>
- `;
-}
-
-function stat(icon,label,value){
- return `
- <div class="card">
-  <div style="font-size:25px">${icon}</div>
-  <div class="muted">${label}</div>
-  <div class="stat">${esc(value)}</div>
- </div>`;
-}
-
-/* =========================
-   ADMIN SANTRI
-========================= */
-
-async function adminSantri(){
- const s=await getDocs(collection(db,"santri"));
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <div><h2>Data Santri</h2><span class="muted">${s.size} data</span></div>
-  <button class="btn" onclick="editSantri()">+ Tambah</button>
- </div>
- <div class="table-box">
- <table>
- <thead><tr>
-  <th>No</th><th>Nama</th><th>Kelas</th>
-  <th>Ustadzah</th><th>Wali</th><th>Aksi</th>
- </tr></thead>
- <tbody>
- ${s.empty?
-  `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`:
-  s.docs.map((d,i)=>{
-   const x=d.data();
-   return `<tr>
-    <td>${i+1}</td><td><b>${esc(x.nama)}</b></td>
-    <td>${esc(x.kelasNama||"-")}</td>
-    <td>${esc(x.ustadzahNama||"-")}</td>
-    <td>${esc(x.waliNama||"-")}</td>
-    <td class="actions">
-     <button class="btn sm" onclick="editSantri('${d.id}')">Edit</button>
-     <button class="btn red sm" onclick="removeDoc('santri','${d.id}')">Hapus</button>
-    </td>
-   </tr>`;
-  }).join("")
- }
- </tbody>
- </table></div>`;
-}
-
-window.editSantri=async id=>{
- let x={};
- if(id)x=(await getDoc(doc(db,"santri",id))).data()||{};
-
- const [k,u,w]=await Promise.all([
-  getDocs(collection(db,"jilid")),
-  getDocs(collection(db,"ustadzah")),
-  getDocs(collection(db,"wali"))
- ]);
-
- openModal(id?"Edit Santri":"Tambah Santri",`
- <form id="santriForm">
-  <div class="field">
-   <label>Nama Santri</label>
-   <input id="sn" value="${esc(x.nama)}" required>
-  </div>
-
-  <div class="row">
-   <div class="field">
-    <label>Kelas / Jilid</label>
-    <select id="sk" required>
-     <option value="">Pilih</option>
-     ${k.docs.map(d=>{
-      const z=d.data();
-      return `<option value="${d.id}"
-       ${x.kelasId===d.id?"selected":""}>
-       ${esc(z.nama)}</option>`;
-     }).join("")}
-    </select>
-   </div>
-
-   <div class="field">
-    <label>Ustadzah</label>
-    <select id="su">
-     <option value="">Pilih</option>
-     ${u.docs.map(d=>{
-      const z=d.data();
-      return `<option value="${d.id}"
-       ${x.ustadzahId===d.id?"selected":""}>
-       ${esc(z.nama)}</option>`;
-     }).join("")}
-    </select>
-   </div>
-  </div>
-
-  <div class="field">
-   <label>Wali</label>
-   <select id="sw">
-    <option value="">Pilih</option>
-    ${w.docs.map(d=>{
-     const z=d.data();
-     return `<option value="${d.id}"
-      ${x.waliId===d.id?"selected":""}>
-      ${esc(z.nama)}</option>`;
-    }).join("")}
-   </select>
-  </div>
-
-  <button class="btn full">Simpan</button>
- </form>
- `);
-
- $("santriForm").onsubmit=async e=>{
-  e.preventDefault();
-
-  const kEl=$("sk"),uEl=$("su"),wEl=$("sw");
-  const data={
-   nama:$("sn").value.trim(),
-   kelasId:kEl.value,
-   kelasNama:kEl.selectedOptions[0]?.textContent.trim()||"",
-   ustadzahId:uEl.value,
-   ustadzahNama:uEl.selectedOptions[0]?.textContent.trim()||"",
-   waliId:wEl.value,
-   waliNama:wEl.selectedOptions[0]?.textContent.trim()||"",
-   updatedAt:serverTimestamp()
   };
 
-  if(id)await updateDoc(doc(db,"santri",id),data);
-  else await addDoc(collection(db,"santri"),{
-   ...data,createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Data santri tersimpan");adminSantri();
- };
-};
-
-/* =========================
-   ADMIN USTADZAH
-========================= */
-
-async function adminUstadzah(){
- const s=await getDocs(collection(db,"ustadzah"));
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <h2>Data Ustadzah</h2>
-  <button class="btn" onclick="editUstadzah()">+ Tambah</button>
- </div>
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.email)}</td>
-   <td><button class="btn sm" onclick="editUstadzah('${d.id}')">Edit</button>
-   <button class="btn red sm" onclick="removeDoc('ustadzah','${d.id}')">Hapus</button></td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-window.editUstadzah=async id=>{
- let x={};
- if(id)x=(await getDoc(doc(db,"ustadzah",id))).data()||{};
-
- openModal(id?"Edit Ustadzah":"Tambah Ustadzah",`
- <form id="uf">
-  <div class="field"><label>Nama</label>
-   <input id="un" value="${esc(x.nama)}" required></div>
-  <div class="field"><label>Email</label>
-   <input id="ue" type="email" value="${esc(x.email)}" required></div>
-  <button class="btn full">Simpan</button>
- </form>`);
-
- $("uf").onsubmit=async e=>{
-  e.preventDefault();
-
-  const data={
-   nama:$("un").value.trim(),
-   email:$("ue").value.trim(),
-   role:"ustadzah",
-   updatedAt:serverTimestamp()
-  };
-
-  if(id)await updateDoc(doc(db,"ustadzah",id),data);
-  else await addDoc(collection(db,"ustadzah"),{
-   ...data,createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Data ustadzah tersimpan");adminUstadzah();
- };
-};
-
-/* =========================
-   ADMIN WALI
-========================= */
-
-async function adminWali(){
- const s=await getDocs(collection(db,"wali"));
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <h2>Data Wali</h2>
-  <button class="btn" onclick="editWali()">+ Tambah</button>
- </div>
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.email||"-")}</td>
-   <td><button class="btn sm" onclick="editWali('${d.id}')">Edit</button>
-   <button class="btn red sm" onclick="removeDoc('wali','${d.id}')">Hapus</button></td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-window.editWali=async id=>{
- let x={};
- if(id)x=(await getDoc(doc(db,"wali",id))).data()||{};
-
- openModal(id?"Edit Wali":"Tambah Wali",`
- <form id="wf">
-  <div class="field"><label>Nama</label>
-   <input id="wn" value="${esc(x.nama)}" required></div>
-  <div class="field"><label>Email</label>
-   <input id="we" type="email" value="${esc(x.email||"")}" required></div>
-  <button class="btn full">Simpan</button>
- </form>`);
-
- $("wf").onsubmit=async e=>{
-  e.preventDefault();
-
-  const data={
-   nama:$("wn").value.trim(),
-   email:$("we").value.trim(),
-   role:"wali",
-   updatedAt:serverTimestamp()
-  };
-
-  if(id)await updateDoc(doc(db,"wali",id),data);
-  else await addDoc(collection(db,"wali"),{
-   ...data,createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Data wali tersimpan");adminWali();
- };
-};
-
-/* =========================
-   KELAS + PDF
-========================= */
-
-async function adminKelas(){
- const s=await getDocs(collection(db,"jilid"));
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <div><h2>Jilid / Kelas</h2>
-  <p class="muted">Atur PDF buku baca dan hafalan.</p></div>
-  <button class="btn" onclick="editKelas()">+ Tambah</button>
- </div>
-
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Kelas</th>
- <th>PDF Baca</th><th>PDF Hafalan</th><th>Aksi</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="5" class="empty">Belum ada kelas.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td>${esc(x.nama)}</td>
-   <td>${x.bukuBacaUrl?"Tersedia":"Belum"}</td>
-   <td>${x.bukuHafalanUrl?"Tersedia":"Belum"}</td>
-   <td><button class="btn sm" onclick="editKelas('${d.id}')">Edit</button>
-   <button class="btn red sm" onclick="removeDoc('jilid','${d.id}')">Hapus</button></td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-window.editKelas=async id=>{
- let x={};
- if(id)x=(await getDoc(doc(db,"jilid",id))).data()||{};
-
- openModal(id?"Edit Kelas":"Tambah Kelas",`
- <form id="kf">
-  <div class="field"><label>Nama Kelas / Jilid</label>
-   <input id="kn" value="${esc(x.nama)}" required></div>
-  <div class="field"><label>URL PDF Buku Baca</label>
-   <input id="kb" type="url" value="${esc(x.bukuBacaUrl||"")}"
-   placeholder="https://domain.com/buku-baca.pdf"></div>
-  <div class="field"><label>URL PDF Buku Hafalan</label>
-   <input id="kh" type="url" value="${esc(x.bukuHafalanUrl||"")}"
-   placeholder="https://domain.com/buku-hafalan.pdf"></div>
-  <button class="btn full">Simpan</button>
- </form>`);
-
- $("kf").onsubmit=async e=>{
-  e.preventDefault();
-
-  const data={
-   nama:$("kn").value.trim(),
-   bukuBacaUrl:$("kb").value.trim(),
-   bukuHafalanUrl:$("kh").value.trim(),
-   updatedAt:serverTimestamp()
-  };
-
-  if(id)await updateDoc(doc(db,"jilid",id),data);
-  else await addDoc(collection(db,"jilid"),{
-   ...data,createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Kelas tersimpan");adminKelas();
- };
-};
-
-/* =========================
-   PENGUMUMAN
-========================= */
-
-async function showPengumuman(){
- const s=await getDocs(collection(db,"pengumuman"));
- const arr=s.docs.sort((a,b)=>
-  (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0)
- );
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <h2>Pengumuman</h2>
-  ${profile.role==="admin"?
-   `<button class="btn" onclick="newNotice()">+ Pengumuman</button>`:""}
- </div>
-
- ${arr.length?arr.map(d=>{
-  const x=d.data();
-  return `<div class="card notice">
-   <div class="toolbar">
-    <b>${esc(x.judul)}</b>
-    ${profile.role==="admin"?
-     `<button class="btn red sm"
-      onclick="removeDoc('pengumuman','${d.id}')">Hapus</button>`:""}
-   </div>
-   <div>${esc(x.isi)}</div>
-  </div>`;
- }).join(""):`<div class="card empty">Belum ada pengumuman.</div>`}`;
-}
-
-window.newNotice=()=>{
- openModal("Pengumuman Baru",`
- <form id="pf">
-  <div class="field"><label>Judul</label><input id="pj" required></div>
-  <div class="field"><label>Isi</label><textarea id="pi" rows="6" required></textarea></div>
-  <button class="btn full">Publikasikan</button>
- </form>`);
-
- $("pf").onsubmit=async e=>{
-  e.preventDefault();
-
-  await addDoc(collection(db,"pengumuman"),{
-   judul:$("pj").value.trim(),
-   isi:$("pi").value.trim(),
-   dibuatOleh:user.uid,
-   createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Pengumuman diterbitkan");showPengumuman();
- };
-};
-
-/* =========================
-   KEUANGAN
-========================= */
-
-async function adminKeuangan(){
- const s=await getDocs(collection(db,"keuangan"));
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <div><h2>Keuangan</h2>
-  <p class="muted">SPP, tabungan dan iuran kegiatan.</p></div>
-  <button class="btn" onclick="newBill()">+ Tagihan</button>
- </div>
-
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Santri</th><th>Tagihan</th>
- <th>Nilai</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="7" class="empty">Belum ada tagihan.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td>${esc(x.santriNama)}</td>
-   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
-   <td>${money(x.terbayar)}</td>
-   <td>${x.status==="lunas"?
-    `<span class="badge green">Lunas</span>`:
-    `<span class="badge yellow">Belum Lunas</span>`}</td>
-   <td><button class="btn red sm"
-    onclick="removeDoc('keuangan','${d.id}')">Hapus</button></td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-window.newBill=async()=>{
- const s=await getDocs(collection(db,"santri"));
-
- openModal("Tambah Tagihan",`
- <form id="bf">
-  <div class="field"><label>Santri</label>
-   <select id="bs" required>
-    <option value="">Pilih santri</option>
-    ${s.docs.map(d=>`<option value="${d.id}">
-     ${esc(d.data().nama)}</option>`).join("")}
-   </select>
-  </div>
-  <div class="field"><label>Tagihan</label>
-   <input id="bt" placeholder="SPP September 2026" required>
-  </div>
-  <div class="row">
-   <div class="field"><label>Nilai</label>
-    <input id="bn" type="number" min="0" required></div>
-   <div class="field"><label>Terbayar</label>
-    <input id="bp" type="number" min="0" value="0"></div>
-  </div>
-  <div class="field"><label>Bayar lewat QRIS</label>
-   <select id="bq"><option value="false">Tidak</option>
-   <option value="true">Ya</option></select>
-  </div>
-  <button class="btn full">Simpan</button>
- </form>`);
-
- $("bf").onsubmit=async e=>{
-  e.preventDefault();
-
-  const sd=await getDoc(doc(db,"santri",$("bs").value));
-  const x=sd.data()||{};
-  const nilai=Number($("bn").value||0);
-  const bayar=Number($("bp").value||0);
-
-  await addDoc(collection(db,"keuangan"),{
-   santriId:sd.id,
-   santriNama:x.nama||"",
-   waliId:x.waliId||"",
-   tagihan:$("bt").value.trim(),
-   nilai,
-   terbayar:bayar,
-   bayarQris:$("bq").value==="true",
-   status:bayar>=nilai?"lunas":"belum",
-   createdAt:serverTimestamp()
-  });
-
-  closeModal();notify("Tagihan tersimpan");adminKeuangan();
- };
-};
-
-/* =========================
-   USTADZAH SANTRI
-========================= */
-
-async function ustadzahSantri(){
- const q=query(collection(db,"santri"),
-  where("ustadzahId","==",user.uid));
- const s=await getDocs(q);
-
- $("page").innerHTML=`
- <div class="toolbar">
-  <div><h2>Santri Kelas</h2>
-  <p class="muted">Kelola baca, hafalan dan keuangan.</p></div>
- </div>
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Aksi</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="4" class="empty">Belum ada santri.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td><b>${esc(x.nama)}</b></td>
-   <td>${esc(x.kelasNama||"-")}</td>
-   <td class="actions">
-    <button class="btn sm" onclick="openStudy('${d.id}','baca')">📖 Baca</button>
-    <button class="btn blue sm" onclick="openStudy('${d.id}','hafalan')">🧠 Hafalan</button>
-    <button class="btn orange sm" onclick="teacherFinance('${d.id}')">💰 Keuangan</button>
-   </td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-window.openStudy=async(santriId,jenis)=>{
- const sd=await getDoc(doc(db,"santri",santriId));
- if(!sd.exists())return;
-
- const s=sd.data();
- const kd=await getDoc(doc(db,"jilid",s.kelasId));
- const k=kd.data()||{};
-
- const q=query(collection(db,"riwayat"),
-  where("santriId","==",santriId),
-  where("jenis","==",jenis));
-
- const h=await getDocs(q);
- const docs=h.docs.sort((a,b)=>
-  (b.data().createdAt?.seconds||0)-
-  (a.data().createdAt?.seconds||0));
-
- const last=docs[0]?.data()||{};
- const page=last.halamanTerakhir||1;
- const url=jenis==="baca"?k.bukuBacaUrl:k.bukuHafalanUrl;
-
- openModal(
-  `${jenis==="baca"?"📖 Buku Dibaca":"🧠 Buku Hafalan"} — ${s.nama}`,
- `
- ${url?
- `<iframe class="pdf" src="${esc(url)}#page=${page}"></iframe>`:
- `<div class="card empty">PDF belum diatur admin.</div>`}
-
- <div class="card" style="margin-top:12px">
-  <div class="row">
-   <div class="field">
-    <label>Halaman terakhir</label>
-    <input id="lastPage" type="number" min="1" value="${page}">
-   </div>
-   <div class="field">
-    <label>Status</label>
-    <select id="status">
-     <option value="naik">Naik</option>
-     <option value="mengulang">Mengulang</option>
-    </select>
-   </div>
-  </div>
-
-  <div class="field">
-   <label>Pesan Ustadzah</label>
-   <textarea id="message" rows="3"></textarea>
-  </div>
-
-  <button class="btn" onclick="saveProgress('${santriId}','${jenis}')">
-   Simpan Progress
-  </button>
- </div>
- `);
-};
-
-window.saveProgress=async(santriId,jenis)=>{
- await addDoc(collection(db,"riwayat"),{
-  santriId,
-  jenis,
-  halamanTerakhir:Number($("lastPage").value||1),
-  status:$("status").value,
-  pesan:$("message").value.trim(),
-  ustadzahId:user.uid,
-  createdAt:serverTimestamp()
- });
-
- notify("Progress tersimpan.");
-};
-
-window.teacherFinance=async santriId=>{
- const q=query(collection(db,"keuangan"),
-  where("santriId","==",santriId));
- const s=await getDocs(q);
-
- openModal("Keuangan Santri",`
- <div class="table-box"><table>
- <thead><tr><th>Tagihan</th><th>Nilai</th>
- <th>Terbayar</th><th>Status</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="4" class="empty">Belum ada.</td></tr>`:
- s.docs.map(d=>{
-  const x=d.data();
-  return `<tr>
-   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
-   <td>${money(x.terbayar)}</td>
-   <td>${x.status==="lunas"?
-    `<span class="badge green">Lunas</span>`:
-    `<span class="badge yellow">Belum</span>`}</td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`);
-};
-
-/* =========================
-   WALI BELAJAR
-========================= */
-
-async function waliBelajar(){
- const q=query(collection(db,"santri"),
-  where("waliId","==",user.uid));
- const s=await getDocs(q);
-
- $("page").innerHTML=`
- <h2>Baca & Hafalan</h2>
- <p class="muted">Buku dibuka dari halaman terakhir yang dicatat ustadzah.</p>
- <div class="grid">
- ${s.empty?`<div class="card empty">Belum ada santri.</div>`:
- s.docs.map(d=>{
-  const x=d.data();
-  return `<div class="card">
-   <h3>${esc(x.nama)}</h3>
-   <p class="muted">${esc(x.kelasNama||"-")}</p>
-   <p>Ustadzah: <b>${esc(x.ustadzahNama||"-")}</b></p>
-   <div class="actions">
-    <button class="btn sm" onclick="parentStudy('${d.id}','baca')">📖 Baca</button>
-    <button class="btn blue sm" onclick="parentStudy('${d.id}','hafalan')">🧠 Hafalan</button>
-   </div>
-  </div>`;
- }).join("")}
- </div>`;
-}
-
-window.parentStudy=async(santriId,jenis)=>{
- const sd=await getDoc(doc(db,"santri",santriId));
- if(!sd.exists())return;
-
- const s=sd.data();
- const kd=await getDoc(doc(db,"jilid",s.kelasId));
- const k=kd.data()||{};
-
- const q=query(collection(db,"riwayat"),
-  where("santriId","==",santriId),
-  where("jenis","==",jenis));
-
- const h=await getDocs(q);
- const arr=h.docs.sort((a,b)=>
-  (b.data().createdAt?.seconds||0)-
-  (a.data().createdAt?.seconds||0));
-
- const last=arr[0]?.data()||{};
- const p=last.halamanTerakhir||1;
- const url=jenis==="baca"?k.bukuBacaUrl:k.bukuHafalanUrl;
-
- openModal(
-  `${jenis==="baca"?"📖 Baca":"🧠 Hafalan"} — ${s.nama}`,
- `
- ${url?
- `<iframe class="pdf" src="${esc(url)}#page=${p}"></iframe>`:
- `<div class="empty">PDF belum diatur admin.</div>`}
-
- <div class="card" style="margin-top:12px">
-  <b>Halaman terakhir: ${p}</b>
-  ${last.status?
-   `<p><span class="badge ${
-    last.status==="naik"?"green":"yellow"}">${esc(last.status)}</span></p>`:""}
-  ${last.pesan?`<p>${esc(last.pesan)}</p>`:""}
- </div>
- `);
-};
-
-/* =========================
-   WALI KEUANGAN
-========================= */
-
-async function waliKeuangan(){
- const q=query(collection(db,"keuangan"),
-  where("waliId","==",user.uid));
- const s=await getDocs(q);
-
- $("page").innerHTML=`
- <h2>Riwayat Keuangan</h2>
- <div class="table-box"><table>
- <thead><tr><th>No</th><th>Santri</th>
- <th>Tagihan Bulanan</th><th>Nilai</th>
- <th>Terbayar</th><th>QRIS</th></tr></thead>
- <tbody>
- ${s.empty?`<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`:
- s.docs.map((d,i)=>{
-  const x=d.data();
-  return `<tr>
-   <td>${i+1}</td><td>${esc(x.santriNama)}</td>
-   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
-   <td>${money(x.terbayar)}</td>
-   <td>${x.bayarQris?
-    `<span class="badge green">QRIS</span>`:
-    `<span class="badge yellow">Belum</span>`}</td>
-  </tr>`;
- }).join("")}
- </tbody></table></div>`;
-}
-
-/* =========================
-   SETTINGS
-========================= */
-
-async function settings(){
- const ref=doc(db,"settings","general");
- const s=await getDoc(ref);
- const x=s.exists()?s.data():{};
-
- $("page").innerHTML=`
- <h2>Pengaturan</h2>
- <div class="card">
-  <form id="setForm">
-   <div class="row">
-    <div class="field"><label>Nama TPQ</label>
-     <input id="tn" value="${esc(x.nama||"TPQ Wardatul Wathon")}"></div>
-    <div class="field"><label>Lokasi</label>
-     <input id="tl" value="${esc(x.lokasi||"Tukum Kidul, Lumajang")}"></div>
-   </div>
-   <div class="field"><label>Nomor WhatsApp</label>
-    <input id="tw" value="${esc(x.whatsapp||"")}"></div>
-   <div class="field"><label>URL QRIS</label>
-    <input id="tq" type="url" value="${esc(x.qrisUrl||"")}"></div>
-   <button class="btn">Simpan</button>
-  </form>
- </div>`;
-
- $("setForm").onsubmit=async e=>{
-  e.preventDefault();
-
-  await setDoc(ref,{
-   nama:$("tn").value.trim(),
-   lokasi:$("tl").value.trim(),
-   whatsapp:$("tw").value.trim(),
-   qrisUrl:$("tq").value.trim(),
-   updatedAt:serverTimestamp()
-  },{merge:true});
-
-  notify("Pengaturan tersimpan.");
- };
-}
-
-/* =========================
-   DELETE
-========================= */
-
-window.removeDoc=async(col,id)=>{
- if(!confirm("Hapus data ini?"))return;
-
- try{
-  await deleteDoc(doc(db,col,id));
-  notify("Data dihapus.");
-  navigate(pageName);
- }catch(e){
-  alert(errorText(e));
- }
-};
-
-/* =========================
-   PWA
-========================= */
-
-if("serviceWorker" in navigator){
- window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js").catch(console.error);
- });
-}
+
+  function buildNavigation(){
+
+    const role =
+      currentProfile.role;
+
+    const items = [
+
+      {
+        page:"dashboard",
+        icon:"🏠",
+        label:"Dashboard",
+        roles:["admin","ustadzah","wali"]
+      },
+
+      {
+        page:"santri",
+        icon:"👨‍🎓",
+        label:"Data Santri",
+        roles:["admin"]
+      },
+
+      {
+        page:"wali",
+        icon:"👨‍👩‍👧",
+        label:"Data Wali",
+        roles:["admin"]
+      },
+
+      {
+        page:"ustadzah",
+        icon:"👩‍🏫",
+        label:"Data Ustadzah",
+        roles:["admin"]
+      },
+
+      {
+        page:"kelas",
+        icon:"📚",
+        label:"Jilid / Kelas",
+        roles:["admin"]
+      },
+
+      {
+        page:"pengumuman",
+        icon:"📢",
+        label:"Pengumuman",
+        roles:["admin","ustadzah","wali"]
+      },
+
+      {
+        page:"keuangan",
+        icon:"💰",
+        label:"Keuangan",
+        roles:["admin"]
+      },
+
+      {
+        page:"settings",
+        icon:"⚙️",
+        label:"Pengaturan",
+        roles:["admin"]
+      },
+
+      {
+        page:"kelasSantri",
+        icon:"👨‍🎓",
+        label:"Santri Kelas",
+        roles:["ustadzah"]
+      },
+
+      {
+        page:"pembelajaran",
+        icon:"📖",
+        label:"Pembelajaran",
+        roles:["ustadzah"]
+      },
+
+      {
+        page:"keuanganUstadzah",
+        icon:"💰",
+        label:"Keuangan Santri",
+        roles:["ustadzah"]
+      },
+
+      {
+        page:"belajar",
+        icon:"📖",
+        label:"Baca & Hafalan",
+        roles:["wali"]
+      },
+
+      {
+        page:"keuanganWali",
+        icon:"💰",
+        label:"Riwayat Keuangan",
+        roles:["wali"]
+      },
+
+      {
+        page:"profil",
+        icon:"👤",
+        label:"Profil",
+        roles:["admin","ustadzah","wali"]
+      }
+
+    ];
+
+
+    const visible =
+      items.filter(
+        item =>
+          item.roles.includes(role)
+      );
+
+
+    $("navigation").innerHTML =
+      visible.map(item=>`
+
+        <button
+          type="button"
+          data-page="${item.page}"
+        >
+
+          ${item.icon}
+          ${item.label}
+
+        </button>
+
+      `).join("");
+
+
+    $("navigation")
+      .querySelectorAll("button")
+      .forEach(button=>{
+
+        button.addEventListener(
+          "click",
+          ()=>{
+
+            navigate(
+              button.dataset.page
+            );
+
+          }
+        );
+
+      });
+
+  }
+
+
+  /* =====================================================
+     NAVIGATE
+  ===================================================== */
+
+  async function navigate(page){
+
+    currentPage = page;
+
+    $("pageTitle")
+      .textContent =
+        pageTitles[page]
+        || "Dashboard";
+
+
+    $("navigation")
+      .querySelectorAll("button")
+      .forEach(button=>{
+
+        button.classList.toggle(
+          "active",
+          button.dataset.page === page
+        );
+
+      });
+
+
+    $("sidebar")
+      .classList.remove("open");
+
+
+    const handlers = {
+
+      dashboard:
+        renderDashboard,
+
+      santri:
+        renderSantri,
+
+      wali:
+        renderWali,
+
+      ustadzah:
+        renderUstadzah,
+
+      kelas:
+        renderKelas,
+
+      pengumuman:
+        renderPengumuman,
+
+      keuangan:
+        renderKeuangan,
+
+      settings:
+        renderSettings,
+
+      kelasSantri:
+        renderKelasSantri,
+
+      pembelajaran:
+        renderPembelajaran,
+
+      keuanganUstadzah:
+        renderKeuanganUstadzah,
+
+      belajar:
+        renderBelajar,
+
+      keuanganWali:
+        renderKeuanganWali,
+
+      profil:
+        renderProfil
+
+    };
+
+
+    const handler =
+      handlers[page];
+
+
+    if(handler){
+
+      await handler();
+
+    }else{
+
+      renderDashboard();
+
+    }
+
+  }
+
+
+  /* =====================================================
+     DASHBOARD
+  ===================================================== */
+
+  async function renderDashboard(){
+
+    const role =
+      currentProfile.role;
+
+
+    if(role === "admin"){
+
+      $("page").innerHTML = `
+
+        <h2 class="section-title">
+          Dashboard Admin
+        </h2>
+
+        <p class="muted">
+          Selamat datang,
+          ${escapeHTML(currentProfile.nama)}.
+        </p>
+
+        <div
+          class="grid"
+          style="margin-top:18px"
+        >
+
+          ${statCard(
+            "👨‍🎓",
+            "Santri",
+            "-"
+          )}
+
+          ${statCard(
+            "👩‍🏫",
+            "Ustadzah",
+            "-"
+          )}
+
+          ${statCard(
+            "👨‍👩‍👧",
+            "Wali",
+            "-"
+          )}
+
+          ${statCard(
+            "📚",
+            "Kelas / Jilid",
+            "-"
+          )}
+
+        </div>
+
+        <div
+          class="card"
+          style="margin-top:18px"
+        >
+
+          <h3>
+            Sistem Informasi TPQ
+          </h3>
+
+          <p class="muted">
+            Modul administrasi, pembelajaran,
+            hafalan, keuangan dan pengumuman
+            akan tersedia di sini.
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    if(role === "ustadzah"){
+
+      $("page").innerHTML = `
+
+        <h2 class="section-title">
+          Dashboard Ustadzah
+        </h2>
+
+        <p class="muted">
+          Kelola pembelajaran santri,
+          hafalan dan keuangan.
+        </p>
+
+        <div
+          class="grid"
+          style="margin-top:18px"
+        >
+
+          ${statCard(
+            "👨‍🎓",
+            "Santri Binaan",
+            "-"
+          )}
+
+          ${statCard(
+            "📖",
+            "Baca",
+            "Modul"
+          )}
+
+          ${statCard(
+            "🧠",
+            "Hafalan",
+            "Modul"
+          )}
+
+          ${statCard(
+            "💰",
+            "Keuangan",
+            "Modul"
+          )}
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    $("page").innerHTML = `
+
+      <h2 class="section-title">
+        Dashboard Wali
+      </h2>
+
+      <p class="muted">
+        Pantau perkembangan pembelajaran
+        dan keuangan santri.
+      </p>
+
+      <div
+        class="grid"
+        style="margin-top:18px"
+      >
+
+        ${statCard(
+          "👨‍🎓",
+          "Santri",
+          "-"
+        )}
+
+        ${statCard(
+          "📖",
+          "Pembelajaran",
+          "Baca & Hafalan"
+        )}
+
+        ${statCard(
+          "💰",
+          "Keuangan",
+          "Tagihan"
+        )}
+
+        ${statCard(
+          "📢",
+          "Pengumuman",
+          "Informasi"
+        )}
+
+      </div>
+
+    `;
+
+  }
+
+
+  function statCard(
+    icon,
+    label,
+    value
+  ){
+
+    return `
+
+      <div class="card stat-card">
+
+        <div class="stat-icon">
+          ${icon}
+        </div>
+
+        <div class="stat-label">
+          ${label}
+        </div>
+
+        <div class="stat-value">
+          ${escapeHTML(value)}
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     PLACEHOLDER MODULES
+     Tahap berikutnya akan mengisi CRUD masing-masing.
+  ===================================================== */
+
+  async function renderSantri(){
+
+    placeholder(
+      "Data Santri",
+      "Modul data santri siap diintegrasikan dengan Firestore."
+    );
+
+  }
+
+
+  async function renderWali(){
+
+    placeholder(
+      "Data Wali",
+      "Modul data wali siap diintegrasikan dengan Firestore."
+    );
+
+  }
+
+
+  async function renderUstadzah(){
+
+    placeholder(
+      "Data Ustadzah",
+      "Modul data ustadzah siap diintegrasikan dengan Firestore."
+    );
+
+  }
+
+
+  async function renderKelas(){
+
+    placeholder(
+      "Jilid / Kelas",
+      "Modul kelas dan pengaturan PDF baca/hafalan akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderPengumuman(){
+
+    placeholder(
+      "Pengumuman",
+      "Modul pengumuman admin akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderKeuangan(){
+
+    placeholder(
+      "Keuangan",
+      "Modul SPP, tabungan dan iuran kegiatan akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderSettings(){
+
+    placeholder(
+      "Pengaturan",
+      "Pengaturan aplikasi akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderKelasSantri(){
+
+    placeholder(
+      "Santri Kelas",
+      "Daftar santri yang dibimbing ustadzah akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderPembelajaran(){
+
+    placeholder(
+      "Pembelajaran",
+      "Modul buku baca dan hafalan akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderKeuanganUstadzah(){
+
+    placeholder(
+      "Keuangan Santri",
+      "Modul keuangan santri untuk ustadzah akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderBelajar(){
+
+    placeholder(
+      "Baca & Hafalan",
+      "Modul PDF dan halaman terakhir akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderKeuanganWali(){
+
+    placeholder(
+      "Riwayat Keuangan",
+      "Riwayat SPP, tabungan dan iuran akan ditempatkan di sini."
+    );
+
+  }
+
+
+  async function renderProfil(){
+
+    $("page").innerHTML = `
+
+      <div class="toolbar">
+
+        <div>
+
+          <h2 class="section-title">
+            Profil
+          </h2>
+
+          <p class="muted">
+            Informasi akun yang sedang digunakan.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="row">
+
+          <div class="form-group">
+
+            <label>
+              Nama
+            </label>
+
+            <input
+              value="${escapeHTML(
+                currentProfile.nama || ""
+              )}"
+              disabled
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Email
+            </label>
+
+            <input
+              value="${escapeHTML(
+                currentProfile.email
+                || currentUser.email
+                || ""
+              )}"
+              disabled
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Role
+            </label>
+
+            <input
+              value="${escapeHTML(
+                currentProfile.role
+              )}"
+              disabled
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Status
+            </label>
+
+            <input
+              value="${
+                currentProfile.aktif === false
+                  ? "Nonaktif"
+                  : "Aktif"
+              }"
+              disabled
+            >
+
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  function placeholder(
+    title,
+    description
+  ){
+
+    $("page").innerHTML = `
+
+      <div class="card">
+
+        <h2>
+          ${escapeHTML(title)}
+        </h2>
+
+        <p class="muted">
+          ${escapeHTML(description)}
+        </p>
+
+        <div
+          class="notice"
+          style="margin-top:18px"
+        >
+
+          <b>Tahap berikutnya</b>
+
+          <div style="margin-top:5px">
+            Modul akan dihubungkan langsung
+            dengan Firestore Firebase.
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     PWA SERVICE WORKER
+  ===================================================== */
+
+  if(
+    "serviceWorker" in navigator
+  ){
+
+    window.addEventListener(
+      "load",
+      ()=>{
+
+        navigator.serviceWorker
+          .register("./sw.js")
+          .catch(error=>{
+
+            console.warn(
+              "Service Worker:",
+              error
+            );
+
+          });
+
+      }
+    );
+
+  }
 
 </script>
+
 </body>
 </html>
