@@ -1,233 +1,164 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#166534">
 <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
+<link rel="manifest" href="./manifest.json">
 <title>TPQ Wardatul Wathon</title>
 
-<link rel="manifest" href="data:application/manifest+json,{
-  %22name%22:%22TPQ%20Wardatul%20Wathon%22,
-  %22short_name%22:%22TPQ%20Wardah%22,
-  %22start_url%22:%22.%22,
-  %22display%22:%22standalone%22,
-  %22background_color%22:%22%23f8fafc%22,
-  %22theme_color%22:%22%23166534%22
-}">
-
 <style>
-*{box-sizing:border-box}
 :root{
- --primary:#166534;
- --primary2:#15803d;
- --light:#f0fdf4;
- --border:#e2e8f0;
- --text:#172033;
- --muted:#64748b;
- --danger:#dc2626;
- --warning:#d97706;
- --blue:#2563eb;
+ --p:#166534;--p2:#15803d;--bg:#f6f8f7;--card:#fff;
+ --text:#172033;--muted:#64748b;--line:#e2e8f0;
+ --red:#dc2626;--blue:#2563eb;--orange:#d97706
 }
-body{
- margin:0;
- font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
- background:#f8fafc;color:var(--text)
-}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-.app{min-height:100vh}
-.login{
- min-height:100vh;display:flex;align-items:center;justify-content:center;
- padding:20px;background:linear-gradient(135deg,#14532d,#166534,#22c55e)
-}
-.login-card{
- width:100%;max-width:430px;background:white;border-radius:24px;padding:30px;
- box-shadow:0 20px 60px #0004
-}
-.logo{
- width:65px;height:65px;border-radius:18px;background:var(--primary);
- color:#fff;display:flex;align-items:center;justify-content:center;
- font-size:30px;margin:auto auto 15px
-}
-h1,h2,h3{margin-top:0}
-.muted{color:var(--muted)}
-.form-group{margin-bottom:15px}
-label{display:block;font-weight:600;margin-bottom:7px;font-size:14px}
-input,select,textarea{
- width:100%;border:1px solid var(--border);border-radius:10px;
- padding:11px 12px;background:#fff;outline:none
-}
-input:focus,select:focus,textarea:focus{border-color:var(--primary)}
-.btn{
- border:0;border-radius:10px;padding:10px 15px;background:var(--primary);
- color:#fff;font-weight:600
-}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;
+padding:20px;background:linear-gradient(135deg,#14532d,#166534,#22c55e)}
+.login-card{width:100%;max-width:420px;background:white;padding:30px;
+border-radius:24px;box-shadow:0 20px 60px #0004}
+.logo{width:68px;height:68px;margin:auto auto 16px;border-radius:20px;
+display:flex;align-items:center;justify-content:center;background:var(--p);
+color:white;font-size:30px}
+.center{text-align:center}
+.form{margin-top:20px}
+.field{margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid var(--line);
+border-radius:10px;padding:11px;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--p)}
+.btn{border:0;border-radius:10px;background:var(--p);color:white;
+padding:10px 14px;font-weight:700}
 .btn:hover{background:#14532d}
-.btn.secondary{background:#e2e8f0;color:#172033}
-.btn.danger{background:var(--danger)}
-.btn.warning{background:var(--warning)}
-.btn.blue{background:var(--blue)}
 .btn.full{width:100%}
-.btn.sm{padding:7px 10px;font-size:13px}
-.link-btn{
- background:none;border:0;color:var(--primary);font-weight:600;padding:5px
-}
-.layout{display:flex;min-height:100vh}
-.sidebar{
- width:250px;background:#14532d;color:#fff;position:fixed;left:0;top:0;
- bottom:0;padding:20px 14px;z-index:20;overflow:auto
-}
-.brand{display:flex;gap:10px;align-items:center;padding:10px 8px 25px}
-.brand-icon{
- width:42px;height:42px;border-radius:12px;background:#22c55e;
- display:flex;align-items:center;justify-content:center;font-size:21px
-}
-.brand small{display:block;color:#bbf7d0}
+.btn.gray{background:#e2e8f0;color:#172033}
+.btn.red{background:var(--red)}
+.btn.blue{background:var(--blue)}
+.btn.orange{background:var(--orange)}
+.btn.sm{padding:7px 10px;font-size:12px}
+.link{border:0;background:none;color:var(--p);font-weight:700}
+.layout{min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;
+background:#14532d;color:white;padding:18px 14px;z-index:50}
+.brand{display:flex;gap:10px;align-items:center;padding:8px 5px 22px}
+.brand-icon{width:42px;height:42px;border-radius:12px;background:#22c55e;
+display:flex;align-items:center;justify-content:center}
+.brand small{display:block;color:#bbf7d0;margin-top:2px}
 .nav{display:grid;gap:5px}
-.nav button{
- border:0;background:transparent;color:#dcfce7;text-align:left;
- padding:12px;border-radius:9px
-}
-.nav button:hover,.nav button.active{background:#ffffff18;color:white}
-.content{margin-left:250px;width:calc(100% - 250px)}
-.topbar{
- height:70px;background:#fff;border-bottom:1px solid var(--border);
- display:flex;align-items:center;justify-content:space-between;padding:0 25px;
- position:sticky;top:0;z-index:10
-}
-.page{padding:25px;max-width:1500px;margin:auto}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.card{
- background:#fff;border:1px solid var(--border);border-radius:15px;
- padding:18px
-}
-.stat-number{font-size:28px;font-weight:800;margin-top:7px}
-.stat-label{color:var(--muted);font-size:14px}
-.toolbar{
- display:flex;gap:10px;justify-content:space-between;align-items:center;
- margin-bottom:15px;flex-wrap:wrap
-}
-.toolbar .left,.toolbar .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.table-wrap{
- overflow:auto;background:#fff;border:1px solid var(--border);border-radius:15px
-}
-table{border-collapse:collapse;width:100%;min-width:700px}
-th,td{padding:12px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
-th{background:#f8fafc;font-weight:700}
-tr:last-child td{border-bottom:0}
-.badge{
- display:inline-flex;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:700
-}
-.badge.green{background:#dcfce7;color:#166534}
-.badge.red{background:#fee2e2;color:#991b1b}
-.badge.yellow{background:#fef3c7;color:#92400e}
-.badge.blue{background:#dbeafe;color:#1e40af}
+.nav button{width:100%;border:0;background:transparent;color:#dcfce7;
+text-align:left;padding:11px;border-radius:9px}
+.nav button:hover,.nav button.active{background:#ffffff18;color:#fff}
+.main{margin-left:250px}
+.top{height:68px;background:#fff;border-bottom:1px solid var(--line);
+display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+position:sticky;top:0;z-index:30}
+.page{max-width:1450px;margin:auto;padding:24px}
+.mobile{display:none}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{background:var(--card);border:1px solid var(--line);
+border-radius:15px;padding:18px}
+.stat{font-size:28px;font-weight:800;margin-top:5px}
+.muted{color:var(--muted)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;
+gap:10px;flex-wrap:wrap;margin-bottom:15px}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
-.modal{
- position:fixed;inset:0;background:#0008;display:flex;align-items:center;
- justify-content:center;padding:15px;z-index:100
-}
-.modal-box{
- background:#fff;width:100%;max-width:650px;max-height:90vh;overflow:auto;
- border-radius:18px;padding:22px
-}
+.table-box{overflow:auto;background:#fff;border:1px solid var(--line);
+border-radius:15px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:12px;border-bottom:1px solid var(--line);
+font-size:14px;text-align:left}
+th{background:#f8fafc}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;
+font-size:11px;font-weight:800}
+.green{background:#dcfce7;color:#166534}
+.yellow{background:#fef3c7;color:#92400e}
+.redbg{background:#fee2e2;color:#991b1b}
+.modal{position:fixed;inset:0;background:#0008;z-index:100;
+display:flex;align-items:center;justify-content:center;padding:15px}
+.modal-box{width:100%;max-width:700px;max-height:90vh;overflow:auto;
+background:white;border-radius:18px;padding:22px}
 .modal-head{display:flex;justify-content:space-between;align-items:center}
-.close{border:0;background:#f1f5f9;border-radius:50%;width:35px;height:35px}
+.close{border:0;width:34px;height:34px;border-radius:50%}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.notice{
- border-left:4px solid var(--primary);background:#f0fdf4;padding:14px;
- border-radius:8px;margin-bottom:10px
-}
-.pdf-viewer{
- width:100%;height:65vh;border:1px solid var(--border);border-radius:12px
-}
-.mobile-menu{display:none}
-.toast{
- position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;
- padding:12px 16px;border-radius:10px;z-index:300;box-shadow:0 10px 30px #0003
-}
-.empty{text-align:center;padding:40px;color:var(--muted)}
-.avatar{
- width:38px;height:38px;border-radius:50%;background:#dcfce7;color:#166534;
- display:inline-flex;align-items:center;justify-content:center;font-weight:800
-}
+.pdf{width:100%;height:65vh;border:1px solid var(--line);border-radius:10px}
+.notice{background:#f0fdf4;border-left:4px solid var(--p);
+padding:13px;margin-bottom:10px;border-radius:8px}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.toast{position:fixed;right:18px;bottom:18px;z-index:200;
+background:#172033;color:#fff;padding:12px 16px;border-radius:10px}
 @media(max-width:900px){
  .sidebar{transform:translateX(-100%);transition:.2s}
  .sidebar.open{transform:translateX(0)}
- .content{margin-left:0;width:100%}
- .mobile-menu{display:block}
+ .main{margin-left:0}
+ .mobile{display:inline-block}
  .grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
- .page{padding:15px}
- .grid{grid-template-columns:1fr}
- .row{grid-template-columns:1fr}
- .topbar{padding:0 15px}
+ .page{padding:15px}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}
 }
 </style>
 </head>
 
 <body>
 
-<div id="loginScreen" class="login">
+<div id="login" class="login">
  <div class="login-card">
   <div class="logo">📖</div>
-  <h2 style="text-align:center;margin-bottom:5px">TPQ Wardatul Wathon</h2>
-  <p class="muted" style="text-align:center;margin-top:0">
-   Tukum Kidul • Lumajang
-  </p>
+  <h2 class="center">TPQ Wardatul Wathon</h2>
+  <p class="center muted">Tukum Kidul • Lumajang</p>
 
-  <form id="loginForm">
-   <div class="form-group">
+  <form id="loginForm" class="form">
+   <div class="field">
     <label>Email</label>
-    <input id="loginEmail" type="email" required placeholder="admin@email.com">
+    <input id="email" type="email" autocomplete="username" required>
    </div>
-   <div class="form-group">
+   <div class="field">
     <label>Password</label>
-    <input id="loginPassword" type="password" required placeholder="Password">
+    <input id="password" type="password" autocomplete="current-password" required>
    </div>
-   <button class="btn full" type="submit">Masuk</button>
+   <button class="btn full">Masuk</button>
   </form>
 
-  <div style="text-align:center;margin-top:15px">
-   <button class="link-btn" onclick="showSetup()">Setup Admin Pertama</button>
+  <div class="center" style="margin-top:15px">
+   <button id="setupBtn" class="link">Setup Admin Pertama</button>
   </div>
 
-  <div id="loginError" style="color:#dc2626;text-align:center;margin-top:10px"></div>
+  <p id="loginError" class="center" style="color:#dc2626"></p>
  </div>
 </div>
 
-<div id="app" class="app hidden">
- <div class="layout">
-
-  <aside id="sidebar" class="sidebar">
-   <div class="brand">
-    <div class="brand-icon">📖</div>
-    <div>
-     <strong>TPQ Wardatul Wathon</strong>
-     <small id="roleLabel">Portal</small>
-    </div>
+<div id="app" class="hidden">
+ <aside id="sidebar" class="sidebar">
+  <div class="brand">
+   <div class="brand-icon">📖</div>
+   <div>
+    <b>TPQ Wardatul Wathon</b>
+    <small id="roleText"></small>
    </div>
-   <nav id="nav" class="nav"></nav>
-  </aside>
+  </div>
+  <nav id="nav" class="nav"></nav>
+ </aside>
 
-  <main class="content">
-   <header class="topbar">
-    <div>
-     <button class="btn secondary mobile-menu" onclick="toggleSidebar()">☰</button>
-     <strong id="pageTitle">Dashboard</strong>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-     <span id="userName"></span>
-     <button class="btn danger sm" onclick="logout()">Keluar</button>
-    </div>
-   </header>
-
-   <section id="page" class="page"></section>
-  </main>
- </div>
+ <main class="main">
+  <header class="top">
+   <div>
+    <button class="btn gray mobile" onclick="toggleMenu()">☰</button>
+    <b id="title">Dashboard</b>
+   </div>
+   <div>
+    <span id="displayName"></span>
+    <button class="btn red sm" onclick="logout()">Keluar</button>
+   </div>
+  </header>
+  <section id="page" class="page"></section>
+ </main>
 </div>
 
 <div id="modal" class="modal hidden">
@@ -245,7 +176,7 @@ tr:last-child td{border-bottom:0}
 <script type="module">
 
 import {initializeApp}
- from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 import {
  getAuth,onAuthStateChanged,signInWithEmailAndPassword,
@@ -267,160 +198,179 @@ const firebaseConfig={
  measurementId:"G-ZVC3M0L8XJ"
 };
 
-const firebaseApp=initializeApp(firebaseConfig);
-const auth=getAuth(firebaseApp);
-const db=getFirestore(firebaseApp);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-let currentUser=null;
-let currentProfile=null;
-let currentPage="dashboard";
-let currentSantri=null;
+let user=null;
+let profile=null;
+let pageName="dashboard";
 
 const $=id=>document.getElementById(id);
 
-function toast(msg){
- $("toast").textContent=msg;
- $("toast").classList.remove("hidden");
- setTimeout(()=>$("toast").classList.add("hidden"),3000);
-}
-
 function esc(v){
- return String(v??"").replace(/[&<>"']/g,m=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
- }[m]));
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#039;"
+ }[c]));
 }
 
-function rupiah(v){
+function money(n){
  return new Intl.NumberFormat("id-ID",{
   style:"currency",currency:"IDR",maximumFractionDigits:0
- }).format(Number(v||0));
+ }).format(Number(n||0));
 }
 
-function closeModal(){$("modal").classList.add("hidden")}
-function openModal(title,body){
+function notify(text){
+ $("toast").textContent=text;
+ $("toast").classList.remove("hidden");
+ setTimeout(()=>$("toast").classList.add("hidden"),2500);
+}
+
+function openModal(title,html){
  $("modalTitle").textContent=title;
- $("modalBody").innerHTML=body;
+ $("modalBody").innerHTML=html;
  $("modal").classList.remove("hidden");
 }
 
+function closeModal(){
+ $("modal").classList.add("hidden");
+}
+
 window.closeModal=closeModal;
-window.showSetup=()=>{
+
+function errorText(e){
+ const m={
+  "auth/invalid-credential":"Email atau password salah.",
+  "auth/email-already-in-use":"Email sudah digunakan.",
+  "auth/invalid-email":"Email tidak valid.",
+  "auth/weak-password":"Password minimal 6 karakter.",
+  "auth/operation-not-allowed":"Login Email/Password belum diaktifkan di Firebase.",
+  "auth/network-request-failed":"Koneksi internet bermasalah."
+ };
+ return m[e.code]||e.message||"Terjadi kesalahan.";
+}
+
+/* =========================
+   SETUP ADMIN
+========================= */
+
+$("setupBtn").addEventListener("click",()=>{
  openModal("Setup Admin Pertama",`
   <form id="setupForm">
-   <div class="form-group">
+   <div class="field">
     <label>Nama Admin</label>
-    <input id="setupName" required value="Administrator">
+    <input id="adminName" value="Administrator" required>
    </div>
-   <div class="form-group">
+   <div class="field">
     <label>Email Admin</label>
-    <input id="setupEmail" type="email" required>
+    <input id="adminEmail" type="email" required>
    </div>
-   <div class="form-group">
+   <div class="field">
     <label>Password</label>
-    <input id="setupPassword" type="password" minlength="6" required>
+    <input id="adminPassword" type="password" minlength="6" required>
    </div>
    <button class="btn full">Buat Akun Admin</button>
   </form>
  `);
 
- $("setupForm").onsubmit=async e=>{
+ $("setupForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  try{
-   const email=$("setupEmail").value.trim();
-   const password=$("setupPassword").value;
-   const name=$("setupName").value.trim();
 
-   const cred=await createUserWithEmailAndPassword(auth,email,password);
+  try{
+   const name=$("adminName").value.trim();
+   const email=$("adminEmail").value.trim();
+   const password=$("adminPassword").value;
+
+   const cred=await createUserWithEmailAndPassword(
+    auth,email,password
+   );
 
    await setDoc(doc(db,"users",cred.user.uid),{
-    uid:cred.user.uid,
-    nama:name,
-    email,
-    role:"admin",
+    uid:cred.user.uid,nama:name,email,role:"admin",
     createdAt:serverTimestamp()
    });
 
    await setDoc(doc(db,"admin",cred.user.uid),{
-    uid:cred.user.uid,
-    nama:name,
-    email,
-    role:"admin",
+    uid:cred.user.uid,nama:name,email,role:"admin",
     createdAt:serverTimestamp()
    });
 
    closeModal();
-   toast("Akun admin berhasil dibuat");
-  }catch(err){
-   toast(firebaseError(err));
+   notify("Akun admin berhasil dibuat.");
+
+  }catch(e){
+   alert(errorText(e));
   }
- };
-};
+ });
+});
 
-function firebaseError(e){
- const code=e?.code||"";
- const map={
-  "auth/email-already-in-use":"Email sudah digunakan.",
-  "auth/invalid-email":"Format email tidak valid.",
-  "auth/weak-password":"Password minimal 6 karakter.",
-  "auth/invalid-credential":"Email atau password salah.",
-  "auth/network-request-failed":"Koneksi internet bermasalah."
- };
- return map[code]||e.message||"Terjadi kesalahan.";
-}
+/* =========================
+   LOGIN
+========================= */
 
-$("loginForm").onsubmit=async e=>{
+$("loginForm").addEventListener("submit",async e=>{
  e.preventDefault();
  $("loginError").textContent="";
+
  try{
   await signInWithEmailAndPassword(
-   auth,$("loginEmail").value.trim(),$("loginPassword").value
+   auth,$("email").value.trim(),$("password").value
   );
- }catch(err){
-  $("loginError").textContent=firebaseError(err);
+ }catch(e){
+  $("loginError").textContent=errorText(e);
  }
-};
+});
 
 window.logout=()=>signOut(auth);
-window.toggleSidebar=()=>$("sidebar").classList.toggle("open");
+window.toggleMenu=()=>$("sidebar").classList.toggle("open");
 
-onAuthStateChanged(auth,async user=>{
- currentUser=user;
- if(!user){
-  $("loginScreen").classList.remove("hidden");
+/* =========================
+   AUTH
+========================= */
+
+onAuthStateChanged(auth,async u=>{
+ if(!u){
+  user=null;profile=null;
+  $("login").classList.remove("hidden");
   $("app").classList.add("hidden");
   return;
  }
 
  try{
-  const snap=await getDoc(doc(db,"users",user.uid));
+  const snap=await getDoc(doc(db,"users",u.uid));
+
   if(!snap.exists()){
-   toast("Profil pengguna belum dibuat admin.");
+   alert("Akun belum memiliki profil aplikasi.");
    await signOut(auth);
    return;
   }
 
-  currentProfile=snap.data();
+  user=u;
+  profile=snap.data();
 
-  $("loginScreen").classList.add("hidden");
+  $("login").classList.add("hidden");
   $("app").classList.remove("hidden");
-  $("userName").textContent=currentProfile.nama||user.email;
-  $("roleLabel").textContent="Portal "+currentProfile.role;
+  $("displayName").textContent=profile.nama||u.email;
+  $("roleText").textContent="Portal "+profile.role;
 
-  buildNav();
+  makeNav();
   navigate("dashboard");
+
  }catch(e){
-  toast(e.message);
+  alert(errorText(e));
  }
 });
 
-function buildNav(){
- const role=currentProfile.role;
- let items=[
-  ["dashboard","🏠","Dashboard"]
- ];
+/* =========================
+   NAV
+========================= */
 
- if(role==="admin"){
-  items.push(
+function makeNav(){
+ let a=[["dashboard","🏠","Dashboard"]];
+
+ if(profile.role==="admin"){
+  a.push(
    ["santri","👨‍🎓","Data Santri"],
    ["ustadzah","👩‍🏫","Data Ustadzah"],
    ["wali","👨‍👩‍👧","Data Wali"],
@@ -431,285 +381,251 @@ function buildNav(){
   );
  }
 
- if(role==="ustadzah"){
-  items.push(
-   ["santriKelas","👨‍🎓","Santri Kelas"],
+ if(profile.role==="ustadzah"){
+  a.push(
+   ["kelasSantri","👨‍🎓","Santri Kelas"],
    ["pengumuman","📢","Pengumuman"]
   );
  }
 
- if(role==="wali"){
-  items.push(
+ if(profile.role==="wali"){
+  a.push(
    ["belajar","📖","Baca & Hafalan"],
    ["keuanganWali","💰","Keuangan"],
    ["pengumuman","📢","Pengumuman"]
   );
  }
 
- $("nav").innerHTML=items.map(x=>`
-  <button onclick="navigate('${x[0]}')" data-page="${x[0]}">
-   ${x[1]} &nbsp; ${x[2]}
+ $("nav").innerHTML=a.map(x=>`
+  <button data-page="${x[0]}" onclick="navigate('${x[0]}')">
+   ${x[1]} ${x[2]}
   </button>
  `).join("");
 }
 
+const titles={
+ dashboard:"Dashboard",santri:"Data Santri",
+ ustadzah:"Data Ustadzah",wali:"Data Wali",
+ kelas:"Jilid / Kelas",pengumuman:"Pengumuman",
+ keuangan:"Keuangan",settings:"Pengaturan",
+ kelasSantri:"Santri Kelas",belajar:"Baca & Hafalan",
+ keuanganWali:"Riwayat Keuangan"
+};
+
 window.navigate=async p=>{
- currentPage=p;
+ pageName=p;
+ $("title").textContent=titles[p]||"Dashboard";
+
  document.querySelectorAll("#nav button").forEach(b=>{
   b.classList.toggle("active",b.dataset.page===p)
  });
+
  $("sidebar").classList.remove("open");
 
- const titles={
-  dashboard:"Dashboard",
-  santri:"Data Santri",
-  ustadzah:"Data Ustadzah",
-  wali:"Data Wali",
-  kelas:"Jilid / Kelas",
-  pengumuman:"Pengumuman",
-  keuangan:"Keuangan",
-  settings:"Pengaturan",
-  santriKelas:"Santri Kelas",
-  belajar:"Baca & Hafalan",
-  keuanganWali:"Riwayat Keuangan"
- };
-
- $("pageTitle").textContent=titles[p]||"Dashboard";
+ const fn={
+  dashboard:dashboard,
+  santri:adminSantri,
+  ustadzah:adminUstadzah,
+  wali:adminWali,
+  kelas:adminKelas,
+  pengumuman:showPengumuman,
+  keuangan:adminKeuangan,
+  settings:settings,
+  kelasSantri:ustadzahSantri,
+  belajar:waliBelajar,
+  keuanganWali:waliKeuangan
+ }[p];
 
  try{
-  const views={
-   dashboard:dashboard,
-   santri:adminSantri,
-   ustadzah:adminUstadzah,
-   wali:adminWali,
-   kelas:adminKelas,
-   pengumuman:pengumuman,
-   keuangan:adminKeuangan,
-   settings:settings,
-   santriKelas:ustadzahSantri,
-   belajar:waliBelajar,
-   keuanganWali:waliKeuangan
-  };
-  await (views[p]||dashboard)();
+  await (fn||dashboard)();
  }catch(e){
-  $("page").innerHTML=`
-   <div class="card">
-    <h3>Terjadi kesalahan</h3>
-    <p>${esc(e.message)}</p>
-   </div>`;
+  $("page").innerHTML=
+   `<div class="card"><b>Gagal memuat data</b><p>${esc(e.message)}</p></div>`;
  }
 };
 
-async function count(col){
- const s=await getDocs(collection(db,col));
- return s.size;
+/* =========================
+   DASHBOARD
+========================= */
+
+async function size(c){
+ return (await getDocs(collection(db,c))).size;
 }
 
 async function dashboard(){
- const role=currentProfile.role;
 
- if(role==="admin"){
-  const [santri,ustadzah,wali,kelas]=await Promise.all([
-   count("santri"),count("ustadzah"),count("wali"),count("jilid")
+ if(profile.role==="admin"){
+  const [a,b,c,d]=await Promise.all([
+   size("santri"),size("ustadzah"),size("wali"),size("jilid")
   ]);
 
   $("page").innerHTML=`
    <h2>Dashboard Admin</h2>
-   <p class="muted">Selamat datang di Sistem Informasi TPQ Wardatul Wathon.</p>
+   <p class="muted">Selamat datang, ${esc(profile.nama)}.</p>
    <div class="grid">
-    ${stat("👨‍🎓","Santri",santri)}
-    ${stat("👩‍🏫","Ustadzah",ustadzah)}
-    ${stat("👨‍👩‍👧","Wali",wali)}
-    ${stat("📚","Jilid / Kelas",kelas)}
+    ${stat("👨‍🎓","Santri",a)}
+    ${stat("👩‍🏫","Ustadzah",b)}
+    ${stat("👨‍👩‍👧","Wali",c)}
+    ${stat("📚","Kelas / Jilid",d)}
    </div>
   `;
   return;
  }
 
- if(role==="ustadzah"){
-  const q=query(collection(db,"santri"),where("ustadzahId","==",currentUser.uid));
+ if(profile.role==="ustadzah"){
+  const q=query(collection(db,"santri"),
+   where("ustadzahId","==",user.uid));
   const s=await getDocs(q);
+
   $("page").innerHTML=`
    <h2>Dashboard Ustadzah</h2>
-   <p class="muted">Daftar santri yang menjadi tanggung jawab Anda.</p>
    <div class="grid">
     ${stat("👨‍🎓","Santri Binaan",s.size)}
-    ${stat("📖","Pembelajaran","Ngaji & Hafalan")}
+    ${stat("📖","Modul","Baca")}
+    ${stat("🧠","Modul","Hafalan")}
+    ${stat("💰","Modul","Keuangan")}
    </div>
   `;
   return;
  }
 
- const santriQ=query(
-  collection(db,"santri"),
-  where("waliId","==",currentUser.uid)
- );
- const s=await getDocs(santriQ);
-
- let notices=await getDocs(
-  query(collection(db,"pengumuman"),orderBy("createdAt","desc"))
- );
+ const q=query(collection(db,"santri"),
+  where("waliId","==",user.uid));
+ const s=await getDocs(q);
 
  $("page").innerHTML=`
   <h2>Dashboard Wali</h2>
-  <p class="muted">Informasi perkembangan putra/putri Anda.</p>
   <div class="grid">
-   ${stat("👨‍🎓","Jumlah Santri",s.size)}
+   ${stat("👨‍🎓","Santri",s.size)}
    ${stat("📖","Pembelajaran","Baca & Hafalan")}
-   ${stat("💰","Keuangan","Lihat tagihan")}
-   ${stat("📢","Pengumuman",notices.size)}
-  </div>
-
-  <div style="margin-top:20px" class="card">
-   <h3>Pengumuman</h3>
-   ${notices.empty?
-    `<div class="empty">Belum ada pengumuman.</div>`:
-    notices.docs.slice(0,5).map(d=>{
-     const x=d.data();
-     return `<div class="notice">
-      <strong>${esc(x.judul)}</strong>
-      <div>${esc(x.isi)}</div>
-     </div>`
-    }).join("")
-   }
+   ${stat("💰","Keuangan","Tagihan")}
+   ${stat("📢","Informasi","Pengumuman")}
   </div>
  `;
 }
 
 function stat(icon,label,value){
- return `<div class="card">
-  <div style="font-size:24px">${icon}</div>
-  <div class="stat-label">${label}</div>
-  <div class="stat-number">${esc(value)}</div>
+ return `
+ <div class="card">
+  <div style="font-size:25px">${icon}</div>
+  <div class="muted">${label}</div>
+  <div class="stat">${esc(value)}</div>
  </div>`;
 }
 
 /* =========================
-   ADMIN - SANTRI
+   ADMIN SANTRI
 ========================= */
 
 async function adminSantri(){
  const s=await getDocs(collection(db,"santri"));
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <div>
-    <h2>Data Santri</h2>
-    <span class="muted">${s.size} santri</span>
-   </div>
-   <button class="btn" onclick="formSantri()">+ Tambah Santri</button>
-  </div>
-
-  <div class="table-wrap">
-   <table>
-    <thead>
-     <tr><th>No.</th><th>Nama Santri</th><th>Kelas/Jilid</th>
-     <th>Wali</th><th>Ustadzah</th><th>Aksi</th></tr>
-    </thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td><strong>${esc(x.nama)}</strong></td>
-        <td>${esc(x.kelasNama||x.jilidNama||"-")}</td>
-        <td>${esc(x.waliNama||"-")}</td>
-        <td>${esc(x.ustadzahNama||"-")}</td>
-        <td class="actions">
-         <button class="btn sm" onclick="formSantri('${d.id}')">Edit</button>
-         <button class="btn danger sm" onclick="hapus('santri','${d.id}')">Hapus</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="toolbar">
+  <div><h2>Data Santri</h2><span class="muted">${s.size} data</span></div>
+  <button class="btn" onclick="editSantri()">+ Tambah</button>
+ </div>
+ <div class="table-box">
+ <table>
+ <thead><tr>
+  <th>No</th><th>Nama</th><th>Kelas</th>
+  <th>Ustadzah</th><th>Wali</th><th>Aksi</th>
+ </tr></thead>
+ <tbody>
+ ${s.empty?
+  `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`:
+  s.docs.map((d,i)=>{
+   const x=d.data();
+   return `<tr>
+    <td>${i+1}</td><td><b>${esc(x.nama)}</b></td>
+    <td>${esc(x.kelasNama||"-")}</td>
+    <td>${esc(x.ustadzahNama||"-")}</td>
+    <td>${esc(x.waliNama||"-")}</td>
+    <td class="actions">
+     <button class="btn sm" onclick="editSantri('${d.id}')">Edit</button>
+     <button class="btn red sm" onclick="removeDoc('santri','${d.id}')">Hapus</button>
+    </td>
+   </tr>`;
+  }).join("")
+ }
+ </tbody>
+ </table></div>`;
 }
 
-window.formSantri=async id=>{
+window.editSantri=async id=>{
  let x={};
  if(id)x=(await getDoc(doc(db,"santri",id))).data()||{};
 
- const [kelas,ust,wali]=await Promise.all([
+ const [k,u,w]=await Promise.all([
   getDocs(collection(db,"jilid")),
   getDocs(collection(db,"ustadzah")),
   getDocs(collection(db,"wali"))
  ]);
 
  openModal(id?"Edit Santri":"Tambah Santri",`
-  <form id="santriForm">
-   <div class="form-group">
-    <label>Nama Santri</label>
-    <input id="snama" required value="${esc(x.nama)}">
-   </div>
+ <form id="santriForm">
+  <div class="field">
+   <label>Nama Santri</label>
+   <input id="sn" value="${esc(x.nama)}" required>
+  </div>
 
-   <div class="row">
-    <div class="form-group">
-     <label>Jilid / Kelas</label>
-     <select id="skelas">
-      <option value="">Pilih</option>
-      ${kelas.docs.map(d=>{
-       const z=d.data();
-       return `<option value="${d.id}" data-name="${esc(z.nama)}"
-        ${x.kelasId===d.id?"selected":""}>${esc(z.nama)}</option>`
-      }).join("")}
-     </select>
-    </div>
-
-    <div class="form-group">
-     <label>Ustadzah</label>
-     <select id="sust">
-      <option value="">Pilih</option>
-      ${ust.docs.map(d=>{
-       const z=d.data();
-       return `<option value="${d.id}"
-        ${x.ustadzahId===d.id?"selected":""}>${esc(z.nama)}</option>`
-      }).join("")}
-     </select>
-    </div>
-   </div>
-
-   <div class="form-group">
-    <label>Wali</label>
-    <select id="swali">
+  <div class="row">
+   <div class="field">
+    <label>Kelas / Jilid</label>
+    <select id="sk" required>
      <option value="">Pilih</option>
-     ${wali.docs.map(d=>{
+     ${k.docs.map(d=>{
       const z=d.data();
       return `<option value="${d.id}"
-       ${x.waliId===d.id?"selected":""}>${esc(z.nama)} — ${esc(z.email||"")}</option>`
+       ${x.kelasId===d.id?"selected":""}>
+       ${esc(z.nama)}</option>`;
      }).join("")}
     </select>
    </div>
 
-   <button class="btn full">Simpan</button>
-  </form>
+   <div class="field">
+    <label>Ustadzah</label>
+    <select id="su">
+     <option value="">Pilih</option>
+     ${u.docs.map(d=>{
+      const z=d.data();
+      return `<option value="${d.id}"
+       ${x.ustadzahId===d.id?"selected":""}>
+       ${esc(z.nama)}</option>`;
+     }).join("")}
+    </select>
+   </div>
+  </div>
+
+  <div class="field">
+   <label>Wali</label>
+   <select id="sw">
+    <option value="">Pilih</option>
+    ${w.docs.map(d=>{
+     const z=d.data();
+     return `<option value="${d.id}"
+      ${x.waliId===d.id?"selected":""}>
+      ${esc(z.nama)}</option>`;
+    }).join("")}
+   </select>
+  </div>
+
+  <button class="btn full">Simpan</button>
+ </form>
  `);
 
  $("santriForm").onsubmit=async e=>{
   e.preventDefault();
 
-  const kelasEl=$("skelas");
-  const ustEl=$("sust");
-  const waliEl=$("swali");
-
-  const kelasName=kelasEl.selectedOptions[0]?.dataset.name||"";
-  const ustName=ustEl.selectedOptions[0]?.textContent||"";
-  const waliName=waliEl.selectedOptions[0]?.textContent?.split(" — ")[0]||"";
-
+  const kEl=$("sk"),uEl=$("su"),wEl=$("sw");
   const data={
-   nama:$("snama").value.trim(),
-   kelasId:kelasEl.value,
-   kelasNama:kelasName,
-   jilidId:kelasEl.value,
-   jilidNama:kelasName,
-   ustadzahId:ustEl.value,
-   ustadzahNama:ustName,
-   waliId:waliEl.value,
-   waliNama:waliName,
+   nama:$("sn").value.trim(),
+   kelasId:kEl.value,
+   kelasNama:kEl.selectedOptions[0]?.textContent.trim()||"",
+   ustadzahId:uEl.value,
+   ustadzahNama:uEl.selectedOptions[0]?.textContent.trim()||"",
+   waliId:wEl.value,
+   waliNama:wEl.selectedOptions[0]?.textContent.trim()||"",
    updatedAt:serverTimestamp()
   };
 
@@ -718,158 +634,115 @@ window.formSantri=async id=>{
    ...data,createdAt:serverTimestamp()
   });
 
-  closeModal();toast("Data santri tersimpan");adminSantri();
+  closeModal();notify("Data santri tersimpan");adminSantri();
  };
 };
 
 /* =========================
-   ADMIN - USTADZAH
+   ADMIN USTADZAH
 ========================= */
 
 async function adminUstadzah(){
  const s=await getDocs(collection(db,"ustadzah"));
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <h2>Data Ustadzah</h2>
-   <button class="btn" onclick="formUstadzah()">+ Tambah Ustadzah</button>
-  </div>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>No.</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td>${esc(x.nama)}</td>
-        <td>${esc(x.email||"-")}</td>
-        <td class="actions">
-         <button class="btn sm" onclick="formUstadzah('${d.id}')">Edit</button>
-         <button class="btn danger sm" onclick="hapus('ustadzah','${d.id}')">Hapus</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="toolbar">
+  <h2>Data Ustadzah</h2>
+  <button class="btn" onclick="editUstadzah()">+ Tambah</button>
+ </div>
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.email)}</td>
+   <td><button class="btn sm" onclick="editUstadzah('${d.id}')">Edit</button>
+   <button class="btn red sm" onclick="removeDoc('ustadzah','${d.id}')">Hapus</button></td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
-window.formUstadzah=async id=>{
+window.editUstadzah=async id=>{
  let x={};
  if(id)x=(await getDoc(doc(db,"ustadzah",id))).data()||{};
 
  openModal(id?"Edit Ustadzah":"Tambah Ustadzah",`
-  <form id="ustForm">
-   <div class="form-group">
-    <label>Nama</label>
-    <input id="unama" required value="${esc(x.nama)}">
-   </div>
-   <div class="form-group">
-    <label>Email</label>
-    <input id="uemail" type="email" required value="${esc(x.email)}">
-   </div>
-   ${!id?`
-    <div class="form-group">
-     <label>Password Login</label>
-     <input id="upass" type="password" minlength="6" required>
-    </div>`:""}
-   <button class="btn full">Simpan</button>
-  </form>
- `);
+ <form id="uf">
+  <div class="field"><label>Nama</label>
+   <input id="un" value="${esc(x.nama)}" required></div>
+  <div class="field"><label>Email</label>
+   <input id="ue" type="email" value="${esc(x.email)}" required></div>
+  <button class="btn full">Simpan</button>
+ </form>`);
 
- $("ustForm").onsubmit=async e=>{
+ $("uf").onsubmit=async e=>{
   e.preventDefault();
 
-  if(id){
-   await updateDoc(doc(db,"ustadzah",id),{
-    nama:$("unama").value.trim(),
-    email:$("uemail").value.trim(),
-    updatedAt:serverTimestamp()
-   });
-  }else{
-   /*
-    Membuat akun auth dari browser akan mengubah sesi admin.
-    Untuk membuat akun ustadzah secara aman gunakan Firebase Admin SDK /
-    Cloud Function. Di sini data profil disimpan terlebih dahulu.
-   */
-   const newDoc=await addDoc(collection(db,"ustadzah"),{
-    nama:$("unama").value.trim(),
-    email:$("uemail").value.trim(),
-    role:"ustadzah",
-    createdAt:serverTimestamp()
-   });
+  const data={
+   nama:$("un").value.trim(),
+   email:$("ue").value.trim(),
+   role:"ustadzah",
+   updatedAt:serverTimestamp()
+  };
 
-   toast("Profil ustadzah dibuat. Akun login dapat dibuat melalui Firebase Authentication.");
-  }
+  if(id)await updateDoc(doc(db,"ustadzah",id),data);
+  else await addDoc(collection(db,"ustadzah"),{
+   ...data,createdAt:serverTimestamp()
+  });
 
-  closeModal();adminUstadzah();
+  closeModal();notify("Data ustadzah tersimpan");adminUstadzah();
  };
 };
 
 /* =========================
-   ADMIN - WALI
+   ADMIN WALI
 ========================= */
 
 async function adminWali(){
  const s=await getDocs(collection(db,"wali"));
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <h2>Data Wali</h2>
-   <button class="btn" onclick="formWali()">+ Tambah Wali</button>
-  </div>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>No.</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td><td>${esc(x.nama)}</td>
-        <td>${esc(x.email||"-")}</td>
-        <td class="actions">
-         <button class="btn sm" onclick="formWali('${d.id}')">Edit</button>
-         <button class="btn danger sm" onclick="hapus('wali','${d.id}')">Hapus</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="toolbar">
+  <h2>Data Wali</h2>
+  <button class="btn" onclick="editWali()">+ Tambah</button>
+ </div>
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Aksi</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="4" class="empty">Belum ada data.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.email||"-")}</td>
+   <td><button class="btn sm" onclick="editWali('${d.id}')">Edit</button>
+   <button class="btn red sm" onclick="removeDoc('wali','${d.id}')">Hapus</button></td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
-window.formWali=async id=>{
+window.editWali=async id=>{
  let x={};
  if(id)x=(await getDoc(doc(db,"wali",id))).data()||{};
 
  openModal(id?"Edit Wali":"Tambah Wali",`
-  <form id="waliForm">
-   <div class="form-group">
-    <label>Nama Wali</label>
-    <input id="wnama" required value="${esc(x.nama)}">
-   </div>
-   <div class="form-group">
-    <label>Email</label>
-    <input id="wemail" type="email" required value="${esc(x.email)}">
-   </div>
-   <button class="btn full">Simpan</button>
-  </form>
- `);
+ <form id="wf">
+  <div class="field"><label>Nama</label>
+   <input id="wn" value="${esc(x.nama)}" required></div>
+  <div class="field"><label>Email</label>
+   <input id="we" type="email" value="${esc(x.email||"")}" required></div>
+  <button class="btn full">Simpan</button>
+ </form>`);
 
- $("waliForm").onsubmit=async e=>{
+ $("wf").onsubmit=async e=>{
   e.preventDefault();
+
   const data={
-   nama:$("wnama").value.trim(),
-   email:$("wemail").value.trim(),
+   nama:$("wn").value.trim(),
+   email:$("we").value.trim(),
    role:"wali",
    updatedAt:serverTimestamp()
   };
@@ -879,92 +752,66 @@ window.formWali=async id=>{
    ...data,createdAt:serverTimestamp()
   });
 
-  closeModal();toast("Data wali tersimpan");adminWali();
+  closeModal();notify("Data wali tersimpan");adminWali();
  };
 };
 
 /* =========================
-   ADMIN - KELAS/JILID
+   KELAS + PDF
 ========================= */
 
 async function adminKelas(){
  const s=await getDocs(collection(db,"jilid"));
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <div>
-    <h2>Jilid / Kelas</h2>
-    <p class="muted">Atur kelas dan buku PDF yang digunakan.</p>
-   </div>
-   <button class="btn" onclick="formKelas()">+ Tambah</button>
-  </div>
+ <div class="toolbar">
+  <div><h2>Jilid / Kelas</h2>
+  <p class="muted">Atur PDF buku baca dan hafalan.</p></div>
+  <button class="btn" onclick="editKelas()">+ Tambah</button>
+ </div>
 
-  <div class="table-wrap">
-   <table>
-    <thead>
-     <tr><th>No.</th><th>Nama</th><th>Buku Baca PDF</th>
-     <th>Buku Hafalan PDF</th><th>Aksi</th></tr>
-    </thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="5" class="empty">Belum ada kelas.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td><strong>${esc(x.nama)}</strong></td>
-        <td>${x.bukuBacaUrl?
-          `<a href="${esc(x.bukuBacaUrl)}" target="_blank">Buka PDF</a>`:"-"}</td>
-        <td>${x.bukuHafalanUrl?
-          `<a href="${esc(x.bukuHafalanUrl)}" target="_blank">Buka PDF</a>`:"-"}</td>
-        <td class="actions">
-         <button class="btn sm" onclick="formKelas('${d.id}')">Edit</button>
-         <button class="btn danger sm" onclick="hapus('jilid','${d.id}')">Hapus</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Kelas</th>
+ <th>PDF Baca</th><th>PDF Hafalan</th><th>Aksi</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="5" class="empty">Belum ada kelas.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td>${esc(x.nama)}</td>
+   <td>${x.bukuBacaUrl?"Tersedia":"Belum"}</td>
+   <td>${x.bukuHafalanUrl?"Tersedia":"Belum"}</td>
+   <td><button class="btn sm" onclick="editKelas('${d.id}')">Edit</button>
+   <button class="btn red sm" onclick="removeDoc('jilid','${d.id}')">Hapus</button></td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
-window.formKelas=async id=>{
+window.editKelas=async id=>{
  let x={};
  if(id)x=(await getDoc(doc(db,"jilid",id))).data()||{};
 
- openModal(id?"Edit Jilid/Kelas":"Tambah Jilid/Kelas",`
-  <form id="kelasForm">
-   <div class="form-group">
-    <label>Nama Jilid / Kelas</label>
-    <input id="knama" required value="${esc(x.nama)}"
-     placeholder="Contoh: Jilid 1 / Kelas A">
-   </div>
+ openModal(id?"Edit Kelas":"Tambah Kelas",`
+ <form id="kf">
+  <div class="field"><label>Nama Kelas / Jilid</label>
+   <input id="kn" value="${esc(x.nama)}" required></div>
+  <div class="field"><label>URL PDF Buku Baca</label>
+   <input id="kb" type="url" value="${esc(x.bukuBacaUrl||"")}"
+   placeholder="https://domain.com/buku-baca.pdf"></div>
+  <div class="field"><label>URL PDF Buku Hafalan</label>
+   <input id="kh" type="url" value="${esc(x.bukuHafalanUrl||"")}"
+   placeholder="https://domain.com/buku-hafalan.pdf"></div>
+  <button class="btn full">Simpan</button>
+ </form>`);
 
-   <div class="form-group">
-    <label>URL PDF Buku yang Dibaca</label>
-    <input id="kbaca" type="url" value="${esc(x.bukuBacaUrl)}"
-     placeholder="https://.../buku-baca.pdf">
-   </div>
-
-   <div class="form-group">
-    <label>URL PDF Buku Hafalan</label>
-    <input id="khafal" type="url" value="${esc(x.bukuHafalanUrl)}"
-     placeholder="https://.../buku-hafalan.pdf">
-   </div>
-
-   <button class="btn full">Simpan</button>
-  </form>
- `);
-
- $("kelasForm").onsubmit=async e=>{
+ $("kf").onsubmit=async e=>{
   e.preventDefault();
 
   const data={
-   nama:$("knama").value.trim(),
-   bukuBacaUrl:$("kbaca").value.trim(),
-   bukuHafalanUrl:$("khafal").value.trim(),
+   nama:$("kn").value.trim(),
+   bukuBacaUrl:$("kb").value.trim(),
+   bukuHafalanUrl:$("kh").value.trim(),
    updatedAt:serverTimestamp()
   };
 
@@ -973,7 +820,7 @@ window.formKelas=async id=>{
    ...data,createdAt:serverTimestamp()
   });
 
-  closeModal();toast("Kelas tersimpan");adminKelas();
+  closeModal();notify("Kelas tersimpan");adminKelas();
  };
 };
 
@@ -981,513 +828,368 @@ window.formKelas=async id=>{
    PENGUMUMAN
 ========================= */
 
-async function pengumuman(){
- const s=await getDocs(
-  query(collection(db,"pengumuman"),orderBy("createdAt","desc"))
+async function showPengumuman(){
+ const s=await getDocs(collection(db,"pengumuman"));
+ const arr=s.docs.sort((a,b)=>
+  (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0)
  );
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <h2>Pengumuman</h2>
-   ${currentProfile.role==="admin"?
-    `<button class="btn" onclick="formPengumuman()">+ Buat Pengumuman</button>`:""}
-  </div>
+ <div class="toolbar">
+  <h2>Pengumuman</h2>
+  ${profile.role==="admin"?
+   `<button class="btn" onclick="newNotice()">+ Pengumuman</button>`:""}
+ </div>
 
-  ${s.empty?`<div class="card empty">Belum ada pengumuman.</div>`:
-   s.docs.map(d=>{
-    const x=d.data();
-    return `<div class="card" style="margin-bottom:12px">
-     <div class="toolbar">
-      <strong>${esc(x.judul)}</strong>
-      ${currentProfile.role==="admin"?
-       `<button class="btn danger sm" onclick="hapus('pengumuman','${d.id}')">Hapus</button>`:""}
-     </div>
-     <p>${esc(x.isi)}</p>
-    </div>`
-   }).join("")
-  }
- `;
+ ${arr.length?arr.map(d=>{
+  const x=d.data();
+  return `<div class="card notice">
+   <div class="toolbar">
+    <b>${esc(x.judul)}</b>
+    ${profile.role==="admin"?
+     `<button class="btn red sm"
+      onclick="removeDoc('pengumuman','${d.id}')">Hapus</button>`:""}
+   </div>
+   <div>${esc(x.isi)}</div>
+  </div>`;
+ }).join(""):`<div class="card empty">Belum ada pengumuman.</div>`}`;
 }
 
-window.formPengumuman=()=>{
- openModal("Buat Pengumuman",`
-  <form id="pForm">
-   <div class="form-group">
-    <label>Judul</label>
-    <input id="pjudul" required>
-   </div>
-   <div class="form-group">
-    <label>Isi Pengumuman</label>
-    <textarea id="pisi" rows="6" required></textarea>
-   </div>
-   <button class="btn full">Publikasikan</button>
-  </form>
- `);
+window.newNotice=()=>{
+ openModal("Pengumuman Baru",`
+ <form id="pf">
+  <div class="field"><label>Judul</label><input id="pj" required></div>
+  <div class="field"><label>Isi</label><textarea id="pi" rows="6" required></textarea></div>
+  <button class="btn full">Publikasikan</button>
+ </form>`);
 
- $("pForm").onsubmit=async e=>{
+ $("pf").onsubmit=async e=>{
   e.preventDefault();
 
   await addDoc(collection(db,"pengumuman"),{
-   judul:$("pjudul").value.trim(),
-   isi:$("pisi").value.trim(),
-   dibuatOleh:currentUser.uid,
+   judul:$("pj").value.trim(),
+   isi:$("pi").value.trim(),
+   dibuatOleh:user.uid,
    createdAt:serverTimestamp()
   });
 
-  closeModal();toast("Pengumuman diterbitkan");pengumuman();
+  closeModal();notify("Pengumuman diterbitkan");showPengumuman();
  };
 };
 
 /* =========================
-   KEUANGAN ADMIN
+   KEUANGAN
 ========================= */
 
 async function adminKeuangan(){
  const s=await getDocs(collection(db,"keuangan"));
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <div>
-    <h2>Keuangan</h2>
-    <p class="muted">SPP, tabungan dan iuran kegiatan.</p>
-   </div>
-   <button class="btn" onclick="formKeuangan()">+ Tambah Tagihan</button>
-  </div>
+ <div class="toolbar">
+  <div><h2>Keuangan</h2>
+  <p class="muted">SPP, tabungan dan iuran kegiatan.</p></div>
+  <button class="btn" onclick="newBill()">+ Tagihan</button>
+ </div>
 
-  <div class="table-wrap">
-   <table>
-    <thead>
-     <tr><th>No.</th><th>Santri</th><th>Tagihan</th><th>Nilai</th>
-     <th>Terbayar</th><th>QRIS</th><th>Aksi</th></tr>
-    </thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="7" class="empty">Belum ada tagihan.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td>${esc(x.santriNama||"-")}</td>
-        <td>${esc(x.tagihan)}</td>
-        <td>${rupiah(x.nilai)}</td>
-        <td>${rupiah(x.terbayar)}</td>
-        <td>${x.bayarQris?
-         `<span class="badge green">Ya</span>`:
-         `<span class="badge yellow">Belum</span>`}</td>
-        <td>
-         <button class="btn danger sm" onclick="hapus('keuangan','${d.id}')">Hapus</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Santri</th><th>Tagihan</th>
+ <th>Nilai</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="7" class="empty">Belum ada tagihan.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td>${esc(x.santriNama)}</td>
+   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
+   <td>${money(x.terbayar)}</td>
+   <td>${x.status==="lunas"?
+    `<span class="badge green">Lunas</span>`:
+    `<span class="badge yellow">Belum Lunas</span>`}</td>
+   <td><button class="btn red sm"
+    onclick="removeDoc('keuangan','${d.id}')">Hapus</button></td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
-window.formKeuangan=async()=>{
- const santri=await getDocs(collection(db,"santri"));
+window.newBill=async()=>{
+ const s=await getDocs(collection(db,"santri"));
 
  openModal("Tambah Tagihan",`
-  <form id="kForm">
-   <div class="form-group">
-    <label>Santri</label>
-    <select id="ksantri" required>
-     <option value="">Pilih santri</option>
-     ${santri.docs.map(d=>{
-      const x=d.data();
-      return `<option value="${d.id}">${esc(x.nama)}</option>`
-     }).join("")}
-    </select>
-   </div>
+ <form id="bf">
+  <div class="field"><label>Santri</label>
+   <select id="bs" required>
+    <option value="">Pilih santri</option>
+    ${s.docs.map(d=>`<option value="${d.id}">
+     ${esc(d.data().nama)}</option>`).join("")}
+   </select>
+  </div>
+  <div class="field"><label>Tagihan</label>
+   <input id="bt" placeholder="SPP September 2026" required>
+  </div>
+  <div class="row">
+   <div class="field"><label>Nilai</label>
+    <input id="bn" type="number" min="0" required></div>
+   <div class="field"><label>Terbayar</label>
+    <input id="bp" type="number" min="0" value="0"></div>
+  </div>
+  <div class="field"><label>Bayar lewat QRIS</label>
+   <select id="bq"><option value="false">Tidak</option>
+   <option value="true">Ya</option></select>
+  </div>
+  <button class="btn full">Simpan</button>
+ </form>`);
 
-   <div class="form-group">
-    <label>Tagihan</label>
-    <input id="ktagihan" required placeholder="SPP September 2026">
-   </div>
-
-   <div class="row">
-    <div class="form-group">
-     <label>Nilai Tagihan</label>
-     <input id="knilai" type="number" min="0" required>
-    </div>
-    <div class="form-group">
-     <label>Terbayar</label>
-     <input id="kterbayar" type="number" min="0" value="0">
-    </div>
-   </div>
-
-   <div class="form-group">
-    <label>
-     <input id="kqris" type="checkbox" style="width:auto">
-     Bayar melalui QRIS
-    </label>
-   </div>
-
-   <button class="btn full">Simpan</button>
-  </form>
- `);
-
- $("kForm").onsubmit=async e=>{
+ $("bf").onsubmit=async e=>{
   e.preventDefault();
 
-  const sid=$("ksantri").value;
-  const sd=await getDoc(doc(db,"santri",sid));
-  const sx=sd.data()||{};
+  const sd=await getDoc(doc(db,"santri",$("bs").value));
+  const x=sd.data()||{};
+  const nilai=Number($("bn").value||0);
+  const bayar=Number($("bp").value||0);
 
   await addDoc(collection(db,"keuangan"),{
-   santriId:sid,
-   santriNama:sx.nama||"",
-   waliId:sx.waliId||"",
-   tagihan:$("ktagihan").value.trim(),
-   nilai:Number($("knilai").value||0),
-   terbayar:Number($("kterbayar").value||0),
-   bayarQris:$("kqris").checked,
-   status:Number($("kterbayar").value||0)>=Number($("knilai").value||0)
-    ?"lunas":"belum",
+   santriId:sd.id,
+   santriNama:x.nama||"",
+   waliId:x.waliId||"",
+   tagihan:$("bt").value.trim(),
+   nilai,
+   terbayar:bayar,
+   bayarQris:$("bq").value==="true",
+   status:bayar>=nilai?"lunas":"belum",
    createdAt:serverTimestamp()
   });
 
-  closeModal();toast("Tagihan tersimpan");adminKeuangan();
+  closeModal();notify("Tagihan tersimpan");adminKeuangan();
  };
 };
 
 /* =========================
-   USTADZAH
+   USTADZAH SANTRI
 ========================= */
 
 async function ustadzahSantri(){
- const q=query(
-  collection(db,"santri"),
-  where("ustadzahId","==",currentUser.uid)
- );
+ const q=query(collection(db,"santri"),
+  where("ustadzahId","==",user.uid));
  const s=await getDocs(q);
 
  $("page").innerHTML=`
-  <div class="toolbar">
-   <div>
-    <h2>Daftar Santri Kelas</h2>
-    <p class="muted">Kelola baca, hafalan dan keuangan santri.</p>
-   </div>
-  </div>
-
-  <div class="table-wrap">
-   <table>
-    <thead>
-     <tr><th>No.</th><th>Nama Santri</th><th>Kelas</th><th>Aksi</th></tr>
-    </thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="4" class="empty">Belum ada santri.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td><strong>${esc(x.nama)}</strong></td>
-        <td>${esc(x.kelasNama||"-")}</td>
-        <td class="actions">
-         <button class="btn sm" onclick="modulBelajarUst('${d.id}','baca')">📖 Baca</button>
-         <button class="btn blue sm" onclick="modulBelajarUst('${d.id}','hafalan')">🧠 Hafalan</button>
-         <button class="btn warning sm" onclick="modulKeuanganUst('${d.id}')">💰 Keuangan</button>
-        </td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <div class="toolbar">
+  <div><h2>Santri Kelas</h2>
+  <p class="muted">Kelola baca, hafalan dan keuangan.</p></div>
+ </div>
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Aksi</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="4" class="empty">Belum ada santri.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td><b>${esc(x.nama)}</b></td>
+   <td>${esc(x.kelasNama||"-")}</td>
+   <td class="actions">
+    <button class="btn sm" onclick="openStudy('${d.id}','baca')">📖 Baca</button>
+    <button class="btn blue sm" onclick="openStudy('${d.id}','hafalan')">🧠 Hafalan</button>
+    <button class="btn orange sm" onclick="teacherFinance('${d.id}')">💰 Keuangan</button>
+   </td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
-async function modulBelajarUst(id,jenis){
- const s=await getDoc(doc(db,"santri",id));
- if(!s.exists())return;
+window.openStudy=async(santriId,jenis)=>{
+ const sd=await getDoc(doc(db,"santri",santriId));
+ if(!sd.exists())return;
 
- currentSantri={id,...s.data()};
+ const s=sd.data();
+ const kd=await getDoc(doc(db,"jilid",s.kelasId));
+ const k=kd.data()||{};
 
- const kelas=await getDoc(doc(db,"jilid",currentSantri.kelasId));
- const k=kelas.data()||{};
+ const q=query(collection(db,"riwayat"),
+  where("santriId","==",santriId),
+  where("jenis","==",jenis));
 
- const hist=await getDocs(
-  query(
-   collection(db,"riwayat"),
-   where("santriId","==",id),
-   where("jenis","==",jenis)
-  )
- );
+ const h=await getDocs(q);
+ const docs=h.docs.sort((a,b)=>
+  (b.data().createdAt?.seconds||0)-
+  (a.data().createdAt?.seconds||0));
 
- const latest=hist.docs.sort((a,b)=>
-  (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0)
- )[0]?.data()||{};
-
+ const last=docs[0]?.data()||{};
+ const page=last.halamanTerakhir||1;
  const url=jenis==="baca"?k.bukuBacaUrl:k.bukuHafalanUrl;
- const halaman=latest.halamanTerakhir||1;
 
  openModal(
-  `${jenis==="baca"?"📖 Buku Dibaca":"🧠 Buku Hafalan"} — ${currentSantri.nama}`,
-  `
-   ${url?
-    `<iframe class="pdf-viewer" src="${esc(url)}#page=${halaman}"></iframe>`:
-    `<div class="card" style="margin-bottom:12px">
-     <div class="empty">PDF belum diatur admin untuk kelas ini.</div>
-    </div>`
-   }
+  `${jenis==="baca"?"📖 Buku Dibaca":"🧠 Buku Hafalan"} — ${s.nama}`,
+ `
+ ${url?
+ `<iframe class="pdf" src="${esc(url)}#page=${page}"></iframe>`:
+ `<div class="card empty">PDF belum diatur admin.</div>`}
 
-   <div class="card" style="margin-top:12px">
-    <h3>Progress</h3>
-    <div class="row">
-     <div>
-      <label>Halaman terakhir dibaca</label>
-      <input id="pageNumber" type="number" min="1" value="${halaman}">
-     </div>
-     <div>
-      <label>Status</label>
-      <select id="progressStatus">
-       <option value="naik">Naik</option>
-       <option value="mengulang">Mengulang</option>
-      </select>
-     </div>
-    </div>
-
-    <div class="form-group">
-     <label>Pesan Ustadzah</label>
-     <textarea id="pesanUst" rows="3"
-      placeholder="Contoh: Bacaan sudah bagus..."></textarea>
-    </div>
-
-    <button class="btn" onclick="simpanProgress('${id}','${jenis}')">
-     💾 Simpan Progress
-    </button>
-
-    <button class="btn blue" onclick="rekamPesan('${id}','${jenis}')">
-     🎙️ Rekam Pesan Suara
-    </button>
+ <div class="card" style="margin-top:12px">
+  <div class="row">
+   <div class="field">
+    <label>Halaman terakhir</label>
+    <input id="lastPage" type="number" min="1" value="${page}">
    </div>
-  `
- );
-}
+   <div class="field">
+    <label>Status</label>
+    <select id="status">
+     <option value="naik">Naik</option>
+     <option value="mengulang">Mengulang</option>
+    </select>
+   </div>
+  </div>
 
-window.simpanProgress=async(id,jenis)=>{
- const page=Number($("pageNumber").value||1);
- const status=$("progressStatus").value;
- const pesan=$("pesanUst").value.trim();
+  <div class="field">
+   <label>Pesan Ustadzah</label>
+   <textarea id="message" rows="3"></textarea>
+  </div>
 
+  <button class="btn" onclick="saveProgress('${santriId}','${jenis}')">
+   Simpan Progress
+  </button>
+ </div>
+ `);
+};
+
+window.saveProgress=async(santriId,jenis)=>{
  await addDoc(collection(db,"riwayat"),{
-  santriId:id,
+  santriId,
   jenis,
-  halamanTerakhir:page,
-  status,
-  pesan,
-  ustadzahId:currentUser.uid,
+  halamanTerakhir:Number($("lastPage").value||1),
+  status:$("status").value,
+  pesan:$("message").value.trim(),
+  ustadzahId:user.uid,
   createdAt:serverTimestamp()
  });
 
- toast("Progress pembelajaran tersimpan");
+ notify("Progress tersimpan.");
 };
 
-let mediaRecorder=null;
-let audioChunks=[];
-
-window.rekamPesan=async(id,jenis)=>{
- try{
-  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-
-  mediaRecorder=new MediaRecorder(stream);
-  audioChunks=[];
-
-  mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
-
-  mediaRecorder.onstop=async()=>{
-   stream.getTracks().forEach(t=>t.stop());
-
-   const blob=new Blob(audioChunks,{type:"audio/webm"});
-   const url=URL.createObjectURL(blob);
-
-   openModal("Pesan Suara",`
-    <p>Rekaman berhasil dibuat.</p>
-    <audio controls style="width:100%" src="${url}"></audio>
-    <p class="muted">
-     Untuk penyimpanan permanen, unggah blob ini ke Firebase Storage.
-     Versi single-file ini menyediakan perekaman dan preview lokal.
-    </p>
-   `);
-  };
-
-  mediaRecorder.start();
-  toast("Merekam... klik OK pada dialog berikut untuk berhenti.");
-  setTimeout(()=>{
-   if(mediaRecorder?.state==="recording")mediaRecorder.stop();
-  },10000);
-
- }catch(e){
-  toast("Izin mikrofon tidak tersedia.");
- }
-};
-
-window.modulBelajarUst=modulBelajarUst;
-
-window.modulKeuanganUst=async id=>{
- const q=query(
-  collection(db,"keuangan"),
-  where("santriId","==",id)
- );
+window.teacherFinance=async santriId=>{
+ const q=query(collection(db,"keuangan"),
+  where("santriId","==",santriId));
  const s=await getDocs(q);
 
  openModal("Keuangan Santri",`
-  <h3>Riwayat Tagihan</h3>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Tagihan</th><th>Nilai</th><th>Terbayar</th><th>Status</th></tr></thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="4" class="empty">Belum ada tagihan.</td></tr>`:
-      s.docs.map(d=>{
-       const x=d.data();
-       return `<tr>
-        <td>${esc(x.tagihan)}</td>
-        <td>${rupiah(x.nilai)}</td>
-        <td>${rupiah(x.terbayar)}</td>
-        <td>${x.status==="lunas"?
-         `<span class="badge green">Lunas</span>`:
-         `<span class="badge yellow">Belum Lunas</span>`}</td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
+ <div class="table-box"><table>
+ <thead><tr><th>Tagihan</th><th>Nilai</th>
+ <th>Terbayar</th><th>Status</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="4" class="empty">Belum ada.</td></tr>`:
+ s.docs.map(d=>{
+  const x=d.data();
+  return `<tr>
+   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
+   <td>${money(x.terbayar)}</td>
+   <td>${x.status==="lunas"?
+    `<span class="badge green">Lunas</span>`:
+    `<span class="badge yellow">Belum</span>`}</td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`);
+};
+
+/* =========================
+   WALI BELAJAR
+========================= */
+
+async function waliBelajar(){
+ const q=query(collection(db,"santri"),
+  where("waliId","==",user.uid));
+ const s=await getDocs(q);
+
+ $("page").innerHTML=`
+ <h2>Baca & Hafalan</h2>
+ <p class="muted">Buku dibuka dari halaman terakhir yang dicatat ustadzah.</p>
+ <div class="grid">
+ ${s.empty?`<div class="card empty">Belum ada santri.</div>`:
+ s.docs.map(d=>{
+  const x=d.data();
+  return `<div class="card">
+   <h3>${esc(x.nama)}</h3>
+   <p class="muted">${esc(x.kelasNama||"-")}</p>
+   <p>Ustadzah: <b>${esc(x.ustadzahNama||"-")}</b></p>
+   <div class="actions">
+    <button class="btn sm" onclick="parentStudy('${d.id}','baca')">📖 Baca</button>
+    <button class="btn blue sm" onclick="parentStudy('${d.id}','hafalan')">🧠 Hafalan</button>
+   </div>
+  </div>`;
+ }).join("")}
+ </div>`;
+}
+
+window.parentStudy=async(santriId,jenis)=>{
+ const sd=await getDoc(doc(db,"santri",santriId));
+ if(!sd.exists())return;
+
+ const s=sd.data();
+ const kd=await getDoc(doc(db,"jilid",s.kelasId));
+ const k=kd.data()||{};
+
+ const q=query(collection(db,"riwayat"),
+  where("santriId","==",santriId),
+  where("jenis","==",jenis));
+
+ const h=await getDocs(q);
+ const arr=h.docs.sort((a,b)=>
+  (b.data().createdAt?.seconds||0)-
+  (a.data().createdAt?.seconds||0));
+
+ const last=arr[0]?.data()||{};
+ const p=last.halamanTerakhir||1;
+ const url=jenis==="baca"?k.bukuBacaUrl:k.bukuHafalanUrl;
+
+ openModal(
+  `${jenis==="baca"?"📖 Baca":"🧠 Hafalan"} — ${s.nama}`,
+ `
+ ${url?
+ `<iframe class="pdf" src="${esc(url)}#page=${p}"></iframe>`:
+ `<div class="empty">PDF belum diatur admin.</div>`}
+
+ <div class="card" style="margin-top:12px">
+  <b>Halaman terakhir: ${p}</b>
+  ${last.status?
+   `<p><span class="badge ${
+    last.status==="naik"?"green":"yellow"}">${esc(last.status)}</span></p>`:""}
+  ${last.pesan?`<p>${esc(last.pesan)}</p>`:""}
+ </div>
  `);
 };
 
 /* =========================
-   WALI - BELAJAR
-========================= */
-
-async function waliBelajar(){
- const q=query(
-  collection(db,"santri"),
-  where("waliId","==",currentUser.uid)
- );
- const s=await getDocs(q);
-
- $("page").innerHTML=`
-  <h2>Baca & Hafalan</h2>
-  <p class="muted">Buku akan otomatis dibuka dari halaman terakhir yang dicatat ustadzah.</p>
-
-  <div class="grid">
-   ${s.empty?
-    `<div class="card empty">Belum ada santri.</div>`:
-    s.docs.map(d=>{
-     const x=d.data();
-     return `<div class="card">
-      <div class="avatar">${esc((x.nama||"?")[0])}</div>
-      <h3 style="margin-top:10px">${esc(x.nama)}</h3>
-      <p class="muted">${esc(x.kelasNama||"-")}</p>
-      <p>Ustadzah: <strong>${esc(x.ustadzahNama||"-")}</strong></p>
-      <div class="actions">
-       <button class="btn sm" onclick="waliBukaBuku('${d.id}','baca')">📖 Baca</button>
-       <button class="btn blue sm" onclick="waliBukaBuku('${d.id}','hafalan')">🧠 Hafalan</button>
-      </div>
-     </div>`
-    }).join("")
-   }
-  </div>
- `;
-}
-
-window.waliBukaBuku=async(id,jenis)=>{
- const sd=await getDoc(doc(db,"santri",id));
- if(!sd.exists())return;
-
- const x=sd.data();
- const kd=await getDoc(doc(db,"jilid",x.kelasId));
- const k=kd.data()||{};
-
- const q=query(
-  collection(db,"riwayat"),
-  where("santriId","==",id),
-  where("jenis","==",jenis)
- );
- const hs=await getDocs(q);
-
- let latest=hs.docs.sort((a,b)=>
-  (b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0)
- )[0]?.data()||{};
-
- const page=latest.halamanTerakhir||1;
- const url=jenis==="baca"?k.bukuBacaUrl:k.bukuHafalanUrl;
-
- openModal(
-  `${jenis==="baca"?"📖 Buku Dibaca":"🧠 Buku Hafalan"} — ${x.nama}`,
-  `
-   ${url?
-    `<iframe class="pdf-viewer"
-     src="${esc(url)}#page=${page}"></iframe>`:
-    `<div class="empty">Buku PDF belum diatur oleh admin.</div>`
-   }
-
-   <div class="card" style="margin-top:12px">
-    <strong>Halaman terakhir:</strong> ${page}
-    <p class="muted">
-     Halaman ini otomatis digunakan sebagai titik mulai pada pembukaan berikutnya.
-    </p>
-    ${latest.status?
-     `<span class="badge ${latest.status==="naik"?"green":"yellow"}">
-      ${esc(latest.status)}
-     </span>`:""}
-    ${latest.pesan?
-     `<p>Pesan ustadzah: ${esc(latest.pesan)}</p>`:""}
-   </div>
-  `
-};
-
-/* =========================
-   WALI - KEUANGAN
+   WALI KEUANGAN
 ========================= */
 
 async function waliKeuangan(){
- const q=query(
-  collection(db,"keuangan"),
-  where("waliId","==",currentUser.uid)
- );
+ const q=query(collection(db,"keuangan"),
+  where("waliId","==",user.uid));
  const s=await getDocs(q);
 
  $("page").innerHTML=`
-  <h2>Riwayat Keuangan</h2>
-  <div class="table-wrap">
-   <table>
-    <thead>
-     <tr>
-      <th>No.</th><th>Santri</th><th>Tagihan Bulanan</th>
-      <th>Nilai Tagihan</th><th>Terbayar</th><th>Bayar lewat QRIS</th>
-     </tr>
-    </thead>
-    <tbody>
-     ${s.empty?
-      `<tr><td colspan="6" class="empty">Belum ada data keuangan.</td></tr>`:
-      s.docs.map((d,i)=>{
-       const x=d.data();
-       return `<tr>
-        <td>${i+1}</td>
-        <td>${esc(x.santriNama)}</td>
-        <td>${esc(x.tagihan)}</td>
-        <td>${rupiah(x.nilai)}</td>
-        <td>${rupiah(x.terbayar)}</td>
-        <td>${x.bayarQris?
-         `<span class="badge green">QRIS</span>`:
-         `<span class="badge yellow">Belum</span>`}</td>
-       </tr>`
-      }).join("")
-     }
-    </tbody>
-   </table>
-  </div>
- `;
+ <h2>Riwayat Keuangan</h2>
+ <div class="table-box"><table>
+ <thead><tr><th>No</th><th>Santri</th>
+ <th>Tagihan Bulanan</th><th>Nilai</th>
+ <th>Terbayar</th><th>QRIS</th></tr></thead>
+ <tbody>
+ ${s.empty?`<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`:
+ s.docs.map((d,i)=>{
+  const x=d.data();
+  return `<tr>
+   <td>${i+1}</td><td>${esc(x.santriNama)}</td>
+   <td>${esc(x.tagihan)}</td><td>${money(x.nilai)}</td>
+   <td>${money(x.terbayar)}</td>
+   <td>${x.bayarQris?
+    `<span class="badge green">QRIS</span>`:
+    `<span class="badge yellow">Belum</span>`}</td>
+  </tr>`;
+ }).join("")}
+ </tbody></table></div>`;
 }
 
 /* =========================
-   PENGATURAN
+   SETTINGS
 ========================= */
 
 async function settings(){
@@ -1496,50 +1198,35 @@ async function settings(){
  const x=s.exists()?s.data():{};
 
  $("page").innerHTML=`
-  <h2>Pengaturan</h2>
+ <h2>Pengaturan</h2>
+ <div class="card">
+  <form id="setForm">
+   <div class="row">
+    <div class="field"><label>Nama TPQ</label>
+     <input id="tn" value="${esc(x.nama||"TPQ Wardatul Wathon")}"></div>
+    <div class="field"><label>Lokasi</label>
+     <input id="tl" value="${esc(x.lokasi||"Tukum Kidul, Lumajang")}"></div>
+   </div>
+   <div class="field"><label>Nomor WhatsApp</label>
+    <input id="tw" value="${esc(x.whatsapp||"")}"></div>
+   <div class="field"><label>URL QRIS</label>
+    <input id="tq" type="url" value="${esc(x.qrisUrl||"")}"></div>
+   <button class="btn">Simpan</button>
+  </form>
+ </div>`;
 
-  <div class="card">
-   <form id="settingsForm">
-    <div class="row">
-     <div class="form-group">
-      <label>Nama TPQ</label>
-      <input id="setNama" value="${esc(x.nama||"TPQ Wardatul Wathon")}">
-     </div>
-     <div class="form-group">
-      <label>Lokasi</label>
-      <input id="setLokasi"
-       value="${esc(x.lokasi||"Tukum Kidul, Lumajang")}">
-     </div>
-    </div>
-
-    <div class="form-group">
-     <label>Nomor WhatsApp</label>
-     <input id="setWa" value="${esc(x.whatsapp||"")}">
-    </div>
-
-    <div class="form-group">
-     <label>URL QRIS</label>
-     <input id="setQris" type="url" value="${esc(x.qrisUrl||"")}"
-      placeholder="https://.../qris.png">
-    </div>
-
-    <button class="btn">Simpan Pengaturan</button>
-   </form>
-  </div>
- `;
-
- $("settingsForm").onsubmit=async e=>{
+ $("setForm").onsubmit=async e=>{
   e.preventDefault();
 
   await setDoc(ref,{
-   nama:$("setNama").value.trim(),
-   lokasi:$("setLokasi").value.trim(),
-   whatsapp:$("setWa").value.trim(),
-   qrisUrl:$("setQris").value.trim(),
+   nama:$("tn").value.trim(),
+   lokasi:$("tl").value.trim(),
+   whatsapp:$("tw").value.trim(),
+   qrisUrl:$("tq").value.trim(),
    updatedAt:serverTimestamp()
   },{merge:true});
 
-  toast("Pengaturan tersimpan");
+  notify("Pengaturan tersimpan.");
  };
 }
 
@@ -1547,35 +1234,28 @@ async function settings(){
    DELETE
 ========================= */
 
-window.hapus=async(col,id)=>{
- if(!confirm("Yakin ingin menghapus data ini?"))return;
+window.removeDoc=async(col,id)=>{
+ if(!confirm("Hapus data ini?"))return;
 
- await deleteDoc(doc(db,col,id));
- toast("Data berhasil dihapus");
- navigate(currentPage);
+ try{
+  await deleteDoc(doc(db,col,id));
+  notify("Data dihapus.");
+  navigate(pageName);
+ }catch(e){
+  alert(errorText(e));
+ }
 };
 
 /* =========================
-   SERVICE WORKER PWA
+   PWA
 ========================= */
 
 if("serviceWorker" in navigator){
- const sw=`
-  const CACHE="tpq-wardah-v1";
-  self.addEventListener("install",e=>{
-   e.waitUntil(caches.open(CACHE).then(c=>c.add(location.href)));
-  });
-  self.addEventListener("fetch",e=>{
-   e.respondWith(
-    fetch(e.request).catch(()=>caches.match(e.request))
-   );
-  });
- `;
- const blob=new Blob([sw],{type:"text/javascript"});
- navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+ window.addEventListener("load",()=>{
+  navigator.serviceWorker.register("./sw.js").catch(console.error);
+ });
 }
 
 </script>
-
 </body>
 </html>
