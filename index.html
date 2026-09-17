@@ -4,3144 +4,3524 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#15803d">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
 <title>TPQ Wardatul Wathon</title>
-
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs"
-        type="module"></script>
 
 <style>
 *{box-sizing:border-box}
 :root{
- --green:#15803d;
- --green2:#166534;
- --light:#f0fdf4;
- --bg:#f1f5f9;
- --text:#172033;
- --muted:#64748b;
- --border:#e2e8f0;
- --danger:#dc2626;
- --blue:#2563eb;
- --orange:#d97706;
+  --primary:#15803d;
+  --primary-dark:#166534;
+  --primary-light:#dcfce7;
+  --bg:#f1f5f9;
+  --card:#fff;
+  --text:#172033;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --blue:#2563eb;
+  --sidebar:#052e16;
 }
+html,body{margin:0;padding:0}
 body{
- margin:0;
- font-family:Inter,Arial,sans-serif;
- background:var(--bg);
- color:var(--text)
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 
-.login{
- min-height:100vh;
- display:flex;
- align-items:center;
- justify-content:center;
- padding:20px;
- background:linear-gradient(135deg,#052e16,#16a34a)
+/* LOGIN */
+.login-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:linear-gradient(135deg,#052e16,#16a34a);
 }
 .login-box{
- width:100%;
- max-width:420px;
- background:#fff;
- border-radius:24px;
- padding:30px;
- box-shadow:0 25px 70px #0005
+  width:100%;
+  max-width:420px;
+  background:white;
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 25px 70px rgba(0,0,0,.25);
 }
 .logo{
- width:78px;height:78px;
- margin:auto;
- display:flex;
- align-items:center;
- justify-content:center;
- background:#dcfce7;
- border-radius:22px;
- font-size:38px
+  width:75px;
+  height:75px;
+  border-radius:20px;
+  background:var(--primary-light);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
+  margin:auto;
 }
 .login-box h1{
- text-align:center;
- font-size:23px;
- margin:18px 0 5px
+  text-align:center;
+  font-size:22px;
+  margin:18px 0 5px;
 }
 .login-sub{
- text-align:center;
- color:var(--muted);
- font-size:14px;
- margin-bottom:25px
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:24px;
 }
-.form-group{margin-bottom:15px}
-label{
- display:block;
- font-weight:700;
- font-size:14px;
- margin-bottom:7px
-}
-input,select,textarea{
- width:100%;
- padding:12px 14px;
- border:1px solid #cbd5e1;
- border-radius:10px;
- outline:none;
- background:#fff
-}
-input:focus,select:focus,textarea:focus{
- border-color:#22c55e;
- box-shadow:0 0 0 3px #22c55e22
-}
-.btn{
- border:0;
- background:var(--green);
- color:#fff;
- padding:11px 15px;
- border-radius:10px;
- font-weight:700
-}
-.btn:hover{background:var(--green2)}
-.btn-blue{background:var(--blue)}
-.btn-orange{background:var(--orange)}
-.btn-danger{background:var(--danger)}
-.btn-gray{background:#e2e8f0;color:#172033}
-.btn-sm{padding:7px 10px;font-size:12px}
-.btn-full{width:100%}
 
-.layout{display:none;min-height:100vh}
+/* APP */
+.app{
+  min-height:100vh;
+  display:none;
+}
 .sidebar{
- width:255px;
- position:fixed;
- left:0;top:0;bottom:0;
- background:#052e16;
- color:#fff;
- padding:18px 13px;
- z-index:50;
- overflow-y:auto
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:0;
+  width:255px;
+  background:var(--sidebar);
+  color:white;
+  z-index:100;
+  padding:18px 13px;
+  overflow-y:auto;
 }
 .brand{
- padding:10px;
- font-size:18px;
- font-weight:800;
- line-height:1.35;
- margin-bottom:18px
+  font-weight:bold;
+  font-size:18px;
+  line-height:1.4;
+  padding:10px;
+  margin-bottom:18px;
 }
 .brand small{
- display:block;
- color:#a7f3d0;
- font-weight:500;
- font-size:12px
+  display:block;
+  color:#a7f3d0;
+  font-size:11px;
+  font-weight:normal;
 }
-.nav button{
- display:block;
- width:100%;
- border:0;
- background:transparent;
- color:#d1fae5;
- text-align:left;
- padding:11px 12px;
- border-radius:9px;
- margin-bottom:4px
+.nav-btn{
+  width:100%;
+  border:0;
+  color:#d1fae5;
+  background:transparent;
+  text-align:left;
+  padding:11px 12px;
+  border-radius:9px;
+  margin-bottom:4px;
 }
-.nav button:hover,.nav button.active{
- background:#166534;
- color:#fff
-}
-.logout{
- width:100%;
- margin-top:18px
+.nav-btn:hover,
+.nav-btn.active{
+  background:#166534;
+  color:white;
 }
 .main{
- margin-left:255px;
- padding:22px;
- max-width:1550px
+  margin-left:255px;
+  min-height:100vh;
+  padding:20px;
 }
 .topbar{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin-bottom:22px
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
 }
-.user-info{text-align:right}
-.user-name{font-weight:800}
+.mobile-menu{
+  display:none;
+}
+.user-name{font-weight:bold}
 .user-role{font-size:12px;color:var(--muted)}
-.mobile-btn{display:none}
-
-.cards{
- display:grid;
- grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
- gap:15px;
- margin-bottom:20px
-}
-.card{
- background:#fff;
- border-radius:16px;
- padding:18px;
- box-shadow:0 2px 9px #0000000b
-}
-.stat{
- font-size:30px;
- font-weight:800;
- margin-top:5px
-}
-.muted{color:var(--muted);font-size:13px}
 
 .page{display:block}
 .page.hidden{display:none}
 
-.toolbar{
- display:flex;
- flex-wrap:wrap;
- gap:8px;
- margin-bottom:15px
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin-bottom:20px;
 }
+.card{
+  background:white;
+  border-radius:15px;
+  padding:18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+.stat{
+  font-size:30px;
+  font-weight:bold;
+  margin-top:7px;
+}
+.muted{
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* BUTTON */
+.btn{
+  border:0;
+  background:var(--primary);
+  color:white;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:bold;
+}
+.btn:hover{background:var(--primary-dark)}
+.btn-blue{background:var(--blue)}
+.btn-danger{background:var(--danger)}
+.btn-warning{background:var(--warning)}
+.btn-gray{
+  background:#e2e8f0;
+  color:#172033;
+}
+.btn-sm{
+  padding:7px 9px;
+  font-size:12px;
+}
+.btn-full{width:100%}
+
+/* FORM */
+.form-group{margin-bottom:15px}
+label{
+  display:block;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  padding:11px 12px;
+  outline:none;
+  background:white;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:#22c55e;
+  box-shadow:0 0 0 3px rgba(34,197,94,.12);
+}
+
+/* TABLE */
 .table-wrap{
- overflow:auto;
- background:#fff;
- border-radius:15px;
- box-shadow:0 2px 9px #0000000b
+  background:white;
+  border-radius:15px;
+  overflow:auto;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
 }
 table{
- width:100%;
- border-collapse:collapse;
- min-width:700px
+  width:100%;
+  border-collapse:collapse;
+  min-width:750px;
 }
 th,td{
- padding:12px;
- border-bottom:1px solid var(--border);
- text-align:left;
- vertical-align:middle
+  padding:11px 12px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+  vertical-align:middle;
 }
 th{
- background:#f8fafc;
- font-size:13px
+  background:#f8fafc;
+  font-size:12px;
 }
+td{font-size:13px}
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:15px;
+}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+/* BADGE */
 .badge{
- display:inline-block;
- border-radius:999px;
- padding:5px 9px;
- font-size:11px;
- font-weight:800
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:99px;
+  font-size:11px;
+  font-weight:bold;
 }
-.green{background:#dcfce7;color:#166534}
-.red{background:#fee2e2;color:#991b1b}
-.yellow{background:#fef3c7;color:#92400e}
-.blue{background:#dbeafe;color:#1e40af}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-yellow{background:#fef3c7;color:#92400e}
+.badge-blue{background:#dbeafe;color:#1e40af}
 
-.alert{
- padding:12px 14px;
- border-radius:10px;
- margin-bottom:14px;
- font-size:14px
-}
-.alert-danger{background:#fee2e2;color:#991b1b}
-.alert-success{background:#dcfce7;color:#166534}
-
+/* MODAL */
 .modal{
- display:none;
- position:fixed;
- inset:0;
- z-index:100;
- background:#0008;
- padding:18px;
- overflow:auto
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  z-index:300;
+  padding:15px;
+  overflow:auto;
 }
 .modal-box{
- width:100%;
- max-width:650px;
- margin:25px auto;
- background:#fff;
- border-radius:17px;
- overflow:hidden
+  max-width:650px;
+  margin:30px auto;
+  background:white;
+  border-radius:16px;
+  overflow:hidden;
 }
 .modal-head{
- padding:15px 18px;
- border-bottom:1px solid var(--border);
- display:flex;
- justify-content:space-between;
- align-items:center
+  padding:14px 17px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 }
 .modal-head h3{margin:0}
 .modal-body{padding:18px}
 
+/* PDF */
 .pdf-modal .modal-box{
- max-width:1200px;
- height:calc(100vh - 36px);
- display:flex;
- flex-direction:column
+  max-width:1200px;
+  height:calc(100vh - 30px);
+  display:flex;
+  flex-direction:column;
 }
 .pdf-toolbar{
- padding:10px;
- background:#f8fafc;
- display:flex;
- align-items:center;
- justify-content:center;
- gap:7px;
- flex-wrap:wrap;
- border-bottom:1px solid var(--border)
+  padding:9px;
+  background:#f8fafc;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
 }
-.pdf-page-input{width:70px;padding:8px}
+.pdf-page{
+  width:65px;
+  padding:7px;
+}
 .pdf-container{
- flex:1;
- overflow:auto;
- background:#334155;
- padding:20px;
- text-align:center
+  flex:1;
+  overflow:auto;
+  background:#334155;
+  padding:20px;
+  text-align:center;
 }
 #pdfCanvas{
- background:#fff;
- box-shadow:0 4px 20px #0006;
- max-width:100%
+  background:white;
+  max-width:100%;
+  box-shadow:0 3px 20px rgba(0,0,0,.4);
 }
-.pdf-info{
- padding:7px 12px;
- font-size:12px;
- color:var(--muted)
+.pdf-status{
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 10px;
 }
-
-.student-action{
- display:flex;
- gap:5px;
- flex-wrap:wrap
+.file-box{
+  border:2px dashed #cbd5e1;
+  border-radius:11px;
+  padding:15px;
+  text-align:center;
+  cursor:pointer;
+  margin-bottom:8px;
 }
-.announcement{
- margin-bottom:12px
-}
-.announcement h3{
- margin:0 0 8px
-}
-.audio{
- width:220px;
- max-width:100%
-}
-.empty{
- text-align:center;
- padding:35px;
- color:var(--muted)
-}
-.file-label{
- display:block;
- padding:13px;
- border:2px dashed #cbd5e1;
- border-radius:12px;
- text-align:center;
- cursor:pointer;
- margin-bottom:12px
-}
-.file-label:hover{
- border-color:var(--green);
- background:var(--light)
+.file-box:hover{
+  border-color:var(--primary);
+  background:#f0fdf4;
 }
 .progress{
- height:8px;
- background:#e2e8f0;
- border-radius:99px;
- overflow:hidden;
- margin-top:8px
+  height:8px;
+  background:#e2e8f0;
+  border-radius:99px;
+  overflow:hidden;
+  margin-top:7px;
 }
 .progress-bar{
- height:100%;
- background:var(--green);
- width:0
+  height:100%;
+  width:0;
+  background:var(--primary);
+}
+.audio{
+  max-width:250px;
+  width:100%;
+}
+
+/* ANNOUNCEMENT */
+.announcement{
+  margin-bottom:12px;
+}
+.announcement h3{
+  margin:0 0 7px;
+}
+.empty{
+  text-align:center;
+  padding:35px;
+  color:var(--muted);
+}
+.alert{
+  padding:11px 13px;
+  border-radius:9px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.alert-red{
+  background:#fee2e2;
+  color:#991b1b;
+}
+.alert-green{
+  background:#dcfce7;
+  color:#166534;
 }
 
 @media(max-width:850px){
- .sidebar{
-  transform:translateX(-100%);
-  transition:.2s
- }
- .sidebar.open{transform:translateX(0)}
- .main{margin-left:0;padding:14px}
- .mobile-btn{display:inline-block}
- .topbar{
-  gap:10px;
-  align-items:center
- }
- .user-info{text-align:right}
-}
-
-@media(max-width:600px){
- .cards{grid-template-columns:1fr 1fr}
- .stat{font-size:24px}
+  .sidebar{
+    transform:translateX(-100%);
+    transition:.2s;
+  }
+  .sidebar.open{
+    transform:translateX(0);
+  }
+  .main{
+    margin-left:0;
+    padding:14px;
+  }
+  .mobile-menu{
+    display:inline-block;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- =========================================================
- LOGIN
-========================================================= -->
-<div id="loginPage" class="login">
- <div class="login-box">
+<!-- =====================================================
+LOGIN
+===================================================== -->
+<div id="loginPage" class="login-page">
 
-  <div class="logo">📖</div>
+  <div class="login-box">
 
-  <h1>TPQ Wardatul Wathon</h1>
-  <div class="login-sub">
-   Tukum Kidul • Lumajang
+    <div class="logo">📖</div>
+
+    <h1>TPQ Wardatul Wathon</h1>
+
+    <div class="login-sub">
+      Tukum Kidul • Lumajang
+    </div>
+
+    <div id="loginError"
+         class="alert alert-red hidden"></div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input id="email"
+             type="email"
+             autocomplete="username"
+             placeholder="Email">
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input id="password"
+             type="password"
+             autocomplete="current-password"
+             placeholder="Password">
+    </div>
+
+    <button id="loginButton"
+            class="btn btn-full"
+            onclick="doLogin()">
+      Masuk
+    </button>
+
   </div>
-
-  <div id="loginError" class="alert alert-danger hidden"></div>
-
-  <div class="form-group">
-   <label>Email</label>
-   <input id="loginEmail" type="email"
-          placeholder="email@contoh.com">
-  </div>
-
-  <div class="form-group">
-   <label>Password</label>
-   <input id="loginPassword" type="password"
-          placeholder="Password">
-  </div>
-
-  <button id="loginBtn" class="btn btn-full"
-          onclick="login()">
-   Masuk
-  </button>
-
-  <div class="muted" style="text-align:center;margin-top:18px">
-   Portal Admin • Ustadzah • Wali
-  </div>
- </div>
 </div>
 
-<!-- =========================================================
- APPLICATION
-========================================================= -->
-<div id="app" class="layout">
+<!-- =====================================================
+APP
+===================================================== -->
+<div id="app" class="app">
 
- <aside id="sidebar" class="sidebar">
+  <aside id="sidebar" class="sidebar">
 
-  <div class="brand">
-   📖 TPQ Wardatul Wathon
-   <small>Tukum Kidul • Lumajang</small>
-  </div>
-
-  <nav class="nav">
-
-   <button id="nav-dashboard"
-           onclick="showPage('dashboard')">
-    🏠 Dashboard
-   </button>
-
-   <button id="nav-santri"
-           onclick="showPage('santri')">
-    👦 Data Santri
-   </button>
-
-   <button id="nav-ustadzah"
-           onclick="showPage('ustadzah')">
-    👩‍🏫 Data Ustadzah
-   </button>
-
-   <button id="nav-kelas"
-           onclick="showPage('kelas')">
-    📚 Jilid / Kelas
-   </button>
-
-   <button id="nav-baca"
-           onclick="showPage('baca')">
-    📖 Baca
-   </button>
-
-   <button id="nav-hafalan"
-           onclick="showPage('hafalan')">
-    🕌 Hafalan
-   </button>
-
-   <button id="nav-keuangan"
-           onclick="showPage('keuangan')">
-    💰 Keuangan
-   </button>
-
-   <button id="nav-pengumuman"
-           onclick="showPage('pengumuman')">
-    📢 Pengumuman
-   </button>
-
-   <button id="nav-pengaturan"
-           onclick="showPage('pengaturan')">
-    ⚙️ Pengaturan
-   </button>
-
-  </nav>
-
-  <button class="btn btn-danger logout"
-          onclick="logout()">
-   Keluar
-  </button>
-
- </aside>
-
- <main class="main">
-
-  <div class="topbar">
-
-   <button class="btn btn-gray mobile-btn"
-           onclick="toggleSidebar()">
-    ☰
-   </button>
-
-   <div style="margin-left:auto">
-    <div class="user-info">
-     <div id="userName" class="user-name">Pengguna</div>
-     <div id="userRole" class="user-role">-</div>
-    </div>
-   </div>
-
-  </div>
-
-  <!-- =======================================================
-  DASHBOARD
-  ======================================================== -->
-  <section id="page-dashboard" class="page">
-
-   <h2>Dashboard</h2>
-
-   <div class="cards">
-
-    <div class="card">
-     <div class="muted">Total Santri</div>
-     <div id="statSantri" class="stat">0</div>
+    <div class="brand">
+      📖 TPQ Wardatul Wathon
+      <small>Tukum Kidul • Lumajang</small>
     </div>
 
-    <div class="card">
-     <div class="muted">Ustadzah</div>
-     <div id="statUstadzah" class="stat">0</div>
+    <nav>
+
+      <button id="navDashboard"
+              class="nav-btn"
+              onclick="go('dashboard')">
+        🏠 Dashboard
+      </button>
+
+      <button id="navSantri"
+              class="nav-btn"
+              onclick="go('santri')">
+        👦 Data Santri
+      </button>
+
+      <button id="navUstadzah"
+              class="nav-btn"
+              onclick="go('ustadzah')">
+        👩‍🏫 Data Ustadzah
+      </button>
+
+      <button id="navKelas"
+              class="nav-btn"
+              onclick="go('kelas')">
+        📚 Jilid / Kelas
+      </button>
+
+      <button id="navBaca"
+              class="nav-btn"
+              onclick="go('baca')">
+        📖 Baca
+      </button>
+
+      <button id="navHafalan"
+              class="nav-btn"
+              onclick="go('hafalan')">
+        🕌 Hafalan
+      </button>
+
+      <button id="navKeuangan"
+              class="nav-btn"
+              onclick="go('keuangan')">
+        💰 Keuangan
+      </button>
+
+      <button id="navPengumuman"
+              class="nav-btn"
+              onclick="go('pengumuman')">
+        📢 Pengumuman
+      </button>
+
+    </nav>
+
+    <button class="btn btn-danger btn-full"
+            style="margin-top:18px"
+            onclick="doLogout()">
+      Keluar
+    </button>
+
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar">
+
+      <button class="btn btn-gray mobile-menu"
+              onclick="toggleSidebar()">
+        ☰
+      </button>
+
+      <div style="margin-left:auto;text-align:right">
+        <div id="userName" class="user-name">-</div>
+        <div id="userRole" class="user-role">-</div>
+      </div>
+
     </div>
 
-    <div class="card">
-     <div class="muted">Jilid / Kelas</div>
-     <div id="statKelas" class="stat">0</div>
-    </div>
+    <!-- =================================================
+    DASHBOARD
+    ================================================== -->
+    <section id="pageDashboard" class="page">
 
-    <div class="card">
-     <div class="muted">Pengumuman</div>
-     <div id="statPengumuman" class="stat">0</div>
-    </div>
+      <h2>Dashboard</h2>
 
-   </div>
+      <div class="cards">
 
-   <div id="dashboardAnnouncements"></div>
+        <div class="card">
+          <div class="muted">Total Santri</div>
+          <div id="statSantri" class="stat">0</div>
+        </div>
 
-  </section>
+        <div class="card">
+          <div class="muted">Ustadzah</div>
+          <div id="statUstadzah" class="stat">0</div>
+        </div>
 
-  <!-- =======================================================
-  SANTRI
-  ======================================================== -->
-  <section id="page-santri" class="page hidden">
+        <div class="card">
+          <div class="muted">Jilid / Kelas</div>
+          <div id="statKelas" class="stat">0</div>
+        </div>
 
-   <h2>Data Santri</h2>
+        <div class="card">
+          <div class="muted">Pengumuman</div>
+          <div id="statPengumuman" class="stat">0</div>
+        </div>
 
-   <div class="toolbar">
-    <button class="btn" onclick="openSantriModal()">
-     + Tambah Santri
-    </button>
-   </div>
+      </div>
 
-   <div class="table-wrap">
-    <table>
-     <thead>
-      <tr>
-       <th>No</th>
-       <th>Nama Santri</th>
-       <th>Nama Wali</th>
-       <th>Kelas</th>
-       <th>Ustadzah</th>
-       <th>Aksi</th>
-      </tr>
-     </thead>
-     <tbody id="santriTable"></tbody>
-    </table>
-   </div>
+      <div id="dashboardContent"></div>
 
-  </section>
+    </section>
 
-  <!-- =======================================================
-  USTADZAH
-  ======================================================== -->
-  <section id="page-ustadzah" class="page hidden">
+    <!-- =================================================
+    SANTRI
+    ================================================== -->
+    <section id="pageSantri" class="page hidden">
 
-   <h2>Data Ustadzah</h2>
+      <h2>Data Santri</h2>
 
-   <div class="toolbar">
-    <button class="btn"
-            onclick="openUstadzahModal()">
-     + Tambah Ustadzah
-    </button>
-   </div>
+      <div class="toolbar">
 
-   <div class="table-wrap">
-    <table>
-     <thead>
-      <tr>
-       <th>No</th>
-       <th>Nama</th>
-       <th>Email</th>
-       <th>Kelas</th>
-       <th>Aksi</th>
-      </tr>
-     </thead>
-     <tbody id="ustadzahTable"></tbody>
-    </table>
-   </div>
+        <button id="addSantriButton"
+                class="btn"
+                onclick="openSantri()">
+          + Tambah Santri
+        </button>
 
-  </section>
+      </div>
 
-  <!-- =======================================================
-  KELAS
-  ======================================================== -->
-  <section id="page-kelas" class="page hidden">
+      <div class="table-wrap">
 
-   <h2>Jilid / Kelas</h2>
+        <table>
 
-   <div class="card" style="margin-bottom:15px">
-    <b>Pengaturan Buku</b>
-    <p class="muted">
-     Upload PDF Baca dan Hafalan. Buku akan otomatis
-     digunakan santri yang berada pada kelas tersebut.
-    </p>
-   </div>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama Santri</th>
+              <th>Wali</th>
+              <th>Kelas</th>
+              <th>Ustadzah</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
 
-   <div class="toolbar">
-    <button class="btn"
-            onclick="openKelasModal()">
-     + Tambah Jilid / Kelas
-    </button>
-   </div>
+          <tbody id="santriTable"></tbody>
 
-   <div class="table-wrap">
-    <table>
-     <thead>
-      <tr>
-       <th>No</th>
-       <th>Kelas</th>
-       <th>Buku Baca</th>
-       <th>Buku Hafalan</th>
-       <th>Aksi</th>
-      </tr>
-     </thead>
-     <tbody id="kelasTable"></tbody>
-    </table>
-   </div>
+        </table>
 
-  </section>
+      </div>
 
-  <!-- =======================================================
-  BACA
-  ======================================================== -->
-  <section id="page-baca" class="page hidden">
+    </section>
 
-   <h2>📖 Modul Baca</h2>
+    <!-- =================================================
+    USTADZAH
+    ================================================== -->
+    <section id="pageUstadzah" class="page hidden">
 
-   <div class="card">
+      <h2>Data Ustadzah</h2>
 
-    <label>Pilih Santri</label>
+      <div class="toolbar">
 
-    <select id="bacaSantriSelect"
-            onchange="loadLearningStudent('baca')">
-     <option value="">-- Pilih Santri --</option>
-    </select>
+        <button id="addUstadzahButton"
+                class="btn"
+                onclick="openUstadzah()">
+          + Tambah Ustadzah
+        </button>
 
-   </div>
+      </div>
 
-   <div id="bacaInfo" style="margin-top:15px"></div>
+      <div class="table-wrap">
 
-  </section>
+        <table>
 
-  <!-- =======================================================
-  HAFALAN
-  ======================================================== -->
-  <section id="page-hafalan" class="page hidden">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>Kelas</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
 
-   <h2>🕌 Modul Hafalan</h2>
+          <tbody id="ustadzahTable"></tbody>
 
-   <div class="card">
+        </table>
 
-    <label>Pilih Santri</label>
+      </div>
 
-    <select id="hafalanSantriSelect"
-            onchange="loadLearningStudent('hafalan')">
-     <option value="">-- Pilih Santri --</option>
-    </select>
+    </section>
 
-   </div>
+    <!-- =================================================
+    KELAS
+    ================================================== -->
+    <section id="pageKelas" class="page hidden">
 
-   <div id="hafalanInfo" style="margin-top:15px"></div>
+      <h2>Jilid / Kelas</h2>
 
-  </section>
+      <div class="card"
+           style="margin-bottom:15px">
 
-  <!-- =======================================================
-  KEUANGAN
-  ======================================================== -->
-  <section id="page-keuangan" class="page hidden">
+        <b>Pengaturan Buku PDF</b>
 
-   <h2>💰 Keuangan</h2>
+        <p class="muted">
+          Admin dapat mengatur buku Baca dan Hafalan
+          untuk setiap jilid/kelas. Buku tersebut akan
+          digunakan otomatis oleh santri sesuai kelasnya.
+        </p>
 
-   <div class="toolbar">
-    <button id="addTagihanBtn"
-            class="btn"
-            onclick="openTagihanModal()">
-     + Tambah Tagihan
-    </button>
-   </div>
+      </div>
 
-   <div class="table-wrap">
-    <table>
-     <thead>
-      <tr>
-       <th>No</th>
-       <th>Santri</th>
-       <th>Tagihan</th>
-       <th>Nilai</th>
-       <th>Terbayar</th>
-       <th>QRIS</th>
-       <th>Aksi</th>
-      </tr>
-     </thead>
-     <tbody id="keuanganTable"></tbody>
-    </table>
-   </div>
+      <div class="toolbar">
 
-  </section>
+        <button class="btn"
+                onclick="openKelas()">
+          + Tambah Kelas
+        </button>
 
-  <!-- =======================================================
-  PENGUMUMAN
-  ======================================================== -->
-  <section id="page-pengumuman" class="page hidden">
+      </div>
 
-   <h2>📢 Pengumuman</h2>
+      <div class="table-wrap">
 
-   <div class="toolbar">
-    <button id="addPengumumanBtn"
-            class="btn"
-            onclick="openPengumumanModal()">
-     + Tambah Pengumuman
-    </button>
-   </div>
+        <table>
 
-   <div id="pengumumanList"></div>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kelas</th>
+              <th>Buku Baca</th>
+              <th>Buku Hafalan</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
 
-  </section>
+          <tbody id="kelasTable"></tbody>
 
-  <!-- =======================================================
-  PENGATURAN
-  ======================================================== -->
-  <section id="page-pengaturan" class="page hidden">
+        </table>
 
-   <h2>⚙️ Pengaturan</h2>
+      </div>
 
-   <div class="card">
+    </section>
 
-    <h3>TPQ Wardatul Wathon</h3>
+    <!-- =================================================
+    BACA
+    ================================================== -->
+    <section id="pageBaca" class="page hidden">
 
-    <p>
-     Tukum Kidul, Lumajang
-    </p>
+      <h2>📖 Pembelajaran Baca</h2>
 
-    <p class="muted">
-     Sistem informasi santri, pembelajaran dan keuangan.
-    </p>
+      <div class="card">
 
-   </div>
+        <label>Pilih Santri</label>
 
-  </section>
+        <select id="bacaSelect"
+                onchange="showLearning('baca')">
+          <option value="">
+            -- Pilih Santri --
+          </option>
+        </select>
 
- </main>
+      </div>
+
+      <div id="bacaContent"
+           style="margin-top:15px">
+      </div>
+
+    </section>
+
+    <!-- =================================================
+    HAFALAN
+    ================================================== -->
+    <section id="pageHafalan" class="page hidden">
+
+      <h2>🕌 Pembelajaran Hafalan</h2>
+
+      <div class="card">
+
+        <label>Pilih Santri</label>
+
+        <select id="hafalanSelect"
+                onchange="showLearning('hafalan')">
+          <option value="">
+            -- Pilih Santri --
+          </option>
+        </select>
+
+      </div>
+
+      <div id="hafalanContent"
+           style="margin-top:15px">
+      </div>
+
+    </section>
+
+    <!-- =================================================
+    KEUANGAN
+    ================================================== -->
+    <section id="pageKeuangan" class="page hidden">
+
+      <h2>💰 Keuangan</h2>
+
+      <div class="toolbar">
+
+        <button id="addBillButton"
+                class="btn"
+                onclick="openBill()">
+          + Tambah Tagihan
+        </button>
+
+      </div>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Santri</th>
+              <th>Tagihan</th>
+              <th>Nilai</th>
+              <th>Terbayar</th>
+              <th>QRIS</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody id="financeTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+    <!-- =================================================
+    PENGUMUMAN
+    ================================================== -->
+    <section id="pagePengumuman" class="page hidden">
+
+      <h2>📢 Pengumuman</h2>
+
+      <div class="toolbar">
+
+        <button id="addAnnouncementButton"
+                class="btn"
+                onclick="openAnnouncement()">
+          + Tambah Pengumuman
+        </button>
+
+      </div>
+
+      <div id="announcementList"></div>
+
+    </section>
+
+  </main>
 </div>
 
-<!-- =========================================================
- MODAL SANTRI
-========================================================= -->
+<!-- =====================================================
+MODAL SANTRI
+===================================================== -->
 <div id="santriModal" class="modal">
- <div class="modal-box">
 
-  <div class="modal-head">
-   <h3>Tambah Santri</h3>
-   <button class="btn btn-gray"
-           onclick="closeModal('santriModal')">✕</button>
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h3>Tambah Santri</h3>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('santriModal')">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Nama Santri</label>
+        <input id="santriName">
+      </div>
+
+      <div class="form-group">
+        <label>Nama Wali</label>
+        <input id="santriWali">
+      </div>
+
+      <div class="form-group">
+        <label>Kelas / Jilid</label>
+        <select id="santriClass"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Ustadzah</label>
+        <select id="santriTeacher"></select>
+      </div>
+
+      <button class="btn"
+              onclick="saveSantri()">
+        Simpan
+      </button>
+
+    </div>
   </div>
-
-  <div class="modal-body">
-
-   <div class="form-group">
-    <label>Nama Santri</label>
-    <input id="santriNama">
-   </div>
-
-   <div class="form-group">
-    <label>Nama Wali</label>
-    <input id="santriWali">
-   </div>
-
-   <div class="form-group">
-    <label>Kelas / Jilid</label>
-    <select id="santriKelas"></select>
-   </div>
-
-   <div class="form-group">
-    <label>Ustadzah Pendamping</label>
-    <select id="santriUstadzah"></select>
-   </div>
-
-   <button class="btn" onclick="saveSantri()">
-    Simpan
-   </button>
-
-  </div>
- </div>
 </div>
 
-<!-- =========================================================
- MODAL USTADZAH
-========================================================= -->
+<!-- =====================================================
+MODAL USTADZAH
+===================================================== -->
 <div id="ustadzahModal" class="modal">
- <div class="modal-box">
 
-  <div class="modal-head">
-   <h3>Tambah Ustadzah</h3>
-   <button class="btn btn-gray"
-           onclick="closeModal('ustadzahModal')">✕</button>
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h3>Tambah Ustadzah</h3>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('ustadzahModal')">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Nama</label>
+        <input id="teacherName">
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input id="teacherEmail"
+               type="email">
+      </div>
+
+      <div class="form-group">
+        <label>Kelas</label>
+        <select id="teacherClass"></select>
+      </div>
+
+      <button class="btn"
+              onclick="saveTeacher()">
+        Simpan
+      </button>
+
+      <p class="muted">
+        Akun login dibuat melalui Firebase Authentication.
+      </p>
+
+    </div>
+
   </div>
-
-  <div class="modal-body">
-
-   <div class="form-group">
-    <label>Nama Ustadzah</label>
-    <input id="ustadzahNama">
-   </div>
-
-   <div class="form-group">
-    <label>Email Login</label>
-    <input id="ustadzahEmail" type="email">
-   </div>
-
-   <div class="form-group">
-    <label>Kelas</label>
-    <select id="ustadzahKelas"></select>
-   </div>
-
-   <p class="muted">
-    Akun login dibuat melalui Firebase Authentication.
-   </p>
-
-   <button class="btn" onclick="saveUstadzah()">
-    Simpan
-   </button>
-
-  </div>
- </div>
 </div>
 
-<!-- =========================================================
- MODAL KELAS
-========================================================= -->
+<!-- =====================================================
+MODAL KELAS
+===================================================== -->
 <div id="kelasModal" class="modal">
- <div class="modal-box">
 
-  <div class="modal-head">
-   <h3>Jilid / Kelas</h3>
-   <button class="btn btn-gray"
-           onclick="closeModal('kelasModal')">✕</button>
-  </div>
+  <div class="modal-box">
 
-  <div class="modal-body">
+    <div class="modal-head">
 
-   <div class="form-group">
-    <label>Nama Jilid / Kelas</label>
-    <input id="kelasNama"
-           placeholder="Contoh: Jilid 1">
-   </div>
+      <h3>Jilid / Kelas</h3>
 
-   <label class="file-label">
-    📖 Pilih PDF Buku Baca
-    <input id="pdfBacaFile"
-           type="file"
-           accept="application/pdf"
-           hidden>
-   </label>
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('kelasModal')">
+        ✕
+      </button>
 
-   <div id="pdfBacaName"
-        class="muted"
-        style="margin-bottom:12px">
-   </div>
-
-   <label class="file-label">
-    🕌 Pilih PDF Buku Hafalan
-    <input id="pdfHafalanFile"
-           type="file"
-           accept="application/pdf"
-           hidden>
-   </label>
-
-   <div id="pdfHafalanName"
-        class="muted"
-        style="margin-bottom:12px">
-   </div>
-
-   <div id="uploadProgress"
-        class="hidden">
-    <div class="muted">Mengupload...</div>
-    <div class="progress">
-     <div id="uploadProgressBar"
-          class="progress-bar"></div>
     </div>
-   </div>
 
-   <br>
+    <div class="modal-body">
 
-   <button class="btn btn-full"
-           onclick="saveKelas()">
-    Simpan Kelas
-   </button>
+      <div class="form-group">
+        <label>Nama Kelas</label>
+        <input id="className"
+               placeholder="Jilid 1">
+      </div>
 
+      <label class="file-box">
+
+        📖 Pilih PDF Buku Baca
+
+        <input id="readPdf"
+               type="file"
+               accept="application/pdf"
+               hidden>
+
+      </label>
+
+      <div id="readPdfName"
+           class="muted"></div>
+
+      <br>
+
+      <label class="file-box">
+
+        🕌 Pilih PDF Buku Hafalan
+
+        <input id="memorizePdf"
+               type="file"
+               accept="application/pdf"
+               hidden>
+
+      </label>
+
+      <div id="memorizePdfName"
+           class="muted"></div>
+
+      <br>
+
+      <div id="uploadBox" class="hidden">
+
+        <div class="muted">
+          Upload file...
+        </div>
+
+        <div class="progress">
+          <div id="uploadBar"
+               class="progress-bar">
+          </div>
+        </div>
+
+      </div>
+
+      <br>
+
+      <button class="btn btn-full"
+              onclick="saveClass()">
+        Simpan Kelas
+      </button>
+
+    </div>
   </div>
- </div>
 </div>
 
-<!-- =========================================================
- MODAL TAGIHAN
-========================================================= -->
-<div id="tagihanModal" class="modal">
- <div class="modal-box">
+<!-- =====================================================
+MODAL TAGIHAN
+===================================================== -->
+<div id="billModal" class="modal">
 
-  <div class="modal-head">
-   <h3>Tambah Tagihan</h3>
-   <button class="btn btn-gray"
-           onclick="closeModal('tagihanModal')">✕</button>
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h3>Tambah Tagihan</h3>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('billModal')">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Santri</label>
+        <select id="billStudent"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Jenis</label>
+
+        <select id="billType">
+          <option value="SPP">SPP</option>
+          <option value="Tabungan">Tabungan</option>
+          <option value="Iuran Kegiatan">
+            Iuran Kegiatan
+          </option>
+        </select>
+
+      </div>
+
+      <div class="form-group">
+        <label>Keterangan</label>
+
+        <input id="billDescription"
+               placeholder="SPP September 2026">
+
+      </div>
+
+      <div class="form-group">
+        <label>Nilai Tagihan</label>
+
+        <input id="billAmount"
+               type="number"
+               min="0">
+
+      </div>
+
+      <button class="btn btn-full"
+              onclick="saveBill()">
+        Simpan Tagihan
+      </button>
+
+    </div>
   </div>
-
-  <div class="modal-body">
-
-   <div class="form-group">
-    <label>Santri</label>
-    <select id="tagihanSantri"></select>
-   </div>
-
-   <div class="form-group">
-    <label>Jenis</label>
-    <select id="tagihanJenis">
-     <option value="SPP">SPP</option>
-     <option value="Tabungan">Tabungan</option>
-     <option value="Iuran Kegiatan">Iuran Kegiatan</option>
-    </select>
-   </div>
-
-   <div class="form-group">
-    <label>Keterangan</label>
-    <input id="tagihanKeterangan"
-           placeholder="SPP September 2026">
-   </div>
-
-   <div class="form-group">
-    <label>Nilai Tagihan</label>
-    <input id="tagihanNilai"
-           type="number"
-           min="0">
-   </div>
-
-   <button class="btn btn-full"
-           onclick="saveTagihan()">
-    Simpan Tagihan
-   </button>
-
-  </div>
- </div>
 </div>
 
-<!-- =========================================================
- MODAL PENGUMUMAN
-========================================================= -->
-<div id="pengumumanModal" class="modal">
- <div class="modal-box">
+<!-- =====================================================
+MODAL PENGUMUMAN
+===================================================== -->
+<div id="announcementModal" class="modal">
 
-  <div class="modal-head">
-   <h3>Pengumuman</h3>
-   <button class="btn btn-gray"
-           onclick="closeModal('pengumumanModal')">✕</button>
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h3>Pengumuman</h3>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('announcementModal')">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-group">
+
+        <label>Judul</label>
+
+        <input id="announcementTitle">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Isi Pengumuman</label>
+
+        <textarea id="announcementText"
+                  rows="5"></textarea>
+
+      </div>
+
+      <button class="btn btn-full"
+              onclick="saveAnnouncement()">
+        Publikasikan
+      </button>
+
+    </div>
+
   </div>
-
-  <div class="modal-body">
-
-   <div class="form-group">
-    <label>Judul</label>
-    <input id="pengumumanJudul">
-   </div>
-
-   <div class="form-group">
-    <label>Isi</label>
-    <textarea id="pengumumanIsi"
-              rows="5"></textarea>
-   </div>
-
-   <button class="btn btn-full"
-           onclick="savePengumuman()">
-    Publikasikan
-   </button>
-
-  </div>
- </div>
 </div>
 
-<!-- =========================================================
- MODAL PEMBELAJARAN
-========================================================= -->
+<!-- =====================================================
+MODAL HASIL PEMBELAJARAN
+===================================================== -->
 <div id="learningModal" class="modal">
- <div class="modal-box">
 
-  <div class="modal-head">
-   <h3 id="learningModalTitle">Hasil Pembelajaran</h3>
+  <div class="modal-box">
 
-   <button class="btn btn-gray"
-           onclick="closeModal('learningModal')">
-    ✕
-   </button>
-  </div>
+    <div class="modal-head">
 
-  <div class="modal-body">
+      <h3 id="learningTitle">
+        Hasil Pembelajaran
+      </h3>
 
-   <div class="form-group">
-    <label>Status</label>
+      <button class="btn btn-gray btn-sm"
+              onclick="closeModal('learningModal')">
+        ✕
+      </button>
 
-    <select id="learningStatus">
-     <option value="naik">Naik</option>
-     <option value="mengulang">Mengulang</option>
-    </select>
-   </div>
-
-   <div class="form-group">
-    <label>Pesan Ustadzah</label>
-    <textarea id="learningMessage"
-              rows="4"
-              placeholder="Tuliskan pesan untuk wali..."></textarea>
-   </div>
-
-   <div class="form-group">
-
-    <label>
-     Pesan Suara
-    </label>
-
-    <button id="recordBtn"
-            class="btn btn-orange"
-            onclick="toggleRecording()">
-     🎙 Mulai Rekam
-    </button>
-
-    <div id="recordStatus"
-         class="muted"
-         style="margin-top:8px">
     </div>
 
-    <audio id="recordPreview"
-           class="audio hidden"
-           controls
-           style="margin-top:10px">
-    </audio>
+    <div class="modal-body">
 
-   </div>
+      <div class="form-group">
 
-   <button class="btn btn-full"
-           onclick="saveLearning()">
-    Simpan Hasil Pembelajaran
-   </button>
+        <label>Status</label>
 
-  </div>
- </div>
-</div>
+        <select id="learningStatus">
+          <option value="naik">Naik</option>
+          <option value="mengulang">
+            Mengulang
+          </option>
+        </select>
 
-<!-- =========================================================
- PDF VIEWER
-========================================================= -->
-<div id="pdfModal" class="modal pdf-modal">
+      </div>
 
- <div class="modal-box">
+      <div class="form-group">
 
-  <div class="modal-head">
+        <label>Pesan Ustadzah</label>
 
-   <div>
-    <h3 id="pdfTitle">Buku</h3>
-    <div id="pdfSubtitle"
-         class="muted">
+        <textarea id="learningMessage"
+                  rows="4"
+                  placeholder="Pesan untuk wali santri">
+        </textarea>
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Pesan Suara</label>
+
+        <button id="recordButton"
+                class="btn btn-warning"
+                onclick="recordAudio()">
+          🎙 Mulai Rekam
+        </button>
+
+        <div id="recordInfo"
+             class="muted"
+             style="margin-top:7px">
+        </div>
+
+        <audio id="recordAudioPreview"
+               class="audio hidden"
+               controls
+               style="margin-top:8px">
+        </audio>
+
+      </div>
+
+      <button class="btn btn-full"
+              onclick="saveLearningResult()">
+        Simpan Hasil
+      </button>
+
     </div>
-   </div>
-
-   <button class="btn btn-gray"
-           onclick="closePdfViewer()">
-    ✕
-   </button>
-
   </div>
-
-  <div class="pdf-toolbar">
-
-   <button class="btn btn-gray btn-sm"
-           onclick="pdfPrev()">
-    ◀
-   </button>
-
-   <span>
-    Halaman
-    <input id="pdfPage"
-           class="pdf-page-input"
-           type="number"
-           min="1"
-           value="1"
-           onchange="pdfGoPage(this.value)">
-    /
-    <b id="pdfTotal">0</b>
-   </span>
-
-   <button class="btn btn-gray btn-sm"
-           onclick="pdfNext()">
-    ▶
-   </button>
-
-   <button class="btn btn-blue btn-sm"
-           onclick="saveCurrentPage()">
-    🔖 Tandai Halaman
-   </button>
-
-  </div>
-
-  <div id="pdfStatus"
-       class="pdf-info">
-  </div>
-
-  <div class="pdf-container">
-   <canvas id="pdfCanvas"></canvas>
-  </div>
-
- </div>
 </div>
 
-<!-- =========================================================
- FIREBASE
-========================================================= -->
+<!-- =====================================================
+PDF MODAL
+===================================================== -->
+<div id="pdfModal"
+     class="modal pdf-modal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <div>
+
+        <h3 id="pdfTitle">Buku</h3>
+
+        <div id="pdfSubtitle"
+             class="muted">
+        </div>
+
+      </div>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="closePdf()">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="pdf-toolbar">
+
+      <button class="btn btn-gray btn-sm"
+              onclick="previousPage()">
+        ◀
+      </button>
+
+      <span>
+        Halaman
+        <input id="pdfPageInput"
+               class="pdf-page"
+               type="number"
+               min="1"
+               value="1"
+               onchange="jumpPage(this.value)">
+        /
+        <b id="pdfTotal">0</b>
+      </span>
+
+      <button class="btn btn-gray btn-sm"
+              onclick="nextPage()">
+        ▶
+      </button>
+
+      <button class="btn btn-blue btn-sm"
+              onclick="saveLastPage()">
+        🔖 Tandai Halaman
+      </button>
+
+    </div>
+
+    <div id="pdfStatus"
+         class="pdf-status">
+    </div>
+
+    <div class="pdf-container">
+
+      <canvas id="pdfCanvas"></canvas>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- =====================================================
+FIREBASE + APPLICATION
+===================================================== -->
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 
 import {
- getAuth,
- signInWithEmailAndPassword,
- signOut,
- onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 import {
- getFirestore,
- collection,
- doc,
- getDoc,
- getDocs,
- addDoc,
- setDoc,
- updateDoc,
- deleteDoc,
- query,
- where,
- orderBy,
- serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 import {
- getStorage,
- ref,
- uploadBytesResumable,
- getDownloadURL
-}
-from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
-/* =========================================================
- FIREBASE CONFIG
-========================================================= */
+/* =====================================================
+FIREBASE CONFIG
+===================================================== */
 
 const firebaseConfig = {
- apiKey:"AIzaSyB_VJ-zWvKiN1PdG6ywFWw-OFn31nazn2s",
- authDomain:"sarpras-68b7c.firebaseapp.com",
- projectId:"sarpras-68b7c",
- storageBucket:"sarpras-68b7c.firebasestorage.app",
- messagingSenderId:"327008853033",
- appId:"1:327008853033:web:30570043f0fe2b06661038",
- measurementId:"G-R2KZFZCVQL"
+  apiKey:"AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
+  authDomain:"tpqwardah.firebaseapp.com",
+  projectId:"tpqwardah",
+  storageBucket:"tpqwardah.firebasestorage.app",
+  messagingSenderId:"308318249706",
+  appId:"1:308318249706:web:ad1f631acee81a2fe6ad93",
+  measurementId:"G-ZVC3M0L8XJ"
 };
 
-const app = initializeApp(firebaseConfig);
+const firebaseApp =
+  initializeApp(firebaseConfig);
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+const auth =
+  getAuth(firebaseApp);
 
-/* =========================================================
- STATE
-========================================================= */
+const db =
+  getFirestore(firebaseApp);
 
-let currentUser = null;
-let currentProfile = null;
+const storage =
+  getStorage(firebaseApp);
 
-let santriData = [];
-let ustadzahData = [];
-let kelasData = [];
-let tagihanData = [];
-let pengumumanData = [];
-let learningData = [];
+/* =====================================================
+STATE
+===================================================== */
 
-let pdfDoc = null;
-let pdfPageNumber = 1;
-let pdfRendering = false;
+let currentUser=null;
+let currentProfile=null;
 
-let pdfStudent = null;
-let pdfMode = "baca";
+let santri=[];
+let ustadzah=[];
+let kelas=[];
+let tagihan=[];
+let pengumuman=[];
+let pembelajaran=[];
 
-let learningTarget = null;
+let pdfDocument=null;
+let pdfCurrentPage=1;
+let pdfStudent=null;
+let pdfMode="baca";
+let pdfRendering=false;
 
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordedBlob = null;
+let learningTarget=null;
 
-/* =========================================================
- LOGIN
-========================================================= */
+let recorder=null;
+let recorderStream=null;
+let audioChunks=[];
+let audioBlob=null;
 
-window.login = async function(){
+/* =====================================================
+UTIL
+===================================================== */
 
- const email =
-   document.getElementById("loginEmail")
-   .value.trim();
-
- const password =
-   document.getElementById("loginPassword")
-   .value;
-
- const error =
-   document.getElementById("loginError");
-
- error.classList.add("hidden");
-
- if(!email || !password){
-
-  error.textContent =
-    "Email dan password wajib diisi.";
-
-  error.classList.remove("hidden");
-
-  return;
- }
-
- const btn =
-   document.getElementById("loginBtn");
-
- btn.disabled=true;
- btn.textContent="Memproses...";
-
- try{
-
-  await signInWithEmailAndPassword(
-   auth,
-   email,
-   password
-  );
-
- }catch(e){
-
-  console.error(e);
-
-  error.textContent =
-    "Login gagal. Periksa email/password.";
-
-  error.classList.remove("hidden");
-
- }finally{
-
-  btn.disabled=false;
-  btn.textContent="Masuk";
- }
-};
-
-window.logout = async function(){
-
- await signOut(auth);
-};
-
-/* =========================================================
- AUTH STATE
-========================================================= */
-
-onAuthStateChanged(auth,async user=>{
-
- if(!user){
-
-  currentUser=null;
-  currentProfile=null;
-
-  document.getElementById("loginPage")
-    .style.display="flex";
-
-  document.getElementById("app")
-    .style.display="none";
-
-  return;
- }
-
- currentUser=user;
-
- await loadProfile(user.uid);
-
- document.getElementById("loginPage")
-   .style.display="none";
-
- document.getElementById("app")
-   .style.display="block";
-
- document.getElementById("userName")
-   .textContent =
-   currentProfile?.nama ||
-   user.email;
-
- document.getElementById("userRole")
-   .textContent =
-   roleLabel(currentProfile?.role);
-
- applyRole();
-
- await loadAll();
-
- showPage("dashboard");
-
-});
-
-/* =========================================================
- PROFILE
-========================================================= */
-
-async function loadProfile(uid){
-
- const snap =
-   await getDoc(
-    doc(db,"users",uid)
-   );
-
- if(snap.exists()){
-
-  currentProfile={
-   id:uid,
-   ...snap.data()
-  };
-
- }else{
-
-  /*
-   Untuk keamanan, profile yang tidak ada
-   tidak diberi hak admin.
-  */
-
-  currentProfile={
-   id:uid,
-   nama:currentUser.email,
-   role:"wali"
-  };
- }
+function escapeHtml(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
 
-function roleLabel(role){
-
- if(role==="admin")return"Administrator";
- if(role==="ustadzah")return"Ustadzah";
- if(role==="wali")return"Wali Santri";
-
- return"Pengguna";
+function rupiah(value){
+  return new Intl.NumberFormat("id-ID")
+    .format(Number(value)||0);
 }
 
-/* =========================================================
- ROLE UI
-========================================================= */
+function roleName(role){
+  if(role==="admin")return"Administrator";
+  if(role==="ustadzah")return"Ustadzah";
+  if(role==="wali")return"Wali Santri";
+  return"Pengguna";
+}
+
+function closeModal(id){
+  document.getElementById(id).style.display="none";
+}
+
+window.closeModal=closeModal;
+
+/* =====================================================
+LOGIN
+===================================================== */
+
+window.doLogin=async function(){
+
+  const email=
+    document.getElementById("email")
+      .value.trim();
+
+  const password=
+    document.getElementById("password")
+      .value;
+
+  const error=
+    document.getElementById("loginError");
+
+  error.classList.add("hidden");
+
+  if(!email || !password){
+
+    error.textContent=
+      "Email dan password wajib diisi.";
+
+    error.classList.remove("hidden");
+
+    return;
+  }
+
+  const button=
+    document.getElementById("loginButton");
+
+  button.disabled=true;
+  button.textContent="Memproses...";
+
+  try{
+
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+  }catch(errorObject){
+
+    console.error(errorObject);
+
+    error.textContent=
+      "Login gagal. Periksa email dan password.";
+
+    error.classList.remove("hidden");
+
+  }finally{
+
+    button.disabled=false;
+    button.textContent="Masuk";
+  }
+};
+
+window.doLogout=async function(){
+  await signOut(auth);
+};
+
+/* =====================================================
+AUTH
+===================================================== */
+
+onAuthStateChanged(
+  auth,
+  async user=>{
+
+    if(!user){
+
+      currentUser=null;
+      currentProfile=null;
+
+      document.getElementById("loginPage")
+        .style.display="flex";
+
+      document.getElementById("app")
+        .style.display="none";
+
+      return;
+    }
+
+    currentUser=user;
+
+    await loadProfile();
+
+    document.getElementById("loginPage")
+      .style.display="none";
+
+    document.getElementById("app")
+      .style.display="block";
+
+    document.getElementById("userName")
+      .textContent=
+        currentProfile?.nama ||
+        user.email;
+
+    document.getElementById("userRole")
+      .textContent=
+        roleName(currentProfile?.role);
+
+    await loadData();
+
+    applyRole();
+
+    go("dashboard");
+  }
+);
+
+/* =====================================================
+PROFILE
+===================================================== */
+
+async function loadProfile(){
+
+  const snapshot=
+    await getDoc(
+      doc(db,"users",currentUser.uid)
+    );
+
+  if(snapshot.exists()){
+
+    currentProfile={
+      uid:currentUser.uid,
+      ...snapshot.data()
+    };
+
+  }else{
+
+    /*
+      Jika profile belum dibuat, user dianggap wali
+      agar tidak memperoleh hak admin.
+    */
+
+    currentProfile={
+      uid:currentUser.uid,
+      nama:currentUser.email,
+      role:"wali"
+    };
+  }
+}
+
+/* =====================================================
+LOAD DATA
+===================================================== */
+
+async function readCollection(name){
+
+  const snapshot=
+    await getDocs(
+      collection(db,name)
+    );
+
+  return snapshot.docs.map(item=>({
+    id:item.id,
+    ...item.data()
+  }));
+}
+
+async function loadData(){
+
+  try{
+
+    santri=
+      await readCollection("santri");
+
+    ustadzah=
+      await readCollection("ustadzah");
+
+    kelas=
+      await readCollection("kelas");
+
+    tagihan=
+      await readCollection("tagihan");
+
+    pengumuman=
+      await readCollection("pengumuman");
+
+    pembelajaran=
+      await readCollection("pembelajaran");
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Sebagian data Firebase tidak dapat dimuat. Periksa Firestore Rules."
+    );
+  }
+
+  updateStats();
+  fillSelectors();
+}
+
+/* =====================================================
+STATS
+===================================================== */
+
+function updateStats(){
+
+  document.getElementById("statSantri")
+    .textContent=santri.length;
+
+  document.getElementById("statUstadzah")
+    .textContent=ustadzah.length;
+
+  document.getElementById("statKelas")
+    .textContent=kelas.length;
+
+  document.getElementById("statPengumuman")
+    .textContent=pengumuman.length;
+}
+
+/* =====================================================
+ROLE
+===================================================== */
 
 function applyRole(){
 
- const role =
-   currentProfile?.role || "wali";
+  const role=
+    currentProfile?.role || "wali";
 
- const allNav =
-   document.querySelectorAll(".nav button");
+  const adminOnly=[
+    "navSantri",
+    "navUstadzah",
+    "navKelas"
+  ];
 
- allNav.forEach(btn=>{
-  btn.style.display="";
- });
+  if(role==="wali"){
 
- if(role==="wali"){
+    adminOnly.forEach(id=>{
+      document.getElementById(id)
+        .style.display="none";
+    });
 
-  [
-   "santri",
-   "ustadzah",
-   "kelas",
-   "pengaturan"
-  ].forEach(p=>{
-   document.getElementById("nav-"+p)
-    .style.display="none";
-  });
+    document.getElementById("navBaca")
+      .style.display="none";
 
-  document.getElementById("addTagihanBtn")
-    ?.classList.add("hidden");
+    document.getElementById("navHafalan")
+      .style.display="none";
 
-  document.getElementById("addPengumumanBtn")
-    ?.classList.add("hidden");
+    document.getElementById("addBillButton")
+      .classList.add("hidden");
 
- }
+    document.getElementById("addAnnouncementButton")
+      .classList.add("hidden");
+  }
 
- if(role==="ustadzah"){
+  if(role==="ustadzah"){
 
-  [
-   "ustadzah",
-   "kelas",
-   "pengaturan"
-  ].forEach(p=>{
-   document.getElementById("nav-"+p)
-    .style.display="none";
-  });
+    document.getElementById("navUstadzah")
+      .style.display="none";
 
-  document.getElementById("addTagihanBtn")
-    ?.classList.add("hidden");
+    document.getElementById("navKelas")
+      .style.display="none";
 
-  document.getElementById("addPengumumanBtn")
-    ?.classList.add("hidden");
- }
+    document.getElementById("navSantri")
+      .style.display="none";
 
- if(role==="admin"){
+    document.getElementById("addBillButton")
+      .classList.add("hidden");
 
-  document.getElementById("addTagihanBtn")
-    ?.classList.remove("hidden");
+    document.getElementById("addAnnouncementButton")
+      .classList.add("hidden");
+  }
 
-  document.getElementById("addPengumumanBtn")
-    ?.classList.remove("hidden");
- }
+  if(role==="admin"){
+
+    document.getElementById("addBillButton")
+      .classList.remove("hidden");
+
+    document.getElementById("addAnnouncementButton")
+      .classList.remove("hidden");
+  }
 }
 
-/* =========================================================
- NAVIGATION
-========================================================= */
+/* =====================================================
+NAVIGATION
+===================================================== */
 
-window.showPage=function(page){
+window.go=function(page){
 
- document.querySelectorAll(".page")
-   .forEach(x=>x.classList.add("hidden"));
+  const map={
+    dashboard:"pageDashboard",
+    santri:"pageSantri",
+    ustadzah:"pageUstadzah",
+    kelas:"pageKelas",
+    baca:"pageBaca",
+    hafalan:"pageHafalan",
+    keuangan:"pageKeuangan",
+    pengumuman:"pagePengumuman"
+  };
 
- document.getElementById("page-"+page)
-   ?.classList.remove("hidden");
+  Object.values(map).forEach(id=>{
+    document.getElementById(id)
+      .classList.add("hidden");
+  });
 
- document.querySelectorAll(".nav button")
-   .forEach(x=>x.classList.remove("active"));
+  if(map[page]){
+    document.getElementById(map[page])
+      .classList.remove("hidden");
+  }
 
- document.getElementById("nav-"+page)
-   ?.classList.add("active");
+  document.querySelectorAll(".nav-btn")
+    .forEach(x=>x.classList.remove("active"));
 
- if(window.innerWidth<=850)
-   document.getElementById("sidebar")
-    .classList.remove("open");
+  const nav={
+    dashboard:"navDashboard",
+    santri:"navSantri",
+    ustadzah:"navUstadzah",
+    kelas:"navKelas",
+    baca:"navBaca",
+    hafalan:"navHafalan",
+    keuangan:"navKeuangan",
+    pengumuman:"navPengumuman"
+  };
 
- if(page==="santri")renderSantri();
- if(page==="ustadzah")renderUstadzah();
- if(page==="kelas")renderKelas();
- if(page==="baca")populateLearningSelectors();
- if(page==="hafalan")populateLearningSelectors();
- if(page==="keuangan")renderKeuangan();
- if(page==="pengumuman")renderPengumuman();
+  document.getElementById(nav[page])
+    ?.classList.add("active");
+
+  if(page==="dashboard")
+    renderDashboard();
+
+  if(page==="santri")
+    renderSantri();
+
+  if(page==="ustadzah")
+    renderUstadzah();
+
+  if(page==="kelas")
+    renderKelas();
+
+  if(page==="baca")
+    fillLearningSelect("baca");
+
+  if(page==="hafalan")
+    fillLearningSelect("hafalan");
+
+  if(page==="keuangan")
+    renderFinance();
+
+  if(page==="pengumuman")
+    renderAnnouncements();
+
+  if(window.innerWidth<=850)
+    document.getElementById("sidebar")
+      .classList.remove("open");
 };
 
 window.toggleSidebar=function(){
- document.getElementById("sidebar")
-   .classList.toggle("open");
+  document.getElementById("sidebar")
+    .classList.toggle("open");
 };
 
-window.closeModal=function(id){
- document.getElementById(id).style.display="none";
-};
-
-/* =========================================================
- LOAD COLLECTION
-========================================================= */
-
-async function getCollection(name){
-
- try{
-
-  const snap =
-    await getDocs(collection(db,name));
-
-  return snap.docs.map(d=>({
-   id:d.id,
-   ...d.data()
-  }));
-
- }catch(e){
-
-  console.error(name,e);
-
-  return [];
- }
-}
-
-async function loadAll(){
-
- santriData=await getCollection("santri");
- ustadzahData=await getCollection("ustadzah");
- kelasData=await getCollection("kelas");
- tagihanData=await getCollection("tagihan");
- pengumumanData=await getCollection("pengumuman");
- learningData=await getCollection("pembelajaran");
-
- document.getElementById("statSantri")
-   .textContent=santriData.length;
-
- document.getElementById("statUstadzah")
-   .textContent=ustadzahData.length;
-
- document.getElementById("statKelas")
-   .textContent=kelasData.length;
-
- document.getElementById("statPengumuman")
-   .textContent=
-   pengumumanData.length;
-
- populateSelectors();
- renderDashboard();
-}
-
-/* =========================================================
- DASHBOARD
-========================================================= */
+/* =====================================================
+DASHBOARD
+===================================================== */
 
 function renderDashboard(){
 
- const el =
-   document.getElementById("dashboardAnnouncements");
+  const el=
+    document.getElementById("dashboardContent");
 
- if(!pengumumanData.length){
+  if(!pengumuman.length){
+
+    el.innerHTML=`
+      <div class="card empty">
+        Belum ada pengumuman.
+      </div>
+    `;
+
+    return;
+  }
 
   el.innerHTML=`
-   <div class="card empty">
-    Belum ada pengumuman.
-   </div>
+    <div class="card">
+
+      <h3>📢 Pengumuman</h3>
+
+      ${
+        pengumuman
+        .slice()
+        .reverse()
+        .slice(0,5)
+        .map(p=>`
+          <div class="announcement">
+
+            <b>${escapeHtml(p.judul)}</b>
+
+            <p>
+              ${escapeHtml(p.isi)}
+            </p>
+
+          </div>
+        `)
+        .join("")
+      }
+
+    </div>
   `;
-
-  return;
- }
-
- el.innerHTML=`
-  <div class="card">
-   <h3>📢 Pengumuman Terbaru</h3>
-
-   ${pengumumanData
-    .slice()
-    .reverse()
-    .slice(0,3)
-    .map(p=>`
-     <div class="announcement">
-      <b>${esc(p.judul||"Pengumuman")}</b>
-      <p>${esc(p.isi||"")}</p>
-     </div>
-    `).join("")}
-
-  </div>
- `;
 }
 
-/* =========================================================
- SELECTORS
-========================================================= */
+/* =====================================================
+SELECTORS
+===================================================== */
 
-function populateSelectors(){
+function fillSelectors(){
 
- const classIds=[
-  "santriKelas",
-  "ustadzahKelas"
- ];
+  const classSelects=[
+    "santriClass",
+    "teacherClass"
+  ];
 
- classIds.forEach(id=>{
+  classSelects.forEach(id=>{
 
-  const el=document.getElementById(id);
-  if(!el)return;
+    const el=
+      document.getElementById(id);
 
-  el.innerHTML=
-   `<option value="">-- Pilih Kelas --</option>`;
+    if(!el)return;
 
-  kelasData.forEach(k=>{
-   el.innerHTML+=`
-    <option value="${k.id}">
-     ${esc(k.nama)}
-    </option>
-   `;
+    el.innerHTML=
+      `<option value="">
+        -- Pilih Kelas --
+      </option>`;
+
+    kelas.forEach(k=>{
+
+      el.innerHTML+=`
+        <option value="${escapeHtml(k.id)}">
+          ${escapeHtml(k.nama)}
+        </option>
+      `;
+    });
   });
- });
 
- const ust=
-   document.getElementById("santriUstadzah");
+  const teacher=
+    document.getElementById("santriTeacher");
 
- if(ust){
+  if(teacher){
 
-  ust.innerHTML=
-   `<option value="">-- Pilih Ustadzah --</option>`;
+    teacher.innerHTML=
+      `<option value="">
+        -- Pilih Ustadzah --
+      </option>`;
 
-  ustadzahData.forEach(u=>{
-   ust.innerHTML+=`
-    <option value="${u.id}">
-     ${esc(u.nama)}
-    </option>
-   `;
-  });
- }
+    ustadzah.forEach(u=>{
 
- populateLearningSelectors();
- populateTagihanSelector();
+      teacher.innerHTML+=`
+        <option value="${escapeHtml(u.id)}">
+          ${escapeHtml(u.nama)}
+        </option>
+      `;
+    });
+  }
 }
 
-/* =========================================================
- SANTRI
-========================================================= */
+/* =====================================================
+SANTRI
+===================================================== */
 
-window.openSantriModal=function(){
+window.openSantri=function(){
 
- document.getElementById("santriNama").value="";
- document.getElementById("santriWali").value="";
+  fillSelectors();
 
- populateSelectors();
+  document.getElementById("santriName")
+    .value="";
 
- document.getElementById("santriModal")
-  .style.display="block";
+  document.getElementById("santriWali")
+    .value="";
+
+  document.getElementById("santriModal")
+    .style.display="block";
 };
 
 window.saveSantri=async function(){
 
- const data={
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
+  }
 
-  nama:
-   document.getElementById("santriNama")
-    .value.trim(),
+  const nama=
+    document.getElementById("santriName")
+      .value.trim();
 
-  wali:
-   document.getElementById("santriWali")
-    .value.trim(),
+  const wali=
+    document.getElementById("santriWali")
+      .value.trim();
 
-  kelasId:
-   document.getElementById("santriKelas")
-    .value,
+  const kelasId=
+    document.getElementById("santriClass")
+      .value;
 
-  ustadzahId:
-   document.getElementById("santriUstadzah")
-    .value,
+  const ustadzahId=
+    document.getElementById("santriTeacher")
+      .value;
 
-  createdAt:serverTimestamp()
- };
+  if(!nama){
 
- if(!data.nama){
+    alert("Nama santri wajib diisi.");
+    return;
+  }
 
-  alert("Nama santri wajib diisi.");
-  return;
- }
+  await addDoc(
+    collection(db,"santri"),
+    {
+      nama,
+      wali,
+      kelasId,
+      ustadzahId,
+      createdAt:serverTimestamp()
+    }
+  );
 
- await addDoc(
-  collection(db,"santri"),
-  data
- );
+  closeModal("santriModal");
 
- closeModal("santriModal");
+  await loadData();
 
- await loadAll();
-
- alert("Santri berhasil ditambahkan.");
+  alert("Santri berhasil disimpan.");
 };
 
 function renderSantri(){
 
- const tbody =
-   document.getElementById("santriTable");
+  const tbody=
+    document.getElementById("santriTable");
 
- tbody.innerHTML="";
+  tbody.innerHTML="";
 
- if(!santriData.length){
+  if(!santri.length){
 
-  tbody.innerHTML=`
-   <tr>
-    <td colspan="6" class="empty">
-     Belum ada data santri.
-    </td>
-   </tr>
-  `;
+    tbody.innerHTML=`
+      <tr>
+        <td colspan="6" class="empty">
+          Belum ada santri.
+        </td>
+      </tr>
+    `;
 
-  return;
- }
+    return;
+  }
 
- santriData.forEach((s,i)=>{
+  santri.forEach((s,index)=>{
 
-  const kelas=
-   kelasData.find(k=>k.id===s.kelasId);
+    const k=
+      kelas.find(x=>x.id===s.kelasId);
 
-  const ust=
-   ustadzahData.find(u=>u.id===s.ustadzahId);
+    const u=
+      ustadzah.find(x=>x.id===s.ustadzahId);
 
-  tbody.innerHTML+=`
-   <tr>
+    tbody.innerHTML+=`
+      <tr>
 
-    <td>${i+1}</td>
+        <td>${index+1}</td>
 
-    <td><b>${esc(s.nama)}</b></td>
+        <td>
+          <b>${escapeHtml(s.nama)}</b>
+        </td>
 
-    <td>${esc(s.wali||"-")}</td>
+        <td>
+          ${escapeHtml(s.wali||"-")}
+        </td>
 
-    <td>${esc(kelas?.nama||"-")}</td>
+        <td>
+          ${escapeHtml(k?.nama||"-")}
+        </td>
 
-    <td>${esc(ust?.nama||"-")}</td>
+        <td>
+          ${escapeHtml(u?.nama||"-")}
+        </td>
 
-    <td>
-     <button class="btn btn-danger btn-sm"
-       onclick="deleteData('santri','${s.id}')">
-      Hapus
-     </button>
-    </td>
+        <td>
 
-   </tr>
-  `;
- });
+          <button class="btn btn-danger btn-sm"
+            onclick="removeItem('santri','${s.id}')">
+            Hapus
+          </button>
+
+        </td>
+
+      </tr>
+    `;
+  });
 }
 
-/* =========================================================
- USTADZAH
-========================================================= */
+/* =====================================================
+USTADZAH
+===================================================== */
 
-window.openUstadzahModal=function(){
+window.openUstadzah=function(){
 
- document.getElementById("ustadzahNama").value="";
- document.getElementById("ustadzahEmail").value="";
+  fillSelectors();
 
- populateSelectors();
+  document.getElementById("teacherName")
+    .value="";
 
- document.getElementById("ustadzahModal")
-  .style.display="block";
+  document.getElementById("teacherEmail")
+    .value="";
+
+  document.getElementById("ustadzahModal")
+    .style.display="block";
 };
 
-window.saveUstadzah=async function(){
+window.saveTeacher=async function(){
 
- const nama=
-  document.getElementById("ustadzahNama")
-   .value.trim();
-
- const email=
-  document.getElementById("ustadzahEmail")
-   .value.trim();
-
- const kelasId=
-  document.getElementById("ustadzahKelas")
-   .value;
-
- if(!nama||!email){
-
-  alert("Nama dan email wajib diisi.");
-  return;
- }
-
- await addDoc(
-  collection(db,"ustadzah"),
-  {
-   nama,
-   email,
-   kelasId,
-   createdAt:serverTimestamp()
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
   }
- );
 
- closeModal("ustadzahModal");
+  const nama=
+    document.getElementById("teacherName")
+      .value.trim();
 
- await loadAll();
+  const email=
+    document.getElementById("teacherEmail")
+      .value.trim();
 
- alert(
-  "Data ustadzah disimpan. Buat akun login dengan email tersebut di Firebase Authentication."
- );
+  const kelasId=
+    document.getElementById("teacherClass")
+      .value;
+
+  if(!nama||!email){
+
+    alert("Nama dan email wajib diisi.");
+    return;
+  }
+
+  await addDoc(
+    collection(db,"ustadzah"),
+    {
+      nama,
+      email,
+      kelasId,
+      createdAt:serverTimestamp()
+    }
+  );
+
+  closeModal("ustadzahModal");
+
+  await loadData();
+
+  alert(
+    "Data ustadzah disimpan. Buat akun login dengan email tersebut melalui Firebase Authentication."
+  );
 };
 
 function renderUstadzah(){
 
- const tbody=
-   document.getElementById("ustadzahTable");
+  const tbody=
+    document.getElementById("ustadzahTable");
 
- tbody.innerHTML="";
+  tbody.innerHTML="";
 
- ustadzahData.forEach((u,i)=>{
+  if(!ustadzah.length){
 
-  const kelas=
-   kelasData.find(k=>k.id===u.kelasId);
+    tbody.innerHTML=`
+      <tr>
+        <td colspan="5"
+            class="empty">
+          Belum ada ustadzah.
+        </td>
+      </tr>
+    `;
 
-  tbody.innerHTML+=`
-   <tr>
+    return;
+  }
 
-    <td>${i+1}</td>
+  ustadzah.forEach((u,index)=>{
 
-    <td><b>${esc(u.nama)}</b></td>
+    const k=
+      kelas.find(x=>x.id===u.kelasId);
 
-    <td>${esc(u.email)}</td>
+    tbody.innerHTML+=`
 
-    <td>${esc(kelas?.nama||"-")}</td>
+      <tr>
 
-    <td>
-     <button class="btn btn-danger btn-sm"
-      onclick="deleteData('ustadzah','${u.id}')">
-      Hapus
-     </button>
-    </td>
+        <td>${index+1}</td>
 
-   </tr>
-  `;
- });
+        <td>
+          <b>${escapeHtml(u.nama)}</b>
+        </td>
+
+        <td>${escapeHtml(u.email||"-")}</td>
+
+        <td>${escapeHtml(k?.nama||"-")}</td>
+
+        <td>
+
+          <button class="btn btn-danger btn-sm"
+            onclick="removeItem('ustadzah','${u.id}')">
+            Hapus
+          </button>
+
+        </td>
+
+      </tr>
+    `;
+  });
 }
 
-/* =========================================================
- KELAS + UPLOAD PDF
-========================================================= */
+/* =====================================================
+KELAS / PDF
+===================================================== */
 
-document.getElementById("pdfBacaFile")
- ?.addEventListener("change",e=>{
+document.getElementById("readPdf")
+  .addEventListener("change",e=>{
 
-  const f=e.target.files[0];
+    document.getElementById("readPdfName")
+      .textContent=
+        e.target.files[0]
+        ?e.target.files[0].name
+        :"";
+  });
 
-  document.getElementById("pdfBacaName")
-   .textContent=f
-    ? `Dipilih: ${f.name}`
-    : "";
- });
+document.getElementById("memorizePdf")
+  .addEventListener("change",e=>{
 
-document.getElementById("pdfHafalanFile")
- ?.addEventListener("change",e=>{
+    document.getElementById("memorizePdfName")
+      .textContent=
+        e.target.files[0]
+        ?e.target.files[0].name
+        :"";
+  });
 
-  const f=e.target.files[0];
+window.openKelas=function(){
 
-  document.getElementById("pdfHafalanName")
-   .textContent=f
-    ? `Dipilih: ${f.name}`
-    : "";
- });
+  document.getElementById("className")
+    .value="";
 
-window.openKelasModal=function(){
+  document.getElementById("readPdf")
+    .value="";
 
- document.getElementById("kelasNama").value="";
+  document.getElementById("memorizePdf")
+    .value="";
 
- document.getElementById("pdfBacaFile").value="";
- document.getElementById("pdfHafalanFile").value="";
+  document.getElementById("readPdfName")
+    .textContent="";
 
- document.getElementById("pdfBacaName").textContent="";
- document.getElementById("pdfHafalanName").textContent="";
+  document.getElementById("memorizePdfName")
+    .textContent="";
 
- document.getElementById("uploadProgress")
-  .classList.add("hidden");
+  document.getElementById("uploadBox")
+    .classList.add("hidden");
 
- document.getElementById("kelasModal")
-  .style.display="block";
+  document.getElementById("kelasModal")
+    .style.display="block";
 };
 
 async function uploadPDF(file,path){
 
- if(!file)return null;
+  if(!file)return null;
 
- if(file.type!=="application/pdf"){
-
-  throw new Error("File harus PDF.");
- }
-
- if(file.size>50*1024*1024){
-
-  throw new Error(
-   "Ukuran PDF maksimal 50 MB."
-  );
- }
-
- const storageRef=
-   ref(storage,path);
-
- const task=
-   uploadBytesResumable(
-    storageRef,
-    file,
-    {
-     contentType:"application/pdf"
-    }
-   );
-
- document.getElementById("uploadProgress")
-  .classList.remove("hidden");
-
- return await new Promise(
-  (resolve,reject)=>{
-
-   task.on(
-    "state_changed",
-
-    snapshot=>{
-
-     const percent=
-      snapshot.totalBytes
-      ? (
-       snapshot.bytesTransferred /
-       snapshot.totalBytes
-      )*100
-      :0;
-
-     document.getElementById(
-      "uploadProgressBar"
-     ).style.width=
-      percent+"%";
-    },
-
-    reject,
-
-    async()=>{
-
-     const url=
-      await getDownloadURL(
-       task.snapshot.ref
-      );
-
-     resolve(url);
-    }
-   );
+  if(file.type!=="application/pdf"){
+    throw new Error("File harus PDF.");
   }
- );
+
+  if(file.size>50*1024*1024){
+    throw new Error("PDF maksimal 50 MB.");
+  }
+
+  document.getElementById("uploadBox")
+    .classList.remove("hidden");
+
+  const storageRef=
+    ref(storage,path);
+
+  const upload=
+    uploadBytesResumable(
+      storageRef,
+      file,
+      {
+        contentType:"application/pdf"
+      }
+    );
+
+  return await new Promise(
+    (resolve,reject)=>{
+
+      upload.on(
+        "state_changed",
+
+        snapshot=>{
+
+          const percent=
+            snapshot.totalBytes
+            ?snapshot.bytesTransferred /
+             snapshot.totalBytes*100
+            :0;
+
+          document.getElementById("uploadBar")
+            .style.width=
+              percent+"%";
+        },
+
+        reject,
+
+        async()=>{
+
+          const url=
+            await getDownloadURL(
+              upload.snapshot.ref
+            );
+
+          resolve(url);
+        }
+      );
+    }
+  );
 }
 
-window.saveKelas=async function(){
+window.saveClass=async function(){
 
- const nama=
-   document.getElementById("kelasNama")
-    .value.trim();
-
- const bacaFile=
-   document.getElementById("pdfBacaFile")
-    .files[0];
-
- const hafalanFile=
-   document.getElementById("pdfHafalanFile")
-    .files[0];
-
- if(!nama){
-
-  alert("Nama kelas wajib diisi.");
-  return;
- }
-
- try{
-
-  const id=
-   crypto.randomUUID();
-
-  let pdfBaca=null;
-  let pdfHafalan=null;
-
-  if(bacaFile){
-
-   pdfBaca=
-    await uploadPDF(
-     bacaFile,
-     `buku/${id}/baca/${bacaFile.name}`
-    );
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
   }
 
-  if(hafalanFile){
+  const name=
+    document.getElementById("className")
+      .value.trim();
 
-   pdfHafalan=
-    await uploadPDF(
-     hafalanFile,
-     `buku/${id}/hafalan/${hafalanFile.name}`
-    );
+  const readFile=
+    document.getElementById("readPdf")
+      .files[0];
+
+  const memorizeFile=
+    document.getElementById("memorizePdf")
+      .files[0];
+
+  if(!name){
+
+    alert("Nama kelas wajib diisi.");
+    return;
   }
 
-  await setDoc(
-   doc(db,"kelas",id),
-   {
-    nama,
-    pdfBaca,
-    pdfHafalan,
-    createdAt:serverTimestamp()
-   }
-  );
+  try{
 
-  closeModal("kelasModal");
+    const id=
+      crypto.randomUUID();
 
-  await loadAll();
+    let readUrl=null;
+    let memorizeUrl=null;
 
-  alert("Kelas dan buku berhasil disimpan.");
+    if(readFile){
 
- }catch(e){
+      readUrl=
+        await uploadPDF(
+          readFile,
+          `books/${id}/baca/${readFile.name}`
+        );
+    }
 
-  console.error(e);
+    if(memorizeFile){
 
-  alert(
-   "Gagal menyimpan: "+
-   (e.message||e)
-  );
- }
+      memorizeUrl=
+        await uploadPDF(
+          memorizeFile,
+          `books/${id}/hafalan/${memorizeFile.name}`
+        );
+    }
+
+    await setDoc(
+      doc(db,"kelas",id),
+      {
+        nama:name,
+        pdfBaca:readUrl,
+        pdfHafalan:memorizeUrl,
+        createdAt:serverTimestamp()
+      }
+    );
+
+    closeModal("kelasModal");
+
+    await loadData();
+
+    alert("Kelas berhasil disimpan.");
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Upload gagal: "+
+      (error.message||error)
+    );
+  }
 };
 
 function renderKelas(){
 
- const tbody=
-   document.getElementById("kelasTable");
+  const tbody=
+    document.getElementById("kelasTable");
 
- tbody.innerHTML="";
+  tbody.innerHTML="";
 
- kelasData.forEach((k,i)=>{
+  if(!kelas.length){
 
-  tbody.innerHTML+=`
+    tbody.innerHTML=`
+      <tr>
+        <td colspan="5"
+            class="empty">
+          Belum ada kelas.
+        </td>
+      </tr>
+    `;
 
-   <tr>
+    return;
+  }
 
-    <td>${i+1}</td>
+  kelas.forEach((k,index)=>{
 
-    <td><b>${esc(k.nama)}</b></td>
+    tbody.innerHTML+=`
 
-    <td>
-     ${
-      k.pdfBaca
-      ? `<span class="badge green">✓ Ada</span>`
-      : `<span class="badge red">Belum ada</span>`
-     }
-    </td>
+      <tr>
 
-    <td>
-     ${
-      k.pdfHafalan
-      ? `<span class="badge green">✓ Ada</span>`
-      : `<span class="badge red">Belum ada</span>`
-     }
-    </td>
+        <td>${index+1}</td>
 
-    <td>
+        <td>
+          <b>${escapeHtml(k.nama)}</b>
+        </td>
 
-     <button class="btn btn-danger btn-sm"
-       onclick="deleteData('kelas','${k.id}')">
-      Hapus
-     </button>
+        <td>
+          ${
+            k.pdfBaca
+            ?'<span class="badge badge-green">✓ Ada</span>'
+            :'<span class="badge badge-red">Belum</span>'
+          }
+        </td>
 
-    </td>
+        <td>
+          ${
+            k.pdfHafalan
+            ?'<span class="badge badge-green">✓ Ada</span>'
+            :'<span class="badge badge-red">Belum</span>'
+          }
+        </td>
 
-   </tr>
-  `;
- });
+        <td>
+
+          <button class="btn btn-danger btn-sm"
+            onclick="removeItem('kelas','${k.id}')">
+            Hapus
+          </button>
+
+        </td>
+
+      </tr>
+    `;
+  });
 }
 
-/* =========================================================
- LEARNING SELECTOR
-========================================================= */
+/* =====================================================
+LEARNING
+===================================================== */
 
-function getVisibleStudents(){
+function visibleStudents(){
 
- let list=[...santriData];
+  let list=[...santri];
 
- if(currentProfile?.role==="ustadzah"){
+  if(currentProfile?.role==="ustadzah"){
 
-  const u=
-   ustadzahData.find(
-    x=>x.email===currentUser?.email
-   );
+    const teacher=
+      ustadzah.find(
+        u=>u.email===currentUser.email
+      );
 
-  if(u){
+    if(teacher){
 
-   list=
-    list.filter(
-     s=>s.kelasId===u.kelasId
+      list=
+        list.filter(
+          s=>s.kelasId===teacher.kelasId
+        );
+    }
+  }
+
+  /*
+    Untuk wali, hubungan akun wali dengan santri
+    menggunakan waliUid.
+  */
+
+  if(currentProfile?.role==="wali"){
+
+    list=
+      list.filter(
+        s=>s.waliUid===currentUser.uid
+      );
+  }
+
+  return list;
+}
+
+function fillLearningSelect(mode){
+
+  const id=
+    mode==="baca"
+    ?"bacaSelect"
+    :"hafalanSelect";
+
+  const select=
+    document.getElementById(id);
+
+  if(!select)return;
+
+  select.innerHTML=
+    `<option value="">
+      -- Pilih Santri --
+    </option>`;
+
+  visibleStudents().forEach(s=>{
+
+    select.innerHTML+=`
+      <option value="${escapeHtml(s.id)}">
+        ${escapeHtml(s.nama)}
+      </option>
+    `;
+  });
+}
+
+window.showLearning=async function(mode){
+
+  const select=
+    document.getElementById(
+      mode==="baca"
+      ?"bacaSelect"
+      :"hafalanSelect"
+    );
+
+  const content=
+    document.getElementById(
+      mode==="baca"
+      ?"bacaContent"
+      :"hafalanContent"
+    );
+
+  const studentId=select.value;
+
+  if(!studentId){
+
+    content.innerHTML="";
+    return;
+  }
+
+  const student=
+    santri.find(
+      s=>s.id===studentId
+    );
+
+  const classData=
+    kelas.find(
+      k=>k.id===student?.kelasId
+    );
+
+  if(!student||!classData){
+
+    content.innerHTML=`
+      <div class="alert alert-red">
+        Data kelas tidak ditemukan.
+      </div>
+    `;
+
+    return;
+  }
+
+  const progress=
+    await getBookProgress(
+      student.id,
+      mode
+    );
+
+  const lastPage=
+    progress?.page||1;
+
+  const pdf=
+    mode==="baca"
+    ?classData.pdfBaca
+    :classData.pdfHafalan;
+
+  content.innerHTML=`
+
+    <div class="card">
+
+      <h3>
+        ${mode==="baca"?"📖":"🕌"}
+        ${escapeHtml(student.nama)}
+      </h3>
+
+      <p class="muted">
+        Kelas:
+        <b>${escapeHtml(classData.nama)}</b>
+      </p>
+
+      <p>
+        Halaman terakhir:
+        <span class="badge badge-blue">
+          ${lastPage}
+        </span>
+      </p>
+
+      ${
+        pdf
+        ?`
+          <button class="btn btn-blue"
+            onclick="openPdf(
+              '${jsString(pdf)}',
+              '${jsString(student.id)}',
+              '${jsString(student.nama)}',
+              '${jsString(classData.nama)}',
+              '${mode}',
+              ${lastPage}
+            )">
+            📖 Buka Buku
+          </button>
+        `
+        :`
+          <div class="alert alert-red">
+            Buku belum diatur admin untuk kelas ini.
+          </div>
+        `
+      }
+
+      ${
+        currentProfile?.role==="ustadzah"
+        ?`
+          <button class="btn"
+            style="margin-left:5px"
+            onclick="openLearning(
+              '${student.id}',
+              '${mode}',
+              ${lastPage}
+            )">
+            ✏️ Catat Hasil
+          </button>
+        `
+        :""
+      }
+
+    </div>
+  `;
+};
+
+async function getBookProgress(studentId,mode){
+
+  const snapshot=
+    await getDoc(
+      doc(
+        db,
+        "progress_buku",
+        `${studentId}_${mode}`
+      )
+    );
+
+  return snapshot.exists()
+    ?snapshot.data()
+    :null;
+}
+
+/* =====================================================
+PDF VIEWER
+===================================================== */
+
+window.openPdf=async function(
+  url,
+  studentId,
+  studentName,
+  className,
+  mode,
+  lastPage
+){
+
+  pdfStudent={
+    id:studentId,
+    name:studentName,
+    className
+  };
+
+  pdfMode=mode;
+
+  document.getElementById("pdfTitle")
+    .textContent=
+      mode==="baca"
+      ?"📖 Buku Baca"
+      :"🕌 Buku Hafalan";
+
+  document.getElementById("pdfSubtitle")
+    .textContent=
+      `${studentName} • ${className}`;
+
+  document.getElementById("pdfStatus")
+    .textContent=
+      `Halaman terakhir tersimpan: ${lastPage}`;
+
+  document.getElementById("pdfModal")
+    .style.display="block";
+
+  try{
+
+    /*
+      PDF.js dimuat hanya ketika viewer dibuka.
+    */
+
+    if(!window.pdfjsLib){
+
+      await loadPdfJs();
+    }
+
+    pdfDocument=
+      await window.pdfjsLib.getDocument({
+        url:url
+      }).promise;
+
+    document.getElementById("pdfTotal")
+      .textContent=
+        pdfDocument.numPages;
+
+    pdfCurrentPage=
+      Math.max(
+        1,
+        Math.min(
+          Number(lastPage)||1,
+          pdfDocument.numPages
+        )
+      );
+
+    await renderPdf(pdfCurrentPage);
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("pdfStatus")
+      .textContent=
+        "PDF gagal dibuka.";
+
+    alert(
+      "PDF tidak dapat dibuka. Periksa Storage Rules dan URL PDF."
     );
   }
- }
+};
 
- if(currentProfile?.role==="wali"){
+async function loadPdfJs(){
 
-  list=
-   list.filter(
-    s=>s.waliUid===currentUser?.uid
-   );
- }
+  const script=
+    document.createElement("script");
 
- return list;
+  script.src=
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+
+  await new Promise(
+    (resolve,reject)=>{
+
+      script.onload=resolve;
+      script.onerror=reject;
+
+      document.head.appendChild(script);
+    }
+  );
+
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 }
 
-function populateLearningSelectors(){
+async function renderPdf(pageNumber){
 
- const list=
-  getVisibleStudents();
+  if(!pdfDocument||pdfRendering)
+    return;
 
- [
-  "bacaSantriSelect",
-  "hafalanSantriSelect"
- ].forEach(id=>{
+  pdfRendering=true;
 
-  const el=
-   document.getElementById(id);
+  try{
 
-  if(!el)return;
+    const page=
+      await pdfDocument.getPage(
+        pageNumber
+      );
 
-  const old=el.value;
+    const canvas=
+      document.getElementById("pdfCanvas");
 
-  el.innerHTML=
-   `<option value="">-- Pilih Santri --</option>`;
+    const context=
+      canvas.getContext("2d");
 
-  list.forEach(s=>{
+    const container=
+      document.querySelector(".pdf-container");
 
-   el.innerHTML+=`
-    <option value="${s.id}">
-     ${esc(s.nama)}
-    </option>
-   `;
-  });
+    const base=
+      page.getViewport({
+        scale:1
+      });
 
-  if(list.some(s=>s.id===old))
-   el.value=old;
- });
+    const availableWidth=
+      Math.max(
+        300,
+        container.clientWidth-40
+      );
+
+    let scale=
+      availableWidth/base.width;
+
+    scale=
+      Math.max(
+        .6,
+        Math.min(scale,2)
+      );
+
+    const viewport=
+      page.getViewport({
+        scale
+      });
+
+    canvas.width=
+      viewport.width;
+
+    canvas.height=
+      viewport.height;
+
+    await page.render({
+      canvasContext:context,
+      viewport
+    }).promise;
+
+    pdfCurrentPage=pageNumber;
+
+    document.getElementById("pdfPageInput")
+      .value=pageNumber;
+
+  }finally{
+
+    pdfRendering=false;
+  }
 }
 
-/* =========================================================
- LOAD LEARNING STUDENT
-========================================================= */
+window.previousPage=async function(){
 
-window.loadLearningStudent=
-async function(mode){
+  if(pdfCurrentPage<=1)
+    return;
 
- const select=
-  document.getElementById(
-   mode==="baca"
-   ?"bacaSantriSelect"
-   :"hafalanSantriSelect"
+  await renderPdf(
+    pdfCurrentPage-1
   );
-
- const info=
-  document.getElementById(
-   mode==="baca"
-   ?"bacaInfo"
-   :"hafalanInfo"
-  );
-
- const id=select.value;
-
- if(!id){
-
-  info.innerHTML="";
-  return;
- }
-
- const santri=
-  santriData.find(s=>s.id===id);
-
- const kelas=
-  kelasData.find(k=>k.id===santri?.kelasId);
-
- if(!santri||!kelas){
-
-  info.innerHTML=`
-   <div class="alert alert-danger">
-    Data santri/kelas tidak ditemukan.
-   </div>
-  `;
-
-  return;
- }
-
- const pdf=
-  mode==="baca"
-  ?kelas.pdfBaca
-  :kelas.pdfHafalan;
-
- const progress=
-  await getProgress(
-   santri.id,
-   mode
-  );
-
- const page=
-  progress?.page||1;
-
- info.innerHTML=`
-
-  <div class="card">
-
-   <h3>
-    ${mode==="baca"?"📖":"🕌"}
-    ${esc(santri.nama)}
-   </h3>
-
-   <p class="muted">
-    Kelas:
-    <b>${esc(kelas.nama)}</b>
-   </p>
-
-   <p>
-    Halaman terakhir:
-    <span class="badge blue">
-     ${page}
-    </span>
-   </p>
-
-   ${
-    pdf
-    ?`
-     <button class="btn btn-blue"
-      onclick="openPDF(
-       '${attr(pdf)}',
-       '${attr(santri.id)}',
-       '${attr(santri.nama)}',
-       '${attr(kelas.nama)}',
-       '${mode}',
-       ${page}
-      )">
-      📖 Buka Buku
-     </button>
-    `
-    :`
-     <div class="alert alert-danger">
-      Buku ${mode==="baca"?"baca":"hafalan"}
-      belum diatur admin untuk kelas ini.
-     </div>
-    `
-   }
-
-  </div>
- `;
-
 };
 
-/* =========================================================
- PROGRESS
-========================================================= */
+window.nextPage=async function(){
 
-async function getProgress(
- santriId,
- mode
-){
+  if(!pdfDocument)
+    return;
 
- const id=
-  `${santriId}_${mode}`;
+  if(pdfCurrentPage>=pdfDocument.numPages)
+    return;
 
- const snap=
-  await getDoc(
-   doc(db,"progress_buku",id)
+  await renderPdf(
+    pdfCurrentPage+1
+  );
+};
+
+window.jumpPage=async function(value){
+
+  if(!pdfDocument)return;
+
+  let page=
+    parseInt(value,10);
+
+  if(!Number.isFinite(page))
+    page=1;
+
+  page=
+    Math.max(
+      1,
+      Math.min(
+        page,
+        pdfDocument.numPages
+      )
+    );
+
+  await renderPdf(page);
+};
+
+window.saveLastPage=async function(){
+
+  if(!pdfStudent)
+    return;
+
+  await setDoc(
+    doc(
+      db,
+      "progress_buku",
+      `${pdfStudent.id}_${pdfMode}`
+    ),
+    {
+      santriId:pdfStudent.id,
+      mode:pdfMode,
+      page:pdfCurrentPage,
+      updatedAt:serverTimestamp()
+    },
+    {
+      merge:true
+    }
   );
 
- return snap.exists()
-  ?snap.data()
-  :null;
-}
-
-/* =========================================================
- PDF
-========================================================= */
-
-window.openPDF=
-async function(
- url,
- studentId,
- studentName,
- className,
- mode,
- page
-){
-
- pdfStudent={
-  id:studentId,
-  name:studentName,
-  className
- };
-
- pdfMode=mode;
-
- document.getElementById("pdfTitle")
-  .textContent=
-  mode==="baca"
-  ?"📖 Buku Baca"
-  :"🕌 Buku Hafalan";
-
- document.getElementById("pdfSubtitle")
-  .textContent=
-  `${studentName} • ${className}`;
-
- document.getElementById("pdfStatus")
-  .textContent=
-  `Halaman terakhir tersimpan: ${page}`;
-
- document.getElementById("pdfModal")
-  .style.display="block";
-
- try{
-
-  const pdfjs=
-   await import(
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs"
-   );
-
-  pdfjs.GlobalWorkerOptions.workerSrc=
-   "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs";
-
-  pdfDoc=
-   await pdfjs.getDocument({
-    url:url,
-    withCredentials:false
-   }).promise;
-
-  document.getElementById("pdfTotal")
-   .textContent=pdfDoc.numPages;
-
-  pdfPageNumber=
-   Math.max(
-    1,
-    Math.min(
-     Number(page)||1,
-     pdfDoc.numPages
-    )
-   );
-
-  await renderPdfPage(pdfPageNumber);
-
- }catch(e){
-
-  console.error(e);
-
-  alert(
-   "PDF gagal dibuka. Pastikan Storage Rules mengizinkan pengguna yang berhak membaca file."
-  );
- }
+  document.getElementById("pdfStatus")
+    .textContent=
+      `✓ Halaman ${pdfCurrentPage} disimpan sebagai halaman terakhir.`;
 };
 
-async function renderPdfPage(num){
+window.closePdf=function(){
 
- if(!pdfDoc||pdfRendering)return;
+  document.getElementById("pdfModal")
+    .style.display="none";
 
- pdfRendering=true;
-
- try{
-
-  const page=
-   await pdfDoc.getPage(num);
-
-  const canvas=
-   document.getElementById("pdfCanvas");
-
-  const context=
-   canvas.getContext("2d");
-
-  const container=
-   document.querySelector(".pdf-container");
-
-  const original=
-   page.getViewport({scale:1});
-
-  const width=
-   Math.max(
-    300,
-    container.clientWidth-40
-   );
-
-  let scale=
-   width/original.width;
-
-  scale=
-   Math.min(
-    Math.max(scale,.7),
-    2
-   );
-
-  const viewport=
-   page.getViewport({scale});
-
-  canvas.width=
-   viewport.width;
-
-  canvas.height=
-   viewport.height;
-
-  await page.render({
-   canvasContext:context,
-   viewport
-  }).promise;
-
-  pdfPageNumber=num;
-
-  document.getElementById("pdfPage")
-   .value=num;
-
- }finally{
-
-  pdfRendering=false;
- }
-}
-
-window.pdfPrev=async function(){
-
- if(pdfPageNumber<=1)return;
-
- await renderPdfPage(
-  pdfPageNumber-1
- );
-};
-
-window.pdfNext=async function(){
-
- if(!pdfDoc)return;
-
- if(pdfPageNumber>=pdfDoc.numPages)
-  return;
-
- await renderPdfPage(
-  pdfPageNumber+1
- );
-};
-
-window.pdfGoPage=async function(value){
-
- if(!pdfDoc)return;
-
- let page=parseInt(value);
-
- if(isNaN(page))page=1;
-
- page=
-  Math.max(
-   1,
-   Math.min(
-    page,
-    pdfDoc.numPages
-   )
-  );
-
- await renderPdfPage(page);
-};
-
-window.saveCurrentPage=
-async function(){
-
- if(!pdfStudent)return;
-
- const id=
-  `${pdfStudent.id}_${pdfMode}`;
-
- await setDoc(
-  doc(db,"progress_buku",id),
-  {
-   santriId:pdfStudent.id,
-   santriNama:pdfStudent.name,
-   kelas:pdfStudent.className,
-   mode:pdfMode,
-   page:pdfPageNumber,
-   updatedAt:serverTimestamp()
-  },
-  {merge:true}
- );
-
- document.getElementById("pdfStatus")
-  .textContent=
-  `✓ Halaman ${pdfPageNumber} disimpan sebagai halaman terakhir.`;
-
-};
-
-window.closePdfViewer=function(){
-
- document.getElementById("pdfModal")
-  .style.display="none";
-
- pdfDoc=null;
- pdfStudent=null;
+  pdfDocument=null;
+  pdfStudent=null;
 };
 
 window.addEventListener(
- "resize",
- ()=>{
-  if(
-   document.getElementById("pdfModal")
-    .style.display==="block"
-  ){
-   renderPdfPage(pdfPageNumber);
+  "resize",
+  ()=>{
+    if(
+      document.getElementById("pdfModal")
+        .style.display==="block"
+      &&
+      pdfDocument
+    ){
+      renderPdf(pdfCurrentPage);
+    }
   }
- }
 );
 
-/* =========================================================
- LEARNING RESULT
-========================================================= */
+/* =====================================================
+HASIL PEMBELAJARAN
+===================================================== */
 
-window.openLearningModal=
-function(
- santriId,
- mode,
- page
-){
-
- learningTarget={
-  santriId,
+window.openLearning=function(
+  studentId,
   mode,
   page
- };
+){
 
- document.getElementById("learningModalTitle")
-  .textContent=
-  mode==="baca"
-  ?"Hasil Baca"
-  :"Hasil Hafalan";
-
- document.getElementById("learningStatus")
-  .value="naik";
-
- document.getElementById("learningMessage")
-  .value="";
-
- document.getElementById("recordPreview")
-  .classList.add("hidden");
-
- recordedBlob=null;
- recordedChunks=[];
-
- document.getElementById("learningModal")
-  .style.display="block";
-};
-
-window.toggleRecording=
-async function(){
-
- if(mediaRecorder &&
-    mediaRecorder.state==="recording"){
-
-  mediaRecorder.stop();
-
-  document.getElementById("recordBtn")
-   .textContent="🎙 Mulai Rekam";
-
-  return;
- }
-
- try{
-
-  const stream=
-   await navigator.mediaDevices
-    .getUserMedia({audio:true});
-
-  recordedChunks=[];
-
-  mediaRecorder=
-   new MediaRecorder(stream);
-
-  mediaRecorder.ondataavailable=
-   e=>{
-
-    if(e.data.size>0)
-     recordedChunks.push(e.data);
-   };
-
-  mediaRecorder.onstop=()=>{
-
-   recordedBlob=
-    new Blob(
-     recordedChunks,
-     {type:"audio/webm"}
-    );
-
-   const url=
-    URL.createObjectURL(
-     recordedBlob
-    );
-
-   const preview=
-    document.getElementById(
-     "recordPreview"
-    );
-
-   preview.src=url;
-   preview.classList.remove("hidden");
-
-   stream.getTracks()
-    .forEach(t=>t.stop());
-
-   document.getElementById("recordStatus")
-    .textContent=
-    "Rekaman siap disimpan.";
+  learningTarget={
+    studentId,
+    mode,
+    page
   };
 
-  mediaRecorder.start();
+  document.getElementById("learningTitle")
+    .textContent=
+      mode==="baca"
+      ?"Hasil Pembelajaran Baca"
+      :"Hasil Pembelajaran Hafalan";
 
-  document.getElementById("recordBtn")
-   .textContent="⏹ Stop Rekam";
+  document.getElementById("learningStatus")
+    .value="naik";
 
-  document.getElementById("recordStatus")
-   .textContent="Sedang merekam...";
+  document.getElementById("learningMessage")
+    .value="";
 
- }catch(e){
+  document.getElementById("recordInfo")
+    .textContent="";
 
-  alert(
-   "Microphone tidak dapat digunakan."
-  );
+  document.getElementById("recordAudioPreview")
+    .classList.add("hidden");
 
-  console.error(e);
- }
+  audioBlob=null;
+  audioChunks=[];
+
+  document.getElementById("learningModal")
+    .style.display="block";
 };
 
-window.saveLearning=
+window.recordAudio=async function(){
+
+  if(
+    recorder &&
+    recorder.state==="recording"
+  ){
+
+    recorder.stop();
+
+    document.getElementById("recordButton")
+      .textContent="🎙 Mulai Rekam";
+
+    return;
+  }
+
+  try{
+
+    recorderStream=
+      await navigator.mediaDevices
+        .getUserMedia({
+          audio:true
+        });
+
+    audioChunks=[];
+
+    recorder=
+      new MediaRecorder(
+        recorderStream
+      );
+
+    recorder.ondataavailable=
+      event=>{
+
+        if(event.data.size>0)
+          audioChunks.push(
+            event.data
+          );
+      };
+
+    recorder.onstop=()=>{
+
+      audioBlob=
+        new Blob(
+          audioChunks,
+          {
+            type:"audio/webm"
+          }
+        );
+
+      const url=
+        URL.createObjectURL(
+          audioBlob
+        );
+
+      const audio=
+        document.getElementById(
+          "recordAudioPreview"
+        );
+
+      audio.src=url;
+      audio.classList.remove("hidden");
+
+      document.getElementById("recordInfo")
+        .textContent=
+          "✓ Rekaman siap disimpan.";
+
+      if(recorderStream){
+
+        recorderStream
+          .getTracks()
+          .forEach(
+            track=>track.stop()
+          );
+      }
+    };
+
+    recorder.start();
+
+    document.getElementById("recordButton")
+      .textContent="⏹ Stop Rekam";
+
+    document.getElementById("recordInfo")
+      .textContent=
+        "Sedang merekam...";
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Microphone tidak tersedia atau izin belum diberikan."
+    );
+  }
+};
+
+window.saveLearningResult=
 async function(){
 
- if(!learningTarget)return;
+  if(!learningTarget)
+    return;
 
- const status=
-  document.getElementById("learningStatus")
-   .value;
+  if(currentProfile?.role!=="ustadzah"){
 
- const message=
-  document.getElementById("learningMessage")
-   .value.trim();
-
- try{
-
-  let audioUrl=null;
-
-  if(recordedBlob){
-
-   const path=
-    `rekaman/${learningTarget.santriId}/${Date.now()}.webm`;
-
-   const storageRef=
-    ref(storage,path);
-
-   const snap=
-    await uploadBytesResumable(
-     storageRef,
-     recordedBlob,
-     {
-      contentType:"audio/webm"
-     }
+    alert(
+      "Hanya ustadzah yang dapat mencatat hasil."
     );
 
-   audioUrl=
-    await getDownloadURL(
-     snap.ref
+    return;
+  }
+
+  try{
+
+    let audioUrl=null;
+
+    if(audioBlob){
+
+      const path=
+        `rekaman/${learningTarget.studentId}/${Date.now()}.webm`;
+
+      const storageRef=
+        ref(storage,path);
+
+      const upload=
+        await uploadBytesResumable(
+          storageRef,
+          audioBlob,
+          {
+            contentType:"audio/webm"
+          }
+        );
+
+      audioUrl=
+        await getDownloadURL(
+          upload.ref
+        );
+    }
+
+    const student=
+      santri.find(
+        s=>s.id===learningTarget.studentId
+      );
+
+    await addDoc(
+      collection(db,"pembelajaran"),
+      {
+        santriId:
+          learningTarget.studentId,
+
+        santriNama:
+          student?.nama||"",
+
+        mode:
+          learningTarget.mode,
+
+        halaman:
+          learningTarget.page,
+
+        status:
+          document.getElementById(
+            "learningStatus"
+          ).value,
+
+        pesan:
+          document.getElementById(
+            "learningMessage"
+          ).value.trim(),
+
+        audioUrl,
+
+        ustadzahUid:
+          currentUser.uid,
+
+        ustadzahNama:
+          currentProfile?.nama||
+          currentUser.email,
+
+        createdAt:
+          serverTimestamp()
+      }
     );
+
+    /*
+      Halaman terakhir juga diperbarui.
+    */
+
+    await setDoc(
+      doc(
+        db,
+        "progress_buku",
+        `${learningTarget.studentId}_${learningTarget.mode}`
+      ),
+      {
+        santriId:
+          learningTarget.studentId,
+
+        mode:
+          learningTarget.mode,
+
+        page:
+          learningTarget.page,
+
+        updatedAt:
+          serverTimestamp()
+      },
+      {
+        merge:true
+      }
+    );
+
+    closeModal("learningModal");
+
+    await loadData();
+
+    alert(
+      "Hasil pembelajaran berhasil disimpan."
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Gagal menyimpan hasil pembelajaran."
+    );
+  }
+};
+
+/* =====================================================
+KEUANGAN
+===================================================== */
+
+window.openBill=function(){
+
+  const select=
+    document.getElementById(
+      "billStudent"
+    );
+
+  select.innerHTML=
+    `<option value="">
+      -- Pilih Santri --
+    </option>`;
+
+  santri.forEach(s=>{
+
+    select.innerHTML+=`
+      <option value="${escapeHtml(s.id)}">
+        ${escapeHtml(s.nama)}
+      </option>
+    `;
+  });
+
+  document.getElementById("billDescription")
+    .value="";
+
+  document.getElementById("billAmount")
+    .value="";
+
+  document.getElementById("billModal")
+    .style.display="block";
+};
+
+window.saveBill=async function(){
+
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
+  }
+
+  const santriId=
+    document.getElementById("billStudent")
+      .value;
+
+  const jenis=
+    document.getElementById("billType")
+      .value;
+
+  const keterangan=
+    document.getElementById("billDescription")
+      .value.trim();
+
+  const nilai=
+    Number(
+      document.getElementById("billAmount")
+        .value
+    );
+
+  if(!santriId){
+
+    alert("Pilih santri.");
+    return;
+  }
+
+  if(!nilai||nilai<1){
+
+    alert("Nilai tagihan tidak valid.");
+    return;
   }
 
   await addDoc(
-   collection(db,"pembelajaran"),
-   {
-    santriId:
-     learningTarget.santriId,
-
-    mode:
-     learningTarget.mode,
-
-    page:
-     learningTarget.page,
-
-    status,
-
-    pesan:
-     message,
-
-    audioUrl,
-
-    ustadzahUid:
-     currentUser.uid,
-
-    ustadzahNama:
-     currentProfile?.nama||
-     currentUser.email,
-
-    createdAt:
-     serverTimestamp()
-   }
+    collection(db,"tagihan"),
+    {
+      santriId,
+      jenis,
+      keterangan,
+      nilai,
+      terbayar:false,
+      qris:false,
+      createdAt:serverTimestamp()
+    }
   );
 
-  /*
-   Halaman yang sedang ditandai juga
-   disimpan sebagai progress.
-  */
+  closeModal("billModal");
 
-  await setDoc(
-   doc(
-    db,
-    "progress_buku",
-    `${learningTarget.santriId}_${learningTarget.mode}`
-   ),
-   {
-    santriId:
-     learningTarget.santriId,
+  await loadData();
 
-    mode:
-     learningTarget.mode,
-
-    page:
-     learningTarget.page,
-
-    updatedAt:
-     serverTimestamp()
-   },
-   {merge:true}
-  );
-
-  closeModal("learningModal");
-
-  await loadAll();
-
-  alert("Hasil pembelajaran berhasil disimpan.");
-
- }catch(e){
-
-  console.error(e);
-
-  alert(
-   "Gagal menyimpan hasil pembelajaran: "+
-   (e.message||e)
-  );
- }
+  alert("Tagihan berhasil dibuat.");
 };
 
-/* =========================================================
- KEUANGAN
-========================================================= */
+function financeForCurrentUser(){
 
-function populateTagihanSelector(){
+  let list=[...tagihan];
 
- const el=
-  document.getElementById("tagihanSantri");
+  if(currentProfile?.role==="wali"){
 
- if(!el)return;
+    list=
+      list.filter(t=>{
 
- el.innerHTML=
-  `<option value="">-- Pilih Santri --</option>`;
+        const s=
+          santri.find(
+            x=>x.id===t.santriId
+          );
 
- getVisibleStudents()
-  .forEach(s=>{
+        return s?.waliUid===currentUser.uid;
+      });
+  }
 
-   el.innerHTML+=`
-    <option value="${s.id}">
-     ${esc(s.nama)}
-    </option>
-   `;
+  if(currentProfile?.role==="ustadzah"){
+
+    const teacher=
+      ustadzah.find(
+        u=>u.email===currentUser.email
+      );
+
+    if(teacher){
+
+      list=
+        list.filter(t=>{
+
+          const s=
+            santri.find(
+              x=>x.id===t.santriId
+            );
+
+          return s?.kelasId===teacher.kelasId;
+        });
+    }
+  }
+
+  return list;
+}
+
+function renderFinance(){
+
+  const tbody=
+    document.getElementById(
+      "financeTable"
+    );
+
+  tbody.innerHTML="";
+
+  const list=
+    financeForCurrentUser();
+
+  if(!list.length){
+
+    tbody.innerHTML=`
+      <tr>
+        <td colspan="7"
+            class="empty">
+          Belum ada transaksi.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  list.forEach((t,index)=>{
+
+    const s=
+      santri.find(
+        x=>x.id===t.santriId
+      );
+
+    tbody.innerHTML+=`
+
+      <tr>
+
+        <td>${index+1}</td>
+
+        <td>
+          ${escapeHtml(s?.nama||"-")}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            t.keterangan||
+            t.jenis||
+            "-"
+          )}
+        </td>
+
+        <td>
+          Rp ${rupiah(t.nilai)}
+        </td>
+
+        <td>
+          ${
+            t.terbayar
+            ?'<span class="badge badge-green">Lunas</span>'
+            :'<span class="badge badge-yellow">Belum</span>'
+          }
+        </td>
+
+        <td>
+          ${
+            t.qris
+            ?'<span class="badge badge-green">✓ QRIS</span>'
+            :'<span class="badge badge-yellow">Belum</span>'
+          }
+        </td>
+
+        <td>
+
+          ${
+            currentProfile?.role==="admin"
+            ?`
+              <button
+                class="btn btn-blue btn-sm"
+                onclick="markPaid('${t.id}')">
+                Tandai Lunas
+              </button>
+            `
+            :""
+          }
+
+        </td>
+
+      </tr>
+    `;
   });
 }
 
-window.openTagihanModal=function(){
+window.markPaid=async function(id){
 
- populateTagihanSelector();
-
- document.getElementById("tagihanKeterangan")
-  .value="";
-
- document.getElementById("tagihanNilai")
-  .value="";
-
- document.getElementById("tagihanModal")
-  .style.display="block";
-};
-
-window.saveTagihan=async function(){
-
- const data={
-
-  santriId:
-   document.getElementById("tagihanSantri")
-    .value,
-
-  jenis:
-   document.getElementById("tagihanJenis")
-    .value,
-
-  keterangan:
-   document.getElementById("tagihanKeterangan")
-    .value.trim(),
-
-  nilai:
-   Number(
-    document.getElementById("tagihanNilai")
-     .value
-   ),
-
-  terbayar:0,
-
-  qris:false,
-
-  createdAt:serverTimestamp()
- };
-
- if(!data.santriId){
-
-  alert("Pilih santri.");
-  return;
- }
-
- if(!data.nilai){
-
-  alert("Masukkan nilai tagihan.");
-  return;
- }
-
- await addDoc(
-  collection(db,"tagihan"),
-  data
- );
-
- closeModal("tagihanModal");
-
- await loadAll();
-
- alert("Tagihan berhasil dibuat.");
-};
-
-function renderKeuangan(){
-
- const tbody=
-  document.getElementById("keuanganTable");
-
- tbody.innerHTML="";
-
- let list=
-  [...tagihanData];
-
- if(currentProfile?.role==="wali"){
-
-  list=
-   list.filter(t=>{
-
-    const s=
-     santriData.find(
-      x=>x.id===t.santriId
-     );
-
-    return s?.waliUid===currentUser.uid;
-   });
- }
-
- if(currentProfile?.role==="ustadzah"){
-
-  const u=
-   ustadzahData.find(
-    x=>x.email===currentUser.email
-   );
-
-  if(u){
-
-   list=
-    list.filter(t=>{
-
-     const s=
-      santriData.find(
-       x=>x.id===t.santriId
-      );
-
-     return s?.kelasId===u.kelasId;
-    });
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
   }
- }
 
- if(!list.length){
+  await updateDoc(
+    doc(db,"tagihan",id),
+    {
+      terbayar:true,
+      qris:true,
+      paidAt:serverTimestamp()
+    }
+  );
 
-  tbody.innerHTML=`
-   <tr>
-    <td colspan="7" class="empty">
-     Belum ada data tagihan.
-    </td>
-   </tr>
-  `;
+  await loadData();
+};
 
-  return;
- }
+/* =====================================================
+PENGUMUMAN
+===================================================== */
 
- list.forEach((t,i)=>{
+window.openAnnouncement=function(){
 
-  const s=
-   santriData.find(
-    x=>x.id===t.santriId
-   );
+  document.getElementById("announcementTitle")
+    .value="";
 
-  tbody.innerHTML+=`
-   <tr>
+  document.getElementById("announcementText")
+    .value="";
 
-    <td>${i+1}</td>
+  document.getElementById("announcementModal")
+    .style.display="block";
+};
 
-    <td>${esc(s?.nama||"-")}</td>
+window.saveAnnouncement=async function(){
 
-    <td>
-     ${esc(
-      t.keterangan||
-      t.jenis||
-      "-"
-     )}
-    </td>
-
-    <td>
-     Rp ${rupiah(t.nilai)}
-    </td>
-
-    <td>
-     ${
-      t.terbayar
-      ? `<span class="badge green">
-          Lunas
-         </span>`
-      : `<span class="badge yellow">
-          Belum
-         </span>`
-     }
-    </td>
-
-    <td>
-     ${
-      t.qris
-      ? `<span class="badge green">
-          ✓ QRIS
-         </span>`
-      : `<span class="badge yellow">
-          Belum
-         </span>`
-     }
-    </td>
-
-    <td>
-
-     ${
-      currentProfile?.role==="admin"
-      ?`
-       <button
-        class="btn btn-blue btn-sm"
-        onclick="markPaid('${t.id}')">
-        Tandai Lunas
-       </button>
-      `
-      :""
-     }
-
-    </td>
-
-   </tr>
-  `;
- });
-}
-
-window.markPaid=
-async function(id){
-
- await updateDoc(
-  doc(db,"tagihan",id),
-  {
-   terbayar:true,
-   qris:true,
-   paidAt:serverTimestamp()
+  if(currentProfile?.role!=="admin"){
+    alert("Hanya admin.");
+    return;
   }
- );
 
- await loadAll();
-};
+  const judul=
+    document.getElementById("announcementTitle")
+      .value.trim();
 
-/* =========================================================
- PENGUMUMAN
-========================================================= */
+  const isi=
+    document.getElementById("announcementText")
+      .value.trim();
 
-window.openPengumumanModal=function(){
+  if(!judul||!isi){
 
- document.getElementById("pengumumanJudul")
-  .value="";
-
- document.getElementById("pengumumanIsi")
-  .value="";
-
- document.getElementById("pengumumanModal")
-  .style.display="block";
-};
-
-window.savePengumuman=async function(){
-
- const judul=
-  document.getElementById("pengumumanJudul")
-   .value.trim();
-
- const isi=
-  document.getElementById("pengumumanIsi")
-   .value.trim();
-
- if(!judul||!isi){
-
-  alert("Judul dan isi wajib diisi.");
-  return;
- }
-
- await addDoc(
-  collection(db,"pengumuman"),
-  {
-   judul,
-   isi,
-   authorUid:currentUser.uid,
-   createdAt:serverTimestamp()
+    alert("Judul dan isi wajib diisi.");
+    return;
   }
- );
 
- closeModal("pengumumanModal");
+  await addDoc(
+    collection(db,"pengumuman"),
+    {
+      judul,
+      isi,
+      authorUid:currentUser.uid,
+      createdAt:serverTimestamp()
+    }
+  );
 
- await loadAll();
+  closeModal("announcementModal");
 
- alert("Pengumuman dipublikasikan.");
+  await loadData();
+
+  alert("Pengumuman berhasil dipublikasikan.");
 };
 
-function renderPengumuman(){
+function renderAnnouncements(){
 
- const el=
-  document.getElementById("pengumumanList");
+  const el=
+    document.getElementById(
+      "announcementList"
+    );
 
- if(!pengumumanData.length){
+  if(!pengumuman.length){
 
-  el.innerHTML=`
-   <div class="card empty">
-    Belum ada pengumuman.
-   </div>
-  `;
+    el.innerHTML=`
+      <div class="card empty">
+        Belum ada pengumuman.
+      </div>
+    `;
 
-  return;
- }
+    return;
+  }
 
- el.innerHTML=
-  pengumumanData
-   .slice()
-   .reverse()
-   .map(p=>`
+  el.innerHTML=
+    pengumuman
+    .slice()
+    .reverse()
+    .map(p=>`
 
-    <div class="card announcement">
+      <div class="card announcement">
 
-     <h3>
-      📢 ${esc(p.judul)}
-     </h3>
+        <h3>
+          📢 ${escapeHtml(p.judul)}
+        </h3>
 
-     <p>
-      ${esc(p.isi)}
-     </p>
+        <p>
+          ${escapeHtml(p.isi)}
+        </p>
 
-     ${
-      currentProfile?.role==="admin"
-      ?`
-       <button class="btn btn-danger btn-sm"
-        onclick="deleteData(
-         'pengumuman',
-         '${p.id}'
-        )">
-        Hapus
-       </button>
-      `
-      :""
-     }
+        ${
+          currentProfile?.role==="admin"
+          ?`
+            <button
+              class="btn btn-danger btn-sm"
+              onclick="removeItem(
+                'pengumuman',
+                '${p.id}'
+              )">
+              Hapus
+            </button>
+          `
+          :""
+        }
 
-    </div>
-
-   `)
-   .join("");
+      </div>
+    `)
+    .join("");
 }
 
-/* =========================================================
- DELETE
-========================================================= */
+/* =====================================================
+DELETE
+===================================================== */
 
-window.deleteData=
-async function(collectionName,id){
-
- if(currentProfile?.role!=="admin"){
-
-  alert("Hanya admin yang dapat menghapus data.");
-  return;
- }
-
- if(!confirm("Yakin ingin menghapus data ini?"))
-  return;
-
- await deleteDoc(
-  doc(db,collectionName,id)
- );
-
- await loadAll();
-};
-
-/* =========================================================
- UTIL
-========================================================= */
-
-function rupiah(value){
-
- return new Intl.NumberFormat(
-  "id-ID"
- ).format(
-  Number(value)||0
- );
-}
-
-function esc(value){
-
- return String(value??"")
-  .replaceAll("&","&amp;")
-  .replaceAll("<","&lt;")
-  .replaceAll(">","&gt;")
-  .replaceAll('"',"&quot;")
-  .replaceAll("'","&#039;");
-}
-
-function attr(value){
-
- return String(value??"")
-  .replaceAll("\\","\\\\")
-  .replaceAll("'","\\'");
-}
-
-/* =========================================================
- WALI: RIWAYAT PEMBELAJARAN
-========================================================= */
-
-async function getStudentLearningHistory(
- santriId,
- mode
+window.removeItem=async function(
+  collectionName,
+  id
 ){
 
- const snap=
-  await getDocs(
-   query(
-    collection(db,"pembelajaran"),
-    where("santriId","==",santriId),
-    where("mode","==",mode)
-   )
-  );
+  if(currentProfile?.role!=="admin"){
 
- return snap.docs.map(d=>({
-  id:d.id,
-  ...d.data()
- }));
-}
+    alert(
+      "Hanya admin yang dapat menghapus."
+    );
 
-/*
-  Fungsi ini sengaja tersedia agar bisa dipakai
-  ketika dashboard wali diperluas menjadi
-  tabel riwayat lengkap.
-*/
+    return;
+  }
 
-window.showLearningHistory=
-async function(santriId,mode){
+  if(!confirm("Hapus data ini?"))
+    return;
 
- const data=
-  await getStudentLearningHistory(
-   santriId,
-   mode
-  );
+  try{
 
- console.table(data);
+    await deleteDoc(
+      doc(
+        db,
+        collectionName,
+        id
+      )
+    );
+
+    await loadData();
+
+    /*
+      Refresh halaman yang sedang terbuka.
+    */
+
+    const visible=
+      document.querySelector(".page:not(.hidden)");
+
+    if(visible){
+
+      const id=visible.id;
+
+      if(id==="pageSantri")
+        renderSantri();
+
+      if(id==="pageUstadzah")
+        renderUstadzah();
+
+      if(id==="pageKelas")
+        renderKelas();
+
+      if(id==="pageKeuangan")
+        renderFinance();
+
+      if(id==="pagePengumuman")
+        renderAnnouncements();
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Gagal menghapus data."
+    );
+  }
 };
 
-/* =========================================================
- CLOSE MODALS WHEN CLICK OUTSIDE
-========================================================= */
+/* =====================================================
+HELPER
+===================================================== */
 
-document.querySelectorAll(".modal")
- .forEach(modal=>{
+function jsString(value){
 
-  modal.addEventListener(
-   "click",
-   e=>{
+  return String(value??"")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/\n/g,"\\n")
+    .replace(/\r/g,"\\r");
+}
 
-    if(e.target===modal)
-     modal.style.display="none";
-   }
-  );
- });
+/* =====================================================
+CLOSE MODAL OUTSIDE
+===================================================== */
+
+document
+  .querySelectorAll(".modal")
+  .forEach(modal=>{
+
+    modal.addEventListener(
+      "click",
+      event=>{
+
+        if(event.target===modal)
+          modal.style.display="none";
+      }
+    );
+  });
 
 </script>
 
