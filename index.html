@@ -2,2196 +2,3148 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#15803d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>TPQ Wardatul Wathon</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs"
+        type="module"></script>
+
 <style>
-  :root{
-    --paper:#FAF6EC;
-    --paper-deep:#F0E8D6;
-    --ink:#22221B;
-    --ink-soft:#615F50;
-    --ink-faint:#8B8873;
-    --pine:#1F4B43;
-    --pine-deep:#12332D;
-    --pine-soft:#E1EAE6;
-    --gold:#B4832A;
-    --gold-soft:#F3E6C6;
-    --brick:#A8452F;
-    --brick-soft:#F5DDD5;
-    --line:#DCD3B9;
-    --white:#FFFFFF;
-    --r-s:6px;
-    --r-m:12px;
-    --r-l:20px;
-    --shadow:0 1px 2px rgba(18,51,45,0.06), 0 6px 20px rgba(18,51,45,0.07);
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;}
-  html,body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3,.display{
-    font-family:'Fraunces',serif;
-    letter-spacing:-0.01em;
-    margin:0;
-  }
-  button{font-family:inherit;cursor:pointer;}
-  input,select,textarea{font-family:inherit;}
-  a{color:inherit;}
-  ::selection{background:var(--gold-soft);}
+*{box-sizing:border-box}
+:root{
+ --green:#15803d;
+ --green2:#166534;
+ --light:#f0fdf4;
+ --bg:#f1f5f9;
+ --text:#172033;
+ --muted:#64748b;
+ --border:#e2e8f0;
+ --danger:#dc2626;
+ --blue:#2563eb;
+ --orange:#d97706;
+}
+body{
+ margin:0;
+ font-family:Inter,Arial,sans-serif;
+ background:var(--bg);
+ color:var(--text)
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
 
-  /* ---------- pattern helpers ---------- */
-  .lattice{
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.16) 1px, transparent 1px);
-    background-size:16px 16px;
-  }
-  .lattice-dark{
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(18,51,45,0.10) 1px, transparent 1px);
-    background-size:16px 16px;
-  }
+.login{
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+ background:linear-gradient(135deg,#052e16,#16a34a)
+}
+.login-box{
+ width:100%;
+ max-width:420px;
+ background:#fff;
+ border-radius:24px;
+ padding:30px;
+ box-shadow:0 25px 70px #0005
+}
+.logo{
+ width:78px;height:78px;
+ margin:auto;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ background:#dcfce7;
+ border-radius:22px;
+ font-size:38px
+}
+.login-box h1{
+ text-align:center;
+ font-size:23px;
+ margin:18px 0 5px
+}
+.login-sub{
+ text-align:center;
+ color:var(--muted);
+ font-size:14px;
+ margin-bottom:25px
+}
+.form-group{margin-bottom:15px}
+label{
+ display:block;
+ font-weight:700;
+ font-size:14px;
+ margin-bottom:7px
+}
+input,select,textarea{
+ width:100%;
+ padding:12px 14px;
+ border:1px solid #cbd5e1;
+ border-radius:10px;
+ outline:none;
+ background:#fff
+}
+input:focus,select:focus,textarea:focus{
+ border-color:#22c55e;
+ box-shadow:0 0 0 3px #22c55e22
+}
+.btn{
+ border:0;
+ background:var(--green);
+ color:#fff;
+ padding:11px 15px;
+ border-radius:10px;
+ font-weight:700
+}
+.btn:hover{background:var(--green2)}
+.btn-blue{background:var(--blue)}
+.btn-orange{background:var(--orange)}
+.btn-danger{background:var(--danger)}
+.btn-gray{background:#e2e8f0;color:#172033}
+.btn-sm{padding:7px 10px;font-size:12px}
+.btn-full{width:100%}
 
-  /* ---------- login ---------- */
-  #login-screen{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-    background:
-      radial-gradient(ellipse at top left, #1a4038 0%, var(--pine-deep) 55%, #0d2622 100%);
-  }
-  .login-card{
-    width:100%;
-    max-width:400px;
-    background:var(--paper);
-    border-radius:var(--r-l);
-    box-shadow:0 30px 60px rgba(0,0,0,0.35);
-    overflow:hidden;
-  }
-  .login-mark{
-    padding:36px 32px 28px;
-    background:var(--pine-deep);
-    position:relative;
-    color:var(--gold-soft);
-  }
-  .login-mark::after{
-    content:"";
-    position:absolute; inset:0;
-    background-image:radial-gradient(circle at 1px 1px, rgba(243,230,198,0.14) 1px, transparent 1px);
-    background-size:14px 14px;
-    pointer-events:none;
-  }
-  .login-badge{
-    width:52px;height:52px;border-radius:50%;
-    border:1.5px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'Fraunces',serif;font-size:22px;color:var(--gold-soft);
-    margin-bottom:16px;
-    position:relative;
-  }
-  .login-mark h1{font-size:22px;color:#fff;font-weight:600;position:relative;line-height:1.25;}
-  .login-mark p{margin:6px 0 0;font-size:13px;color:#c9d8d2;position:relative;}
-  .login-body{padding:28px 32px 32px;}
-  .field{margin-bottom:16px;}
-  .field label{
-    display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;
-  }
-  .field-static{
-    padding:11px 13px;border-radius:var(--r-s);background:var(--paper-deep);
-    color:var(--ink-faint);font-size:15px;border:1px solid var(--line);
-  }
-  .field input, .field select{
-    width:100%;padding:11px 13px;border-radius:var(--r-s);
-    border:1px solid var(--line);background:#fff;font-size:15px;color:var(--ink);
-    outline:none;
-  }
-  .field input:focus, .field select:focus{border-color:var(--pine);box-shadow:0 0 0 3px var(--pine-soft);}
-  .btn{
-    border:none;border-radius:var(--r-s);padding:11px 18px;font-size:14.5px;font-weight:600;
-    display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    transition:transform .06s ease, filter .15s ease;
-  }
-  .btn:active{transform:scale(0.98);}
-  .btn-primary{background:var(--pine);color:#fff;width:100%;padding:12px;}
-  .btn-primary:hover{filter:brightness(1.08);}
-  .btn-gold{background:var(--gold);color:#3a2a08;}
-  .btn-gold:hover{filter:brightness(1.06);}
-  .btn-ghost{background:transparent;color:var(--pine);border:1px solid var(--line);}
-  .btn-ghost:hover{background:var(--pine-soft);}
-  .btn-danger{background:var(--brick-soft);color:var(--brick);}
-  .btn-danger:hover{background:#efc9be;}
-  .btn-sm{padding:7px 12px;font-size:13px;}
-  .login-demo-note{
-    margin-top:18px;padding:11px 13px;background:var(--gold-soft);border-radius:var(--r-s);
-    font-size:12px;color:#5c4413;line-height:1.5;
-  }
-  .login-error{color:var(--brick);font-size:13px;margin:-6px 0 14px;display:none;}
+.layout{display:none;min-height:100vh}
+.sidebar{
+ width:255px;
+ position:fixed;
+ left:0;top:0;bottom:0;
+ background:#052e16;
+ color:#fff;
+ padding:18px 13px;
+ z-index:50;
+ overflow-y:auto
+}
+.brand{
+ padding:10px;
+ font-size:18px;
+ font-weight:800;
+ line-height:1.35;
+ margin-bottom:18px
+}
+.brand small{
+ display:block;
+ color:#a7f3d0;
+ font-weight:500;
+ font-size:12px
+}
+.nav button{
+ display:block;
+ width:100%;
+ border:0;
+ background:transparent;
+ color:#d1fae5;
+ text-align:left;
+ padding:11px 12px;
+ border-radius:9px;
+ margin-bottom:4px
+}
+.nav button:hover,.nav button.active{
+ background:#166534;
+ color:#fff
+}
+.logout{
+ width:100%;
+ margin-top:18px
+}
+.main{
+ margin-left:255px;
+ padding:22px;
+ max-width:1550px
+}
+.topbar{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:22px
+}
+.user-info{text-align:right}
+.user-name{font-weight:800}
+.user-role{font-size:12px;color:var(--muted)}
+.mobile-btn{display:none}
 
-  /* ---------- shell ---------- */
-  #app-shell{display:none;min-height:100vh;}
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--pine-deep);color:#fff;
-    padding:0 20px;height:60px;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .topbar-left{display:flex;align-items:center;gap:12px;}
-  .topbar-mark{
-    width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;
-    color:var(--gold-soft);font-size:14px;
-  }
-  .topbar-title{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600;line-height:1.2;}
-  .topbar-title small{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:11px;color:#a9bdb6;}
-  .topbar-right{display:flex;align-items:center;gap:14px;}
-  .topbar-user{text-align:right;font-size:13px;line-height:1.3;}
-  .topbar-user b{display:block;font-size:13.5px;}
-  .topbar-user span{color:#a9bdb6;font-size:11.5px;}
-  .icon-btn{
-    width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);
-    border:none;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;
-  }
-  .icon-btn:hover{background:rgba(255,255,255,0.16);}
+.cards{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+ gap:15px;
+ margin-bottom:20px
+}
+.card{
+ background:#fff;
+ border-radius:16px;
+ padding:18px;
+ box-shadow:0 2px 9px #0000000b
+}
+.stat{
+ font-size:30px;
+ font-weight:800;
+ margin-top:5px
+}
+.muted{color:var(--muted);font-size:13px}
 
-  .shell-body{display:flex;align-items:flex-start;min-height:calc(100vh - 60px);}
-  .sidebar{
-    width:220px;flex-shrink:0;background:var(--pine);min-height:calc(100vh - 60px);
-    padding:18px 12px;
-  }
-  .nav-item{
-    display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:var(--r-s);
-    color:#dce8e4;font-size:14px;font-weight:500;margin-bottom:3px;
-  }
-  .nav-item i{width:18px;text-align:center;font-size:14.5px;}
-  .nav-item.active{background:rgba(255,255,255,0.12);color:#fff;}
-  .nav-item:not(.active):hover{background:rgba(255,255,255,0.06);cursor:pointer;}
+.page{display:block}
+.page.hidden{display:none}
 
-  .content{flex:1;padding:26px 30px 60px;max-width:1180px;}
-  @media (max-width: 860px){
-    .sidebar{width:64px;}
-    .nav-item span{display:none;}
-    .nav-item{justify-content:center;padding:12px 0;}
-    .content{padding:18px 14px 50px;}
-    .topbar-title small{display:none;}
-  }
+.toolbar{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ margin-bottom:15px
+}
+.table-wrap{
+ overflow:auto;
+ background:#fff;
+ border-radius:15px;
+ box-shadow:0 2px 9px #0000000b
+}
+table{
+ width:100%;
+ border-collapse:collapse;
+ min-width:700px
+}
+th,td{
+ padding:12px;
+ border-bottom:1px solid var(--border);
+ text-align:left;
+ vertical-align:middle
+}
+th{
+ background:#f8fafc;
+ font-size:13px
+}
+.badge{
+ display:inline-block;
+ border-radius:999px;
+ padding:5px 9px;
+ font-size:11px;
+ font-weight:800
+}
+.green{background:#dcfce7;color:#166534}
+.red{background:#fee2e2;color:#991b1b}
+.yellow{background:#fef3c7;color:#92400e}
+.blue{background:#dbeafe;color:#1e40af}
 
-  /* ---------- hero / cards ---------- */
-  .hero{
-    background:linear-gradient(120deg, var(--pine-deep), var(--pine) 130%);
-    border-radius:var(--r-l);padding:26px 28px;color:#fff;position:relative;overflow:hidden;
-    margin-bottom:22px;
-  }
-  .hero::after{
-    content:"";position:absolute;inset:0;
-    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.13) 1px, transparent 1px);
-    background-size:16px 16px;pointer-events:none;
-  }
-  .hero-eyebrow{position:relative;font-size:12.5px;color:#b9cec7;margin-bottom:6px;}
-  .hero h2{position:relative;font-size:23px;font-weight:600;color:#fff;}
-  .hero p{position:relative;margin:8px 0 0;font-size:13.5px;color:#c9d8d2;max-width:520px;line-height:1.55;}
+.alert{
+ padding:12px 14px;
+ border-radius:10px;
+ margin-bottom:14px;
+ font-size:14px
+}
+.alert-danger{background:#fee2e2;color:#991b1b}
+.alert-success{background:#dcfce7;color:#166534}
 
-  .grid{display:grid;gap:16px;}
-  .grid-2{grid-template-columns:1fr 1fr;}
-  .grid-3{grid-template-columns:repeat(3,1fr);}
-  .grid-4{grid-template-columns:repeat(4,1fr);}
-  @media (max-width:860px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+.modal{
+ display:none;
+ position:fixed;
+ inset:0;
+ z-index:100;
+ background:#0008;
+ padding:18px;
+ overflow:auto
+}
+.modal-box{
+ width:100%;
+ max-width:650px;
+ margin:25px auto;
+ background:#fff;
+ border-radius:17px;
+ overflow:hidden
+}
+.modal-head{
+ padding:15px 18px;
+ border-bottom:1px solid var(--border);
+ display:flex;
+ justify-content:space-between;
+ align-items:center
+}
+.modal-head h3{margin:0}
+.modal-body{padding:18px}
 
-  .panel{
-    background:#fff;border:1px solid var(--line);border-radius:var(--r-m);
-    padding:20px 20px 22px;
-  }
-  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
-  .panel-head h3{font-size:16.5px;font-weight:600;}
-  .panel-head .sub{font-size:12.5px;color:var(--ink-faint);margin-top:2px;}
+.pdf-modal .modal-box{
+ max-width:1200px;
+ height:calc(100vh - 36px);
+ display:flex;
+ flex-direction:column
+}
+.pdf-toolbar{
+ padding:10px;
+ background:#f8fafc;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:7px;
+ flex-wrap:wrap;
+ border-bottom:1px solid var(--border)
+}
+.pdf-page-input{width:70px;padding:8px}
+.pdf-container{
+ flex:1;
+ overflow:auto;
+ background:#334155;
+ padding:20px;
+ text-align:center
+}
+#pdfCanvas{
+ background:#fff;
+ box-shadow:0 4px 20px #0006;
+ max-width:100%
+}
+.pdf-info{
+ padding:7px 12px;
+ font-size:12px;
+ color:var(--muted)
+}
 
-  .stat-card{
-    background:#fff;border:1px solid var(--line);border-radius:var(--r-m);
-    padding:16px 18px;border-left:4px solid var(--pine);
-  }
-  .stat-card.gold{border-left-color:var(--gold);}
-  .stat-card.brick{border-left-color:var(--brick);}
-  .stat-card .stat-label{font-size:12px;color:var(--ink-faint);font-weight:600;}
-  .stat-card .stat-value{font-family:'Fraunces',serif;font-size:26px;margin-top:4px;}
-  .stat-card .stat-note{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.student-action{
+ display:flex;
+ gap:5px;
+ flex-wrap:wrap
+}
+.announcement{
+ margin-bottom:12px
+}
+.announcement h3{
+ margin:0 0 8px
+}
+.audio{
+ width:220px;
+ max-width:100%
+}
+.empty{
+ text-align:center;
+ padding:35px;
+ color:var(--muted)
+}
+.file-label{
+ display:block;
+ padding:13px;
+ border:2px dashed #cbd5e1;
+ border-radius:12px;
+ text-align:center;
+ cursor:pointer;
+ margin-bottom:12px
+}
+.file-label:hover{
+ border-color:var(--green);
+ background:var(--light)
+}
+.progress{
+ height:8px;
+ background:#e2e8f0;
+ border-radius:99px;
+ overflow:hidden;
+ margin-top:8px
+}
+.progress-bar{
+ height:100%;
+ background:var(--green);
+ width:0
+}
 
-  .person-row{display:flex;align-items:center;gap:12px;}
-  .avatar{
-    width:44px;height:44px;border-radius:50%;background:var(--pine-soft);color:var(--pine);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;
-  }
-  .avatar.small{width:32px;height:32px;font-size:12.5px;}
-  .avatar.gold{background:var(--gold-soft);color:#7a5713;}
+@media(max-width:850px){
+ .sidebar{
+  transform:translateX(-100%);
+  transition:.2s
+ }
+ .sidebar.open{transform:translateX(0)}
+ .main{margin-left:0;padding:14px}
+ .mobile-btn{display:inline-block}
+ .topbar{
+  gap:10px;
+  align-items:center
+ }
+ .user-info{text-align:right}
+}
 
-  .badge{
-    display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;
-    font-size:11.5px;font-weight:600;
-  }
-  .badge-green{background:var(--pine-soft);color:var(--pine);}
-  .badge-gold{background:var(--gold-soft);color:#7a5713;}
-  .badge-brick{background:var(--brick-soft);color:var(--brick);}
-
-  .announce-item{
-    padding:12px 0;border-bottom:1px solid var(--line);
-  }
-  .announce-item:last-child{border-bottom:none;}
-  .announce-item .a-title{font-weight:600;font-size:14px;}
-  .announce-item .a-date{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
-  .announce-item .a-body{font-size:13px;color:var(--ink-soft);margin-top:5px;line-height:1.5;}
-
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  thead th{
-    text-align:left;font-size:11.5px;color:var(--ink-faint);font-weight:700;
-    padding:0 10px 9px;border-bottom:1.5px solid var(--line);white-space:nowrap;
-  }
-  tbody td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  tbody tr:last-child td{border-bottom:none;}
-  .table-scroll{overflow-x:auto;}
-  .action-icon{
-    width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;
-    display:inline-flex;align-items:center;justify-content:center;color:var(--pine);font-size:13.5px;
-    margin-right:5px;
-  }
-  .action-icon:hover{background:var(--pine-soft);}
-  .action-icon.gold{color:#7a5713;}
-  .action-icon.gold:hover{background:var(--gold-soft);}
-  .action-icon.brick{color:var(--brick);}
-  .action-icon.brick:hover{background:var(--brick-soft);}
-
-  /* ---------- modal ---------- */
-  .modal-backdrop{
-    display:none;position:fixed;inset:0;background:rgba(18,30,27,0.55);
-    z-index:100;align-items:flex-start;justify-content:center;padding:36px 16px;overflow-y:auto;
-  }
-  .modal-backdrop.open{display:flex;}
-  .modal-box{
-    background:var(--paper);border-radius:var(--r-l);max-width:560px;width:100%;
-    box-shadow:0 30px 60px rgba(0,0,0,0.35);overflow:hidden;
-  }
-  .modal-box.wide{max-width:680px;}
-  .modal-head{
-    padding:18px 22px;background:var(--pine-deep);color:#fff;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .modal-head h3{font-size:16px;font-weight:600;color:#fff;}
-  .modal-head .sub{font-size:12px;color:#a9bdb6;margin-top:2px;}
-  .modal-close{background:rgba(255,255,255,0.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;}
-  .modal-body{padding:22px;max-height:70vh;overflow-y:auto;}
-  .modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
-
-  .tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1.5px solid var(--line);}
-  .tab-btn{
-    background:none;border:none;padding:9px 4px;margin-right:14px;font-size:13.5px;font-weight:600;
-    color:var(--ink-faint);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;
-  }
-  .tab-btn.active{color:var(--pine);border-bottom-color:var(--pine);}
-
-  .page-viewer{
-    background:var(--pine-deep);border-radius:var(--r-m);padding:26px;text-align:center;color:#fff;
-    position:relative;overflow:hidden;margin-bottom:16px;
-  }
-  .page-viewer::after{
-    content:"";position:absolute;inset:0;
-    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size:14px 14px;
-  }
-  .page-viewer .pv-book{position:relative;font-size:11.5px;color:#a9bdb6;letter-spacing:.02em;}
-  .page-viewer .pv-page{position:relative;font-family:'Fraunces',serif;font-size:46px;margin:6px 0 2px;color:#fff;}
-  .page-viewer .pv-note{position:relative;font-size:11.5px;color:#c9d8d2;}
-
-  .form-row{margin-bottom:14px;}
-  .form-row label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
-  .form-row input, .form-row select, .form-row textarea{
-    width:100%;padding:10px 12px;border-radius:var(--r-s);border:1px solid var(--line);
-    background:#fff;font-size:14px;outline:none;
-  }
-  .form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:var(--pine);box-shadow:0 0 0 3px var(--pine-soft);}
-  .form-row textarea{resize:vertical;min-height:70px;}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-
-  .mic-box{
-    display:flex;align-items:center;gap:14px;background:var(--paper-deep);border-radius:var(--r-m);
-    padding:14px 16px;margin-bottom:10px;
-  }
-  .mic-circle{
-    width:48px;height:48px;border-radius:50%;background:var(--brick);color:#fff;border:none;
-    display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
-  }
-  .mic-circle.recording{animation:pulse 1.1s infinite;}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(168,69,47,0.5);}70%{box-shadow:0 0 0 12px rgba(168,69,47,0);}100%{box-shadow:0 0 0 0 rgba(168,69,47,0);}}
-  .wave{display:flex;align-items:center;gap:3px;height:26px;flex:1;}
-  .wave span{width:3px;background:var(--pine);border-radius:2px;height:6px;}
-  .mic-time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink-soft);}
-
-  .voice-msg{
-    display:flex;align-items:center;gap:10px;background:var(--pine-soft);border-radius:100px;
-    padding:7px 13px 7px 7px;font-size:12.5px;color:var(--pine);width:fit-content;
-  }
-  .voice-msg .vm-play{width:24px;height:24px;border-radius:50%;background:var(--pine);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:10px;}
-
-  .qr-box{
-    width:170px;height:170px;margin:0 auto 14px;background:#fff;border-radius:var(--r-s);
-    padding:10px;border:1px solid var(--line);
-  }
-  .qr-box img{width:100%;height:100%;object-fit:contain;}
-
-  .upload-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-  .upload-current{
-    font-size:12px;color:var(--ink-faint);background:var(--paper-deep);border:1px solid var(--line);
-    border-radius:100px;padding:5px 12px;
-  }
-  .file-input{
-    font-size:12.5px;padding:8px 10px;border:1px dashed var(--line);border-radius:var(--r-s);
-    background:#fff;width:100%;max-width:220px;
-  }
-  .upload-preview-row{display:flex;align-items:center;gap:14px;margin-top:6px;}
-  .logo-preview{
-    width:56px;height:56px;border-radius:50%;background:var(--pine-deep);color:var(--gold-soft);
-    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;
-    flex-shrink:0;overflow:hidden;border:1.5px solid var(--gold);
-  }
-  .logo-preview img{width:100%;height:100%;object-fit:cover;}
-  .qris-preview{
-    width:56px;height:56px;border-radius:var(--r-s);background:var(--paper-deep);color:var(--ink-faint);
-    display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;
-    border:1px solid var(--line);
-  }
-  .qris-preview img{width:100%;height:100%;object-fit:contain;}
-  .setting-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
-
-  /* ---------- accessibility & polish ---------- */
-  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px;}
-  @media (prefers-reduced-motion: reduce){
-    .mic-circle.recording{animation:none;box-shadow:0 0 0 4px rgba(168,69,47,0.35);}
-    *{scroll-behavior:auto !important;}
-  }
-  html{scroll-behavior:smooth;}
-  ::-webkit-scrollbar{width:9px;height:9px;}
-  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:100px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-
-  .empty-note{padding:24px;text-align:center;color:var(--ink-faint);font-size:13px;}
-
-  .toast{
-    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
-    background:var(--pine-deep);color:#fff;padding:12px 20px;border-radius:100px;font-size:13.5px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.25);z-index:200;display:none;align-items:center;gap:8px;
-  }
-  .toast.show{display:flex;}
-  .toast i{color:var(--gold-soft);}
+@media(max-width:600px){
+ .cards{grid-template-columns:1fr 1fr}
+ .stat{font-size:24px}
+}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 </head>
+
 <body>
 
-<!-- ======================= LOGIN ======================= -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-mark">
-      <div class="login-badge" id="login-badge-el">TW</div>
-      <h1>TPQ Wardatul Wathon</h1>
-      <p>Tukum Kidul, Lumajang — portal pembelajaran santri</p>
-    </div>
-    <div class="login-body">
-      <div class="field">
-        <label>Akun tersimpan pada perangkat ini</label>
-        <div class="field-static" id="account-display">Belum ada akun perangkat</div><input type="text" id="device-username" placeholder="Masukkan username akun" autocomplete="username" style="display:none;margin-top:8px;">
-      </div>
-      <div class="field">
-        <label>Kata sandi</label>
-        <input type="password" id="login-password" placeholder="Masukkan kata sandi" autocomplete="current-password">
-      </div>
-      <div class="login-error" id="login-error">Kata sandi salah. Coba lagi.</div>
-      <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
-      <div class="login-demo-note" id="login-note">Username akun ditetapkan admin dan disimpan pada perangkat. Pengguna cukup memasukkan kata sandi.</div>
-    </div>
+<!-- =========================================================
+ LOGIN
+========================================================= -->
+<div id="loginPage" class="login">
+ <div class="login-box">
+
+  <div class="logo">📖</div>
+
+  <h1>TPQ Wardatul Wathon</h1>
+  <div class="login-sub">
+   Tukum Kidul • Lumajang
   </div>
+
+  <div id="loginError" class="alert alert-danger hidden"></div>
+
+  <div class="form-group">
+   <label>Email</label>
+   <input id="loginEmail" type="email"
+          placeholder="email@contoh.com">
+  </div>
+
+  <div class="form-group">
+   <label>Password</label>
+   <input id="loginPassword" type="password"
+          placeholder="Password">
+  </div>
+
+  <button id="loginBtn" class="btn btn-full"
+          onclick="login()">
+   Masuk
+  </button>
+
+  <div class="muted" style="text-align:center;margin-top:18px">
+   Portal Admin • Ustadzah • Wali
+  </div>
+ </div>
 </div>
 
-<!-- ======================= APP SHELL ======================= -->
-<div id="app-shell">
+<!-- =========================================================
+ APPLICATION
+========================================================= -->
+<div id="app" class="layout">
+
+ <aside id="sidebar" class="sidebar">
+
+  <div class="brand">
+   📖 TPQ Wardatul Wathon
+   <small>Tukum Kidul • Lumajang</small>
+  </div>
+
+  <nav class="nav">
+
+   <button id="nav-dashboard"
+           onclick="showPage('dashboard')">
+    🏠 Dashboard
+   </button>
+
+   <button id="nav-santri"
+           onclick="showPage('santri')">
+    👦 Data Santri
+   </button>
+
+   <button id="nav-ustadzah"
+           onclick="showPage('ustadzah')">
+    👩‍🏫 Data Ustadzah
+   </button>
+
+   <button id="nav-kelas"
+           onclick="showPage('kelas')">
+    📚 Jilid / Kelas
+   </button>
+
+   <button id="nav-baca"
+           onclick="showPage('baca')">
+    📖 Baca
+   </button>
+
+   <button id="nav-hafalan"
+           onclick="showPage('hafalan')">
+    🕌 Hafalan
+   </button>
+
+   <button id="nav-keuangan"
+           onclick="showPage('keuangan')">
+    💰 Keuangan
+   </button>
+
+   <button id="nav-pengumuman"
+           onclick="showPage('pengumuman')">
+    📢 Pengumuman
+   </button>
+
+   <button id="nav-pengaturan"
+           onclick="showPage('pengaturan')">
+    ⚙️ Pengaturan
+   </button>
+
+  </nav>
+
+  <button class="btn btn-danger logout"
+          onclick="logout()">
+   Keluar
+  </button>
+
+ </aside>
+
+ <main class="main">
+
   <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-mark" id="topbar-mark-el">TW</div>
-      <div class="topbar-title">TPQ Wardatul Wathon<small id="topbar-role-label">Portal</small></div>
+
+   <button class="btn btn-gray mobile-btn"
+           onclick="toggleSidebar()">
+    ☰
+   </button>
+
+   <div style="margin-left:auto">
+    <div class="user-info">
+     <div id="userName" class="user-name">Pengguna</div>
+     <div id="userRole" class="user-role">-</div>
     </div>
-    <div class="topbar-right">
-      <div class="topbar-user"><b id="topbar-username">-</b><span id="topbar-usersub">-</span></div>
-      <button class="icon-btn" title="Keluar" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+   </div>
+
+  </div>
+
+  <!-- =======================================================
+  DASHBOARD
+  ======================================================== -->
+  <section id="page-dashboard" class="page">
+
+   <h2>Dashboard</h2>
+
+   <div class="cards">
+
+    <div class="card">
+     <div class="muted">Total Santri</div>
+     <div id="statSantri" class="stat">0</div>
     </div>
-  </div>
-  <div class="shell-body">
-    <div class="sidebar" id="sidebar"></div>
-    <div class="content" id="content"></div>
-  </div>
+
+    <div class="card">
+     <div class="muted">Ustadzah</div>
+     <div id="statUstadzah" class="stat">0</div>
+    </div>
+
+    <div class="card">
+     <div class="muted">Jilid / Kelas</div>
+     <div id="statKelas" class="stat">0</div>
+    </div>
+
+    <div class="card">
+     <div class="muted">Pengumuman</div>
+     <div id="statPengumuman" class="stat">0</div>
+    </div>
+
+   </div>
+
+   <div id="dashboardAnnouncements"></div>
+
+  </section>
+
+  <!-- =======================================================
+  SANTRI
+  ======================================================== -->
+  <section id="page-santri" class="page hidden">
+
+   <h2>Data Santri</h2>
+
+   <div class="toolbar">
+    <button class="btn" onclick="openSantriModal()">
+     + Tambah Santri
+    </button>
+   </div>
+
+   <div class="table-wrap">
+    <table>
+     <thead>
+      <tr>
+       <th>No</th>
+       <th>Nama Santri</th>
+       <th>Nama Wali</th>
+       <th>Kelas</th>
+       <th>Ustadzah</th>
+       <th>Aksi</th>
+      </tr>
+     </thead>
+     <tbody id="santriTable"></tbody>
+    </table>
+   </div>
+
+  </section>
+
+  <!-- =======================================================
+  USTADZAH
+  ======================================================== -->
+  <section id="page-ustadzah" class="page hidden">
+
+   <h2>Data Ustadzah</h2>
+
+   <div class="toolbar">
+    <button class="btn"
+            onclick="openUstadzahModal()">
+     + Tambah Ustadzah
+    </button>
+   </div>
+
+   <div class="table-wrap">
+    <table>
+     <thead>
+      <tr>
+       <th>No</th>
+       <th>Nama</th>
+       <th>Email</th>
+       <th>Kelas</th>
+       <th>Aksi</th>
+      </tr>
+     </thead>
+     <tbody id="ustadzahTable"></tbody>
+    </table>
+   </div>
+
+  </section>
+
+  <!-- =======================================================
+  KELAS
+  ======================================================== -->
+  <section id="page-kelas" class="page hidden">
+
+   <h2>Jilid / Kelas</h2>
+
+   <div class="card" style="margin-bottom:15px">
+    <b>Pengaturan Buku</b>
+    <p class="muted">
+     Upload PDF Baca dan Hafalan. Buku akan otomatis
+     digunakan santri yang berada pada kelas tersebut.
+    </p>
+   </div>
+
+   <div class="toolbar">
+    <button class="btn"
+            onclick="openKelasModal()">
+     + Tambah Jilid / Kelas
+    </button>
+   </div>
+
+   <div class="table-wrap">
+    <table>
+     <thead>
+      <tr>
+       <th>No</th>
+       <th>Kelas</th>
+       <th>Buku Baca</th>
+       <th>Buku Hafalan</th>
+       <th>Aksi</th>
+      </tr>
+     </thead>
+     <tbody id="kelasTable"></tbody>
+    </table>
+   </div>
+
+  </section>
+
+  <!-- =======================================================
+  BACA
+  ======================================================== -->
+  <section id="page-baca" class="page hidden">
+
+   <h2>📖 Modul Baca</h2>
+
+   <div class="card">
+
+    <label>Pilih Santri</label>
+
+    <select id="bacaSantriSelect"
+            onchange="loadLearningStudent('baca')">
+     <option value="">-- Pilih Santri --</option>
+    </select>
+
+   </div>
+
+   <div id="bacaInfo" style="margin-top:15px"></div>
+
+  </section>
+
+  <!-- =======================================================
+  HAFALAN
+  ======================================================== -->
+  <section id="page-hafalan" class="page hidden">
+
+   <h2>🕌 Modul Hafalan</h2>
+
+   <div class="card">
+
+    <label>Pilih Santri</label>
+
+    <select id="hafalanSantriSelect"
+            onchange="loadLearningStudent('hafalan')">
+     <option value="">-- Pilih Santri --</option>
+    </select>
+
+   </div>
+
+   <div id="hafalanInfo" style="margin-top:15px"></div>
+
+  </section>
+
+  <!-- =======================================================
+  KEUANGAN
+  ======================================================== -->
+  <section id="page-keuangan" class="page hidden">
+
+   <h2>💰 Keuangan</h2>
+
+   <div class="toolbar">
+    <button id="addTagihanBtn"
+            class="btn"
+            onclick="openTagihanModal()">
+     + Tambah Tagihan
+    </button>
+   </div>
+
+   <div class="table-wrap">
+    <table>
+     <thead>
+      <tr>
+       <th>No</th>
+       <th>Santri</th>
+       <th>Tagihan</th>
+       <th>Nilai</th>
+       <th>Terbayar</th>
+       <th>QRIS</th>
+       <th>Aksi</th>
+      </tr>
+     </thead>
+     <tbody id="keuanganTable"></tbody>
+    </table>
+   </div>
+
+  </section>
+
+  <!-- =======================================================
+  PENGUMUMAN
+  ======================================================== -->
+  <section id="page-pengumuman" class="page hidden">
+
+   <h2>📢 Pengumuman</h2>
+
+   <div class="toolbar">
+    <button id="addPengumumanBtn"
+            class="btn"
+            onclick="openPengumumanModal()">
+     + Tambah Pengumuman
+    </button>
+   </div>
+
+   <div id="pengumumanList"></div>
+
+  </section>
+
+  <!-- =======================================================
+  PENGATURAN
+  ======================================================== -->
+  <section id="page-pengaturan" class="page hidden">
+
+   <h2>⚙️ Pengaturan</h2>
+
+   <div class="card">
+
+    <h3>TPQ Wardatul Wathon</h3>
+
+    <p>
+     Tukum Kidul, Lumajang
+    </p>
+
+    <p class="muted">
+     Sistem informasi santri, pembelajaran dan keuangan.
+    </p>
+
+   </div>
+
+  </section>
+
+ </main>
 </div>
 
-<!-- ======================= MODAL ======================= -->
-<div class="modal-backdrop" id="modal-backdrop">
-  <div class="modal-box" id="modal-box"></div>
+<!-- =========================================================
+ MODAL SANTRI
+========================================================= -->
+<div id="santriModal" class="modal">
+ <div class="modal-box">
+
+  <div class="modal-head">
+   <h3>Tambah Santri</h3>
+   <button class="btn btn-gray"
+           onclick="closeModal('santriModal')">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Nama Santri</label>
+    <input id="santriNama">
+   </div>
+
+   <div class="form-group">
+    <label>Nama Wali</label>
+    <input id="santriWali">
+   </div>
+
+   <div class="form-group">
+    <label>Kelas / Jilid</label>
+    <select id="santriKelas"></select>
+   </div>
+
+   <div class="form-group">
+    <label>Ustadzah Pendamping</label>
+    <select id="santriUstadzah"></select>
+   </div>
+
+   <button class="btn" onclick="saveSantri()">
+    Simpan
+   </button>
+
+  </div>
+ </div>
 </div>
 
-<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
+<!-- =========================================================
+ MODAL USTADZAH
+========================================================= -->
+<div id="ustadzahModal" class="modal">
+ <div class="modal-box">
 
-<script>
-/* ============================================================
-   MOCK DATABASE
-   ============================================================ */
-const LEGACY_DB = {
-  jilid: [
-    { id:'j1', nama:'Jilid 1', ustadzahId:'u2', bukuBacaan:'Iqro Jilid 1.pdf', bukuHafalan:'Juz Amma (Pemula).pdf' },
-    { id:'j2', nama:'Jilid 2', ustadzahId:'u1', bukuBacaan:'Iqro Jilid 2.pdf', bukuHafalan:'Juz Amma.pdf' },
-  ],
-  ustadzah: [
-    { id:'u1', nama:'Ustadzah Aminah', username:'ustadzah.aminah', hp:'0812-3456-7801', jilidId:'j2' },
-    { id:'u2', nama:'Ustadzah Fatimah', username:'ustadzah.fatimah', hp:'0812-3456-7802', jilidId:'j1' },
-  ],
-  santri: [
-    { id:'s1', nama:'Muhammad Rizki', jilidId:'j2', waliId:'w1' },
-    { id:'s2', nama:'Ahmad Zaki', jilidId:'j2', waliId:'w3' },
-    { id:'s3', nama:'Nur Aini', jilidId:'j2', waliId:'w4' },
-    { id:'s4', nama:'Bilal Ramadhan', jilidId:'j2', waliId:'w5' },
-    { id:'s5', nama:'Khadijah Putri', jilidId:'j2', waliId:'w6' },
-    { id:'s6', nama:'Fatimah Azzahra', jilidId:'j1', waliId:'w2' },
-    { id:'s7', nama:'Umar Faruq', jilidId:'j1', waliId:'w7' },
-    { id:'s8', nama:'Zainab Salsabila', jilidId:'j1', waliId:'w8' },
-  ],
-  wali: [
-    { id:'w1', nama:'Bpk. Ahmad Fauzi', username:'wali.ahmad', hp:'0813-1111-0001', santriId:'s1' },
-    { id:'w2', nama:'Ibu Siti Aisyah', username:'wali.siti', hp:'0813-1111-0002', santriId:'s6' },
-    { id:'w3', nama:'Bpk. Hendra Saputra', username:'wali.hendra', hp:'0813-1111-0003', santriId:'s2' },
-    { id:'w4', nama:'Ibu Ratna Sari', username:'wali.ratna', hp:'0813-1111-0004', santriId:'s3' },
-    { id:'w5', nama:'Bpk. Dedi Kurniawan', username:'wali.dedi', hp:'0813-1111-0005', santriId:'s4' },
-    { id:'w6', nama:'Ibu Yuli Astuti', username:'wali.yuli', hp:'0813-1111-0006', santriId:'s5' },
-    { id:'w7', nama:'Bpk. Agus Salim', username:'wali.agus', hp:'0813-1111-0007', santriId:'s7' },
-    { id:'w8', nama:'Ibu Nur Hasanah', username:'wali.nur', hp:'0813-1111-0008', santriId:'s8' },
-  ],
-  admin: [{ id:'a1', nama:'Admin TPQ', username:'admin.tpq' }],
-  // riwayat ngaji: bacaan & hafalan digabung per-jenis, terbaru di depan
-  riwayat: {
-    s1: {
-      bacaan: [
-        { halaman:14, status:'naik', pesan:'Bacaan tajwidnya sudah rapi, lanjut ke halaman berikutnya ya nak.', pesanTipe:'teks', tanggal:'2026-09-15' },
-        { halaman:13, status:'mengulang', pesan:'Pesan suara (0:24)', pesanTipe:'suara', tanggal:'2026-09-12' },
-        { halaman:13, status:'naik', pesan:'Alhamdulillah lancar, pertahankan.', pesanTipe:'teks', tanggal:'2026-09-10' },
-      ],
-      hafalan: [
-        { halaman:5, status:'naik', pesan:'Hafalan An-Naba ayat 1-5 sudah lancar.', pesanTipe:'teks', tanggal:'2026-09-14' },
-      ]
+  <div class="modal-head">
+   <h3>Tambah Ustadzah</h3>
+   <button class="btn btn-gray"
+           onclick="closeModal('ustadzahModal')">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Nama Ustadzah</label>
+    <input id="ustadzahNama">
+   </div>
+
+   <div class="form-group">
+    <label>Email Login</label>
+    <input id="ustadzahEmail" type="email">
+   </div>
+
+   <div class="form-group">
+    <label>Kelas</label>
+    <select id="ustadzahKelas"></select>
+   </div>
+
+   <p class="muted">
+    Akun login dibuat melalui Firebase Authentication.
+   </p>
+
+   <button class="btn" onclick="saveUstadzah()">
+    Simpan
+   </button>
+
+  </div>
+ </div>
+</div>
+
+<!-- =========================================================
+ MODAL KELAS
+========================================================= -->
+<div id="kelasModal" class="modal">
+ <div class="modal-box">
+
+  <div class="modal-head">
+   <h3>Jilid / Kelas</h3>
+   <button class="btn btn-gray"
+           onclick="closeModal('kelasModal')">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Nama Jilid / Kelas</label>
+    <input id="kelasNama"
+           placeholder="Contoh: Jilid 1">
+   </div>
+
+   <label class="file-label">
+    📖 Pilih PDF Buku Baca
+    <input id="pdfBacaFile"
+           type="file"
+           accept="application/pdf"
+           hidden>
+   </label>
+
+   <div id="pdfBacaName"
+        class="muted"
+        style="margin-bottom:12px">
+   </div>
+
+   <label class="file-label">
+    🕌 Pilih PDF Buku Hafalan
+    <input id="pdfHafalanFile"
+           type="file"
+           accept="application/pdf"
+           hidden>
+   </label>
+
+   <div id="pdfHafalanName"
+        class="muted"
+        style="margin-bottom:12px">
+   </div>
+
+   <div id="uploadProgress"
+        class="hidden">
+    <div class="muted">Mengupload...</div>
+    <div class="progress">
+     <div id="uploadProgressBar"
+          class="progress-bar"></div>
+    </div>
+   </div>
+
+   <br>
+
+   <button class="btn btn-full"
+           onclick="saveKelas()">
+    Simpan Kelas
+   </button>
+
+  </div>
+ </div>
+</div>
+
+<!-- =========================================================
+ MODAL TAGIHAN
+========================================================= -->
+<div id="tagihanModal" class="modal">
+ <div class="modal-box">
+
+  <div class="modal-head">
+   <h3>Tambah Tagihan</h3>
+   <button class="btn btn-gray"
+           onclick="closeModal('tagihanModal')">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Santri</label>
+    <select id="tagihanSantri"></select>
+   </div>
+
+   <div class="form-group">
+    <label>Jenis</label>
+    <select id="tagihanJenis">
+     <option value="SPP">SPP</option>
+     <option value="Tabungan">Tabungan</option>
+     <option value="Iuran Kegiatan">Iuran Kegiatan</option>
+    </select>
+   </div>
+
+   <div class="form-group">
+    <label>Keterangan</label>
+    <input id="tagihanKeterangan"
+           placeholder="SPP September 2026">
+   </div>
+
+   <div class="form-group">
+    <label>Nilai Tagihan</label>
+    <input id="tagihanNilai"
+           type="number"
+           min="0">
+   </div>
+
+   <button class="btn btn-full"
+           onclick="saveTagihan()">
+    Simpan Tagihan
+   </button>
+
+  </div>
+ </div>
+</div>
+
+<!-- =========================================================
+ MODAL PENGUMUMAN
+========================================================= -->
+<div id="pengumumanModal" class="modal">
+ <div class="modal-box">
+
+  <div class="modal-head">
+   <h3>Pengumuman</h3>
+   <button class="btn btn-gray"
+           onclick="closeModal('pengumumanModal')">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Judul</label>
+    <input id="pengumumanJudul">
+   </div>
+
+   <div class="form-group">
+    <label>Isi</label>
+    <textarea id="pengumumanIsi"
+              rows="5"></textarea>
+   </div>
+
+   <button class="btn btn-full"
+           onclick="savePengumuman()">
+    Publikasikan
+   </button>
+
+  </div>
+ </div>
+</div>
+
+<!-- =========================================================
+ MODAL PEMBELAJARAN
+========================================================= -->
+<div id="learningModal" class="modal">
+ <div class="modal-box">
+
+  <div class="modal-head">
+   <h3 id="learningModalTitle">Hasil Pembelajaran</h3>
+
+   <button class="btn btn-gray"
+           onclick="closeModal('learningModal')">
+    ✕
+   </button>
+  </div>
+
+  <div class="modal-body">
+
+   <div class="form-group">
+    <label>Status</label>
+
+    <select id="learningStatus">
+     <option value="naik">Naik</option>
+     <option value="mengulang">Mengulang</option>
+    </select>
+   </div>
+
+   <div class="form-group">
+    <label>Pesan Ustadzah</label>
+    <textarea id="learningMessage"
+              rows="4"
+              placeholder="Tuliskan pesan untuk wali..."></textarea>
+   </div>
+
+   <div class="form-group">
+
+    <label>
+     Pesan Suara
+    </label>
+
+    <button id="recordBtn"
+            class="btn btn-orange"
+            onclick="toggleRecording()">
+     🎙 Mulai Rekam
+    </button>
+
+    <div id="recordStatus"
+         class="muted"
+         style="margin-top:8px">
+    </div>
+
+    <audio id="recordPreview"
+           class="audio hidden"
+           controls
+           style="margin-top:10px">
+    </audio>
+
+   </div>
+
+   <button class="btn btn-full"
+           onclick="saveLearning()">
+    Simpan Hasil Pembelajaran
+   </button>
+
+  </div>
+ </div>
+</div>
+
+<!-- =========================================================
+ PDF VIEWER
+========================================================= -->
+<div id="pdfModal" class="modal pdf-modal">
+
+ <div class="modal-box">
+
+  <div class="modal-head">
+
+   <div>
+    <h3 id="pdfTitle">Buku</h3>
+    <div id="pdfSubtitle"
+         class="muted">
+    </div>
+   </div>
+
+   <button class="btn btn-gray"
+           onclick="closePdfViewer()">
+    ✕
+   </button>
+
+  </div>
+
+  <div class="pdf-toolbar">
+
+   <button class="btn btn-gray btn-sm"
+           onclick="pdfPrev()">
+    ◀
+   </button>
+
+   <span>
+    Halaman
+    <input id="pdfPage"
+           class="pdf-page-input"
+           type="number"
+           min="1"
+           value="1"
+           onchange="pdfGoPage(this.value)">
+    /
+    <b id="pdfTotal">0</b>
+   </span>
+
+   <button class="btn btn-gray btn-sm"
+           onclick="pdfNext()">
+    ▶
+   </button>
+
+   <button class="btn btn-blue btn-sm"
+           onclick="saveCurrentPage()">
+    🔖 Tandai Halaman
+   </button>
+
+  </div>
+
+  <div id="pdfStatus"
+       class="pdf-info">
+  </div>
+
+  <div class="pdf-container">
+   <canvas id="pdfCanvas"></canvas>
+  </div>
+
+ </div>
+</div>
+
+<!-- =========================================================
+ FIREBASE
+========================================================= -->
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+ getAuth,
+ signInWithEmailAndPassword,
+ signOut,
+ onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+ getFirestore,
+ collection,
+ doc,
+ getDoc,
+ getDocs,
+ addDoc,
+ setDoc,
+ updateDoc,
+ deleteDoc,
+ query,
+ where,
+ orderBy,
+ serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+import {
+ getStorage,
+ ref,
+ uploadBytesResumable,
+ getDownloadURL
+}
+from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+
+/* =========================================================
+ FIREBASE CONFIG
+========================================================= */
+
+const firebaseConfig = {
+ apiKey:"AIzaSyB_VJ-zWvKiN1PdG6ywFWw-OFn31nazn2s",
+ authDomain:"sarpras-68b7c.firebaseapp.com",
+ projectId:"sarpras-68b7c",
+ storageBucket:"sarpras-68b7c.firebasestorage.app",
+ messagingSenderId:"327008853033",
+ appId:"1:327008853033:web:30570043f0fe2b06661038",
+ measurementId:"G-R2KZFZCVQL"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+/* =========================================================
+ STATE
+========================================================= */
+
+let currentUser = null;
+let currentProfile = null;
+
+let santriData = [];
+let ustadzahData = [];
+let kelasData = [];
+let tagihanData = [];
+let pengumumanData = [];
+let learningData = [];
+
+let pdfDoc = null;
+let pdfPageNumber = 1;
+let pdfRendering = false;
+
+let pdfStudent = null;
+let pdfMode = "baca";
+
+let learningTarget = null;
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordedBlob = null;
+
+/* =========================================================
+ LOGIN
+========================================================= */
+
+window.login = async function(){
+
+ const email =
+   document.getElementById("loginEmail")
+   .value.trim();
+
+ const password =
+   document.getElementById("loginPassword")
+   .value;
+
+ const error =
+   document.getElementById("loginError");
+
+ error.classList.add("hidden");
+
+ if(!email || !password){
+
+  error.textContent =
+    "Email dan password wajib diisi.";
+
+  error.classList.remove("hidden");
+
+  return;
+ }
+
+ const btn =
+   document.getElementById("loginBtn");
+
+ btn.disabled=true;
+ btn.textContent="Memproses...";
+
+ try{
+
+  await signInWithEmailAndPassword(
+   auth,
+   email,
+   password
+  );
+
+ }catch(e){
+
+  console.error(e);
+
+  error.textContent =
+    "Login gagal. Periksa email/password.";
+
+  error.classList.remove("hidden");
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="Masuk";
+ }
+};
+
+window.logout = async function(){
+
+ await signOut(auth);
+};
+
+/* =========================================================
+ AUTH STATE
+========================================================= */
+
+onAuthStateChanged(auth,async user=>{
+
+ if(!user){
+
+  currentUser=null;
+  currentProfile=null;
+
+  document.getElementById("loginPage")
+    .style.display="flex";
+
+  document.getElementById("app")
+    .style.display="none";
+
+  return;
+ }
+
+ currentUser=user;
+
+ await loadProfile(user.uid);
+
+ document.getElementById("loginPage")
+   .style.display="none";
+
+ document.getElementById("app")
+   .style.display="block";
+
+ document.getElementById("userName")
+   .textContent =
+   currentProfile?.nama ||
+   user.email;
+
+ document.getElementById("userRole")
+   .textContent =
+   roleLabel(currentProfile?.role);
+
+ applyRole();
+
+ await loadAll();
+
+ showPage("dashboard");
+
+});
+
+/* =========================================================
+ PROFILE
+========================================================= */
+
+async function loadProfile(uid){
+
+ const snap =
+   await getDoc(
+    doc(db,"users",uid)
+   );
+
+ if(snap.exists()){
+
+  currentProfile={
+   id:uid,
+   ...snap.data()
+  };
+
+ }else{
+
+  /*
+   Untuk keamanan, profile yang tidak ada
+   tidak diberi hak admin.
+  */
+
+  currentProfile={
+   id:uid,
+   nama:currentUser.email,
+   role:"wali"
+  };
+ }
+}
+
+function roleLabel(role){
+
+ if(role==="admin")return"Administrator";
+ if(role==="ustadzah")return"Ustadzah";
+ if(role==="wali")return"Wali Santri";
+
+ return"Pengguna";
+}
+
+/* =========================================================
+ ROLE UI
+========================================================= */
+
+function applyRole(){
+
+ const role =
+   currentProfile?.role || "wali";
+
+ const allNav =
+   document.querySelectorAll(".nav button");
+
+ allNav.forEach(btn=>{
+  btn.style.display="";
+ });
+
+ if(role==="wali"){
+
+  [
+   "santri",
+   "ustadzah",
+   "kelas",
+   "pengaturan"
+  ].forEach(p=>{
+   document.getElementById("nav-"+p)
+    .style.display="none";
+  });
+
+  document.getElementById("addTagihanBtn")
+    ?.classList.add("hidden");
+
+  document.getElementById("addPengumumanBtn")
+    ?.classList.add("hidden");
+
+ }
+
+ if(role==="ustadzah"){
+
+  [
+   "ustadzah",
+   "kelas",
+   "pengaturan"
+  ].forEach(p=>{
+   document.getElementById("nav-"+p)
+    .style.display="none";
+  });
+
+  document.getElementById("addTagihanBtn")
+    ?.classList.add("hidden");
+
+  document.getElementById("addPengumumanBtn")
+    ?.classList.add("hidden");
+ }
+
+ if(role==="admin"){
+
+  document.getElementById("addTagihanBtn")
+    ?.classList.remove("hidden");
+
+  document.getElementById("addPengumumanBtn")
+    ?.classList.remove("hidden");
+ }
+}
+
+/* =========================================================
+ NAVIGATION
+========================================================= */
+
+window.showPage=function(page){
+
+ document.querySelectorAll(".page")
+   .forEach(x=>x.classList.add("hidden"));
+
+ document.getElementById("page-"+page)
+   ?.classList.remove("hidden");
+
+ document.querySelectorAll(".nav button")
+   .forEach(x=>x.classList.remove("active"));
+
+ document.getElementById("nav-"+page)
+   ?.classList.add("active");
+
+ if(window.innerWidth<=850)
+   document.getElementById("sidebar")
+    .classList.remove("open");
+
+ if(page==="santri")renderSantri();
+ if(page==="ustadzah")renderUstadzah();
+ if(page==="kelas")renderKelas();
+ if(page==="baca")populateLearningSelectors();
+ if(page==="hafalan")populateLearningSelectors();
+ if(page==="keuangan")renderKeuangan();
+ if(page==="pengumuman")renderPengumuman();
+};
+
+window.toggleSidebar=function(){
+ document.getElementById("sidebar")
+   .classList.toggle("open");
+};
+
+window.closeModal=function(id){
+ document.getElementById(id).style.display="none";
+};
+
+/* =========================================================
+ LOAD COLLECTION
+========================================================= */
+
+async function getCollection(name){
+
+ try{
+
+  const snap =
+    await getDocs(collection(db,name));
+
+  return snap.docs.map(d=>({
+   id:d.id,
+   ...d.data()
+  }));
+
+ }catch(e){
+
+  console.error(name,e);
+
+  return [];
+ }
+}
+
+async function loadAll(){
+
+ santriData=await getCollection("santri");
+ ustadzahData=await getCollection("ustadzah");
+ kelasData=await getCollection("kelas");
+ tagihanData=await getCollection("tagihan");
+ pengumumanData=await getCollection("pengumuman");
+ learningData=await getCollection("pembelajaran");
+
+ document.getElementById("statSantri")
+   .textContent=santriData.length;
+
+ document.getElementById("statUstadzah")
+   .textContent=ustadzahData.length;
+
+ document.getElementById("statKelas")
+   .textContent=kelasData.length;
+
+ document.getElementById("statPengumuman")
+   .textContent=
+   pengumumanData.length;
+
+ populateSelectors();
+ renderDashboard();
+}
+
+/* =========================================================
+ DASHBOARD
+========================================================= */
+
+function renderDashboard(){
+
+ const el =
+   document.getElementById("dashboardAnnouncements");
+
+ if(!pengumumanData.length){
+
+  el.innerHTML=`
+   <div class="card empty">
+    Belum ada pengumuman.
+   </div>
+  `;
+
+  return;
+ }
+
+ el.innerHTML=`
+  <div class="card">
+   <h3>📢 Pengumuman Terbaru</h3>
+
+   ${pengumumanData
+    .slice()
+    .reverse()
+    .slice(0,3)
+    .map(p=>`
+     <div class="announcement">
+      <b>${esc(p.judul||"Pengumuman")}</b>
+      <p>${esc(p.isi||"")}</p>
+     </div>
+    `).join("")}
+
+  </div>
+ `;
+}
+
+/* =========================================================
+ SELECTORS
+========================================================= */
+
+function populateSelectors(){
+
+ const classIds=[
+  "santriKelas",
+  "ustadzahKelas"
+ ];
+
+ classIds.forEach(id=>{
+
+  const el=document.getElementById(id);
+  if(!el)return;
+
+  el.innerHTML=
+   `<option value="">-- Pilih Kelas --</option>`;
+
+  kelasData.forEach(k=>{
+   el.innerHTML+=`
+    <option value="${k.id}">
+     ${esc(k.nama)}
+    </option>
+   `;
+  });
+ });
+
+ const ust=
+   document.getElementById("santriUstadzah");
+
+ if(ust){
+
+  ust.innerHTML=
+   `<option value="">-- Pilih Ustadzah --</option>`;
+
+  ustadzahData.forEach(u=>{
+   ust.innerHTML+=`
+    <option value="${u.id}">
+     ${esc(u.nama)}
+    </option>
+   `;
+  });
+ }
+
+ populateLearningSelectors();
+ populateTagihanSelector();
+}
+
+/* =========================================================
+ SANTRI
+========================================================= */
+
+window.openSantriModal=function(){
+
+ document.getElementById("santriNama").value="";
+ document.getElementById("santriWali").value="";
+
+ populateSelectors();
+
+ document.getElementById("santriModal")
+  .style.display="block";
+};
+
+window.saveSantri=async function(){
+
+ const data={
+
+  nama:
+   document.getElementById("santriNama")
+    .value.trim(),
+
+  wali:
+   document.getElementById("santriWali")
+    .value.trim(),
+
+  kelasId:
+   document.getElementById("santriKelas")
+    .value,
+
+  ustadzahId:
+   document.getElementById("santriUstadzah")
+    .value,
+
+  createdAt:serverTimestamp()
+ };
+
+ if(!data.nama){
+
+  alert("Nama santri wajib diisi.");
+  return;
+ }
+
+ await addDoc(
+  collection(db,"santri"),
+  data
+ );
+
+ closeModal("santriModal");
+
+ await loadAll();
+
+ alert("Santri berhasil ditambahkan.");
+};
+
+function renderSantri(){
+
+ const tbody =
+   document.getElementById("santriTable");
+
+ tbody.innerHTML="";
+
+ if(!santriData.length){
+
+  tbody.innerHTML=`
+   <tr>
+    <td colspan="6" class="empty">
+     Belum ada data santri.
+    </td>
+   </tr>
+  `;
+
+  return;
+ }
+
+ santriData.forEach((s,i)=>{
+
+  const kelas=
+   kelasData.find(k=>k.id===s.kelasId);
+
+  const ust=
+   ustadzahData.find(u=>u.id===s.ustadzahId);
+
+  tbody.innerHTML+=`
+   <tr>
+
+    <td>${i+1}</td>
+
+    <td><b>${esc(s.nama)}</b></td>
+
+    <td>${esc(s.wali||"-")}</td>
+
+    <td>${esc(kelas?.nama||"-")}</td>
+
+    <td>${esc(ust?.nama||"-")}</td>
+
+    <td>
+     <button class="btn btn-danger btn-sm"
+       onclick="deleteData('santri','${s.id}')">
+      Hapus
+     </button>
+    </td>
+
+   </tr>
+  `;
+ });
+}
+
+/* =========================================================
+ USTADZAH
+========================================================= */
+
+window.openUstadzahModal=function(){
+
+ document.getElementById("ustadzahNama").value="";
+ document.getElementById("ustadzahEmail").value="";
+
+ populateSelectors();
+
+ document.getElementById("ustadzahModal")
+  .style.display="block";
+};
+
+window.saveUstadzah=async function(){
+
+ const nama=
+  document.getElementById("ustadzahNama")
+   .value.trim();
+
+ const email=
+  document.getElementById("ustadzahEmail")
+   .value.trim();
+
+ const kelasId=
+  document.getElementById("ustadzahKelas")
+   .value;
+
+ if(!nama||!email){
+
+  alert("Nama dan email wajib diisi.");
+  return;
+ }
+
+ await addDoc(
+  collection(db,"ustadzah"),
+  {
+   nama,
+   email,
+   kelasId,
+   createdAt:serverTimestamp()
+  }
+ );
+
+ closeModal("ustadzahModal");
+
+ await loadAll();
+
+ alert(
+  "Data ustadzah disimpan. Buat akun login dengan email tersebut di Firebase Authentication."
+ );
+};
+
+function renderUstadzah(){
+
+ const tbody=
+   document.getElementById("ustadzahTable");
+
+ tbody.innerHTML="";
+
+ ustadzahData.forEach((u,i)=>{
+
+  const kelas=
+   kelasData.find(k=>k.id===u.kelasId);
+
+  tbody.innerHTML+=`
+   <tr>
+
+    <td>${i+1}</td>
+
+    <td><b>${esc(u.nama)}</b></td>
+
+    <td>${esc(u.email)}</td>
+
+    <td>${esc(kelas?.nama||"-")}</td>
+
+    <td>
+     <button class="btn btn-danger btn-sm"
+      onclick="deleteData('ustadzah','${u.id}')">
+      Hapus
+     </button>
+    </td>
+
+   </tr>
+  `;
+ });
+}
+
+/* =========================================================
+ KELAS + UPLOAD PDF
+========================================================= */
+
+document.getElementById("pdfBacaFile")
+ ?.addEventListener("change",e=>{
+
+  const f=e.target.files[0];
+
+  document.getElementById("pdfBacaName")
+   .textContent=f
+    ? `Dipilih: ${f.name}`
+    : "";
+ });
+
+document.getElementById("pdfHafalanFile")
+ ?.addEventListener("change",e=>{
+
+  const f=e.target.files[0];
+
+  document.getElementById("pdfHafalanName")
+   .textContent=f
+    ? `Dipilih: ${f.name}`
+    : "";
+ });
+
+window.openKelasModal=function(){
+
+ document.getElementById("kelasNama").value="";
+
+ document.getElementById("pdfBacaFile").value="";
+ document.getElementById("pdfHafalanFile").value="";
+
+ document.getElementById("pdfBacaName").textContent="";
+ document.getElementById("pdfHafalanName").textContent="";
+
+ document.getElementById("uploadProgress")
+  .classList.add("hidden");
+
+ document.getElementById("kelasModal")
+  .style.display="block";
+};
+
+async function uploadPDF(file,path){
+
+ if(!file)return null;
+
+ if(file.type!=="application/pdf"){
+
+  throw new Error("File harus PDF.");
+ }
+
+ if(file.size>50*1024*1024){
+
+  throw new Error(
+   "Ukuran PDF maksimal 50 MB."
+  );
+ }
+
+ const storageRef=
+   ref(storage,path);
+
+ const task=
+   uploadBytesResumable(
+    storageRef,
+    file,
+    {
+     contentType:"application/pdf"
+    }
+   );
+
+ document.getElementById("uploadProgress")
+  .classList.remove("hidden");
+
+ return await new Promise(
+  (resolve,reject)=>{
+
+   task.on(
+    "state_changed",
+
+    snapshot=>{
+
+     const percent=
+      snapshot.totalBytes
+      ? (
+       snapshot.bytesTransferred /
+       snapshot.totalBytes
+      )*100
+      :0;
+
+     document.getElementById(
+      "uploadProgressBar"
+     ).style.width=
+      percent+"%";
     },
-    s6: {
-      bacaan: [
-        { halaman:9, status:'mengulang', pesan:'Perhatikan panjang pendek bacaan di baris ketiga.', pesanTipe:'teks', tanggal:'2026-09-15' },
-        { halaman:9, status:'naik', pesan:'Pesan suara (0:31)', pesanTipe:'suara', tanggal:'2026-09-11' },
-      ],
-      hafalan: [
-        { halaman:2, status:'naik', pesan:'Hafalan An-Nas sudah lancar sekali.', pesanTipe:'teks', tanggal:'2026-09-13' },
-      ]
+
+    reject,
+
+    async()=>{
+
+     const url=
+      await getDownloadURL(
+       task.snapshot.ref
+      );
+
+     resolve(url);
     }
+   );
+  }
+ );
+}
+
+window.saveKelas=async function(){
+
+ const nama=
+   document.getElementById("kelasNama")
+    .value.trim();
+
+ const bacaFile=
+   document.getElementById("pdfBacaFile")
+    .files[0];
+
+ const hafalanFile=
+   document.getElementById("pdfHafalanFile")
+    .files[0];
+
+ if(!nama){
+
+  alert("Nama kelas wajib diisi.");
+  return;
+ }
+
+ try{
+
+  const id=
+   crypto.randomUUID();
+
+  let pdfBaca=null;
+  let pdfHafalan=null;
+
+  if(bacaFile){
+
+   pdfBaca=
+    await uploadPDF(
+     bacaFile,
+     `buku/${id}/baca/${bacaFile.name}`
+    );
+  }
+
+  if(hafalanFile){
+
+   pdfHafalan=
+    await uploadPDF(
+     hafalanFile,
+     `buku/${id}/hafalan/${hafalanFile.name}`
+    );
+  }
+
+  await setDoc(
+   doc(db,"kelas",id),
+   {
+    nama,
+    pdfBaca,
+    pdfHafalan,
+    createdAt:serverTimestamp()
+   }
+  );
+
+  closeModal("kelasModal");
+
+  await loadAll();
+
+  alert("Kelas dan buku berhasil disimpan.");
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Gagal menyimpan: "+
+   (e.message||e)
+  );
+ }
+};
+
+function renderKelas(){
+
+ const tbody=
+   document.getElementById("kelasTable");
+
+ tbody.innerHTML="";
+
+ kelasData.forEach((k,i)=>{
+
+  tbody.innerHTML+=`
+
+   <tr>
+
+    <td>${i+1}</td>
+
+    <td><b>${esc(k.nama)}</b></td>
+
+    <td>
+     ${
+      k.pdfBaca
+      ? `<span class="badge green">✓ Ada</span>`
+      : `<span class="badge red">Belum ada</span>`
+     }
+    </td>
+
+    <td>
+     ${
+      k.pdfHafalan
+      ? `<span class="badge green">✓ Ada</span>`
+      : `<span class="badge red">Belum ada</span>`
+     }
+    </td>
+
+    <td>
+
+     <button class="btn btn-danger btn-sm"
+       onclick="deleteData('kelas','${k.id}')">
+      Hapus
+     </button>
+
+    </td>
+
+   </tr>
+  `;
+ });
+}
+
+/* =========================================================
+ LEARNING SELECTOR
+========================================================= */
+
+function getVisibleStudents(){
+
+ let list=[...santriData];
+
+ if(currentProfile?.role==="ustadzah"){
+
+  const u=
+   ustadzahData.find(
+    x=>x.email===currentUser?.email
+   );
+
+  if(u){
+
+   list=
+    list.filter(
+     s=>s.kelasId===u.kelasId
+    );
+  }
+ }
+
+ if(currentProfile?.role==="wali"){
+
+  list=
+   list.filter(
+    s=>s.waliUid===currentUser?.uid
+   );
+ }
+
+ return list;
+}
+
+function populateLearningSelectors(){
+
+ const list=
+  getVisibleStudents();
+
+ [
+  "bacaSantriSelect",
+  "hafalanSantriSelect"
+ ].forEach(id=>{
+
+  const el=
+   document.getElementById(id);
+
+  if(!el)return;
+
+  const old=el.value;
+
+  el.innerHTML=
+   `<option value="">-- Pilih Santri --</option>`;
+
+  list.forEach(s=>{
+
+   el.innerHTML+=`
+    <option value="${s.id}">
+     ${esc(s.nama)}
+    </option>
+   `;
+  });
+
+  if(list.some(s=>s.id===old))
+   el.value=old;
+ });
+}
+
+/* =========================================================
+ LOAD LEARNING STUDENT
+========================================================= */
+
+window.loadLearningStudent=
+async function(mode){
+
+ const select=
+  document.getElementById(
+   mode==="baca"
+   ?"bacaSantriSelect"
+   :"hafalanSantriSelect"
+  );
+
+ const info=
+  document.getElementById(
+   mode==="baca"
+   ?"bacaInfo"
+   :"hafalanInfo"
+  );
+
+ const id=select.value;
+
+ if(!id){
+
+  info.innerHTML="";
+  return;
+ }
+
+ const santri=
+  santriData.find(s=>s.id===id);
+
+ const kelas=
+  kelasData.find(k=>k.id===santri?.kelasId);
+
+ if(!santri||!kelas){
+
+  info.innerHTML=`
+   <div class="alert alert-danger">
+    Data santri/kelas tidak ditemukan.
+   </div>
+  `;
+
+  return;
+ }
+
+ const pdf=
+  mode==="baca"
+  ?kelas.pdfBaca
+  :kelas.pdfHafalan;
+
+ const progress=
+  await getProgress(
+   santri.id,
+   mode
+  );
+
+ const page=
+  progress?.page||1;
+
+ info.innerHTML=`
+
+  <div class="card">
+
+   <h3>
+    ${mode==="baca"?"📖":"🕌"}
+    ${esc(santri.nama)}
+   </h3>
+
+   <p class="muted">
+    Kelas:
+    <b>${esc(kelas.nama)}</b>
+   </p>
+
+   <p>
+    Halaman terakhir:
+    <span class="badge blue">
+     ${page}
+    </span>
+   </p>
+
+   ${
+    pdf
+    ?`
+     <button class="btn btn-blue"
+      onclick="openPDF(
+       '${attr(pdf)}',
+       '${attr(santri.id)}',
+       '${attr(santri.nama)}',
+       '${attr(kelas.nama)}',
+       '${mode}',
+       ${page}
+      )">
+      📖 Buka Buku
+     </button>
+    `
+    :`
+     <div class="alert alert-danger">
+      Buku ${mode==="baca"?"baca":"hafalan"}
+      belum diatur admin untuk kelas ini.
+     </div>
+    `
+   }
+
+  </div>
+ `;
+
+};
+
+/* =========================================================
+ PROGRESS
+========================================================= */
+
+async function getProgress(
+ santriId,
+ mode
+){
+
+ const id=
+  `${santriId}_${mode}`;
+
+ const snap=
+  await getDoc(
+   doc(db,"progress_buku",id)
+  );
+
+ return snap.exists()
+  ?snap.data()
+  :null;
+}
+
+/* =========================================================
+ PDF
+========================================================= */
+
+window.openPDF=
+async function(
+ url,
+ studentId,
+ studentName,
+ className,
+ mode,
+ page
+){
+
+ pdfStudent={
+  id:studentId,
+  name:studentName,
+  className
+ };
+
+ pdfMode=mode;
+
+ document.getElementById("pdfTitle")
+  .textContent=
+  mode==="baca"
+  ?"📖 Buku Baca"
+  :"🕌 Buku Hafalan";
+
+ document.getElementById("pdfSubtitle")
+  .textContent=
+  `${studentName} • ${className}`;
+
+ document.getElementById("pdfStatus")
+  .textContent=
+  `Halaman terakhir tersimpan: ${page}`;
+
+ document.getElementById("pdfModal")
+  .style.display="block";
+
+ try{
+
+  const pdfjs=
+   await import(
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs"
+   );
+
+  pdfjs.GlobalWorkerOptions.workerSrc=
+   "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs";
+
+  pdfDoc=
+   await pdfjs.getDocument({
+    url:url,
+    withCredentials:false
+   }).promise;
+
+  document.getElementById("pdfTotal")
+   .textContent=pdfDoc.numPages;
+
+  pdfPageNumber=
+   Math.max(
+    1,
+    Math.min(
+     Number(page)||1,
+     pdfDoc.numPages
+    )
+   );
+
+  await renderPdfPage(pdfPageNumber);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "PDF gagal dibuka. Pastikan Storage Rules mengizinkan pengguna yang berhak membaca file."
+  );
+ }
+};
+
+async function renderPdfPage(num){
+
+ if(!pdfDoc||pdfRendering)return;
+
+ pdfRendering=true;
+
+ try{
+
+  const page=
+   await pdfDoc.getPage(num);
+
+  const canvas=
+   document.getElementById("pdfCanvas");
+
+  const context=
+   canvas.getContext("2d");
+
+  const container=
+   document.querySelector(".pdf-container");
+
+  const original=
+   page.getViewport({scale:1});
+
+  const width=
+   Math.max(
+    300,
+    container.clientWidth-40
+   );
+
+  let scale=
+   width/original.width;
+
+  scale=
+   Math.min(
+    Math.max(scale,.7),
+    2
+   );
+
+  const viewport=
+   page.getViewport({scale});
+
+  canvas.width=
+   viewport.width;
+
+  canvas.height=
+   viewport.height;
+
+  await page.render({
+   canvasContext:context,
+   viewport
+  }).promise;
+
+  pdfPageNumber=num;
+
+  document.getElementById("pdfPage")
+   .value=num;
+
+ }finally{
+
+  pdfRendering=false;
+ }
+}
+
+window.pdfPrev=async function(){
+
+ if(pdfPageNumber<=1)return;
+
+ await renderPdfPage(
+  pdfPageNumber-1
+ );
+};
+
+window.pdfNext=async function(){
+
+ if(!pdfDoc)return;
+
+ if(pdfPageNumber>=pdfDoc.numPages)
+  return;
+
+ await renderPdfPage(
+  pdfPageNumber+1
+ );
+};
+
+window.pdfGoPage=async function(value){
+
+ if(!pdfDoc)return;
+
+ let page=parseInt(value);
+
+ if(isNaN(page))page=1;
+
+ page=
+  Math.max(
+   1,
+   Math.min(
+    page,
+    pdfDoc.numPages
+   )
+  );
+
+ await renderPdfPage(page);
+};
+
+window.saveCurrentPage=
+async function(){
+
+ if(!pdfStudent)return;
+
+ const id=
+  `${pdfStudent.id}_${pdfMode}`;
+
+ await setDoc(
+  doc(db,"progress_buku",id),
+  {
+   santriId:pdfStudent.id,
+   santriNama:pdfStudent.name,
+   kelas:pdfStudent.className,
+   mode:pdfMode,
+   page:pdfPageNumber,
+   updatedAt:serverTimestamp()
   },
-  // keuangan per santri
-  keuangan: {
-    s1: [
-      { id:'k1', jenis:'SPP', label:'SPP September 2026', nominal:150000, status:'lunas', metode:'QRIS', tanggal:'2026-09-05' },
-      { id:'k2', jenis:'SPP', label:'SPP Agustus 2026', nominal:150000, status:'lunas', metode:'QRIS', tanggal:'2026-08-04' },
-      { id:'k3', jenis:'Tabungan', label:'Tabungan September 2026', nominal:50000, status:'belum', metode:'-', tanggal:'-' },
-      { id:'k4', jenis:'Iuran', label:'Iuran Peringatan Maulid Nabi', nominal:25000, status:'belum', metode:'-', tanggal:'-' },
-    ],
-    s6: [
-      { id:'k5', jenis:'SPP', label:'SPP September 2026', nominal:150000, status:'belum', metode:'-', tanggal:'-' },
-      { id:'k6', jenis:'SPP', label:'SPP Agustus 2026', nominal:150000, status:'lunas', metode:'QRIS', tanggal:'2026-08-08' },
-      { id:'k7', jenis:'Tabungan', label:'Tabungan September 2026', nominal:50000, status:'lunas', metode:'QRIS', tanggal:'2026-09-02' },
-    ],
-  },
-  pengumuman: [
-    { id:'p1', judul:'Libur Maulid Nabi Muhammad SAW', tanggal:'2026-09-14', isi:'Kegiatan mengaji diliburkan pada hari Senin, 15 September 2026 dalam rangka peringatan Maulid Nabi. Kegiatan aktif kembali hari Selasa.' },
-    { id:'p2', judul:'Pembayaran SPP September', tanggal:'2026-09-01', isi:'Mohon wali santri menyelesaikan pembayaran SPP bulan September paling lambat tanggal 10 melalui menu Riwayat Keuangan.' },
-    { id:'p3', judul:'Khataman Akbar Akhir Tahun', tanggal:'2026-08-28', isi:'TPQ akan mengadakan Khataman Akbar pada bulan Oktober. Info lebih lanjut menyusul melalui pengumuman berikutnya.' },
-  ],
-  settings: {
-    logo: null,   // data URL logo lembaga, diatur admin
-    qris: null,   // data URL gambar QRIS statis lembaga, diatur admin
-    spp: { nominal:150000, jatuhTempo:10 },
-    tabungan: { minSetor:20000, keterangan:'Setoran tabungan bersifat sukarela, dapat diambil di akhir semester.' },
-    iuran: [
-      { id:'ik1', nama:'Iuran Peringatan Maulid Nabi', nominal:25000, deadline:'2026-09-30' },
-      { id:'ik2', nama:'Iuran Khataman Akbar', nominal:15000, deadline:'2026-10-15' },
-    ]
-  }
+  {merge:true}
+ );
+
+ document.getElementById("pdfStatus")
+  .textContent=
+  `✓ Halaman ${pdfPageNumber} disimpan sebagai halaman terakhir.`;
+
 };
 
-const DB = {
-  jilid:[],
-  ustadzah:[],
-  santri:[],
-  wali:[],
-  admin:[],
-  users:[],
-  riwayat:{},
-  keuangan:{},
-  pengumuman:[],
-  settings:{
-    logo:null,
-    qris:null,
-    spp:{nominal:150000,jatuhTempo:10},
-    tabungan:{minSetor:20000,keterangan:"Setoran tabungan bersifat sukarela, dapat diambil di akhir semester."},
-    iuran:[]
-  }
+window.closePdfViewer=function(){
+
+ document.getElementById("pdfModal")
+  .style.display="none";
+
+ pdfDoc=null;
+ pdfStudent=null;
 };
 
-let session = null;     // { role, id, nama, username }
-let ui = { adminTab:'dashboard', financeTab:'SPP', selectedSantriId:null, recording:false, recordSeconds:0, recordTimer:null };
-
-/* ============================================================
-   HELPERS
-   ============================================================ */
-function rupiah(n){ return 'Rp' + n.toLocaleString('id-ID'); }
-function tglIndo(iso){
-  if(!iso || iso==='-') return '-';
-  const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  const d=new Date(iso+'T00:00:00');
-  return d.getDate()+' '+bln[d.getMonth()]+' '+d.getFullYear();
-}
-function initials(name){ return name.split(' ').filter(w=>!/^(bpk\.|ibu)$/i.test(w)).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
-function findSantri(id){ return DB.santri.find(s=>s.id===id); }
-function findJilid(id){ return DB.jilid.find(j=>j.id===id); }
-function findUstadzah(id){ return DB.ustadzah.find(u=>u.id===id); }
-function findWali(id){ return DB.wali.find(w=>w.id===id); }
-function applyBranding(){
-  const badge = document.getElementById('login-badge-el');
-  const mark = document.getElementById('topbar-mark-el');
-  const inner = DB.settings.logo ? `<img src="${DB.settings.logo}" alt="Logo TPQ Wardatul Wathon" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : 'TW';
-  if(badge) badge.innerHTML = inner;
-  if(mark) mark.innerHTML = inner;
-}
-function showToast(msg){
-  const t=document.getElementById('toast');
-  document.getElementById('toast-text').textContent=msg;
-  t.classList.add('show');
-  clearTimeout(window._toastTimer);
-  window._toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
-}
-function openModal(html, wide){
-  document.getElementById('modal-box').className = 'modal-box' + (wide?' wide':'');
-  document.getElementById('modal-box').innerHTML = html;
-  document.getElementById('modal-backdrop').classList.add('open');
-}
-function closeModal(){
-  document.getElementById('modal-backdrop').classList.remove('open');
-  if(ui.recordTimer){ clearInterval(ui.recordTimer); ui.recordTimer=null; }
-  ui.recording=false; ui.recordSeconds=0;
-}
-document.getElementById('modal-backdrop').addEventListener('click', function(e){
-  if(e.target===this) closeModal();
-});
-document.addEventListener('keydown', function(e){
-  if(e.key==='Escape' && document.getElementById('modal-backdrop').classList.contains('open')) closeModal();
-});
-
-/* ============================================================
-   LOGIN / LOGOUT
-   ============================================================ */
-function onPickAccount(){}
-function doLogin(){
-  const uname = document.getElementById('demo-account-picker').value;
-  const pass = document.getElementById('login-password').value;
-  if(pass !== '123456'){
-    document.getElementById('login-error').style.display='block';
-    return;
+window.addEventListener(
+ "resize",
+ ()=>{
+  if(
+   document.getElementById("pdfModal")
+    .style.display==="block"
+  ){
+   renderPdfPage(pdfPageNumber);
   }
-  document.getElementById('login-error').style.display='none';
+ }
+);
 
-  let found=null, role=null;
-  found = DB.wali.find(w=>w.username===uname); if(found) role='wali';
-  if(!found){ found = DB.ustadzah.find(u=>u.username===uname); if(found) role='ustadzah'; }
-  if(!found){ found = DB.admin.find(a=>a.username===uname); if(found) role='admin'; }
+/* =========================================================
+ LEARNING RESULT
+========================================================= */
 
-  session = { role, id:found.id, nama:found.nama, username:found.username };
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app-shell').style.display='block';
+window.openLearningModal=
+function(
+ santriId,
+ mode,
+ page
+){
 
-  const roleLabel = role==='wali' ? 'Portal Wali' : role==='ustadzah' ? 'Portal Ustadzah' : 'Portal Admin';
-  document.getElementById('topbar-role-label').textContent = roleLabel;
-  document.getElementById('topbar-username').textContent = found.nama;
-  document.getElementById('topbar-usersub').textContent = '@'+found.username;
+ learningTarget={
+  santriId,
+  mode,
+  page
+ };
 
-  renderSidebar();
-  if(role==='wali') renderWaliDashboard();
-  if(role==='ustadzah') renderUstadzahDashboard();
-  if(role==='admin'){ ui.adminTab='dashboard'; renderAdmin(); }
-}
-function doLogout(){
-  session=null;
-  document.getElementById('app-shell').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-password').value='123456';
-}
+ document.getElementById("learningModalTitle")
+  .textContent=
+  mode==="baca"
+  ?"Hasil Baca"
+  :"Hasil Hafalan";
 
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-function renderSidebar(){
-  const sb = document.getElementById('sidebar');
-  if(session.role==='wali'){
-    sb.innerHTML = `<div class="nav-item active"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>`;
-  } else if(session.role==='ustadzah'){
-    sb.innerHTML = `<div class="nav-item active"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>`;
-  } else {
-    const items=[
-      {k:'dashboard', icon:'fa-house', label:'Dashboard'},
-      {k:'santri', icon:'fa-child-reaching', label:'Data Santri'},
-      {k:'guru', icon:'fa-chalkboard-user', label:'Data Guru'},
-      {k:'jilid', icon:'fa-layer-group', label:'Jilid / Kelas'},
-      {k:'pengaturan', icon:'fa-gear', label:'Pengaturan'},
-    ];
-    sb.innerHTML = items.map(it=>`
-      <div class="nav-item ${ui.adminTab===it.k?'active':''}" onclick="setAdminTab('${it.k}')">
-        <i class="fa-solid ${it.icon}"></i><span>${it.label}</span>
-      </div>`).join('');
-  }
-}
-function setAdminTab(k){ ui.adminTab=k; renderSidebar(); renderAdmin(); }
+ document.getElementById("learningStatus")
+  .value="naik";
 
-/* ============================================================
-   PORTAL WALI
-   ============================================================ */
-function renderWaliDashboard(){
-  const wali = findWali(session.id);
-  const santri = findSantri(wali.santriId);
-  const jilid = findJilid(santri.jilidId);
-  const ustadzah = findUstadzah(jilid.ustadzahId);
-  const riwayatBacaan = (DB.riwayat[santri.id]?.bacaan)||[];
-  const keuangan = DB.keuangan[santri.id]||[];
+ document.getElementById("learningMessage")
+  .value="";
 
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="hero">
-      <div class="hero-eyebrow">Assalamu'alaikum, ${wali.nama}</div>
-      <h2>${santri.nama}</h2>
-      <p>Sedang menempuh ${jilid.nama}, didampingi oleh ${ustadzah.nama}. Pantau perkembangan mengaji dan riwayat pembayaran di bawah ini.</p>
-    </div>
+ document.getElementById("recordPreview")
+  .classList.add("hidden");
 
-    <div class="grid grid-2" style="margin-bottom:16px;">
-      <div class="panel">
-        <div class="panel-head"><h3>Ustadzah pendamping</h3></div>
-        <div class="person-row">
-          <div class="avatar gold">${initials(ustadzah.nama)}</div>
-          <div>
-            <div style="font-weight:600;font-size:14.5px;">${ustadzah.nama}</div>
-            <div style="font-size:12.5px;color:var(--ink-faint);">Pengampu ${jilid.nama} · ${ustadzah.hp}</div>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h3>Pengumuman</h3><span class="badge badge-gold"><i class="fa-solid fa-bell"></i> ${DB.pengumuman.length} info</span></div>
-        <div style="max-height:150px;overflow-y:auto;">
-          ${DB.pengumuman.slice(0,3).map(p=>`
-            <div class="announce-item">
-              <div class="a-title">${p.judul}</div>
-              <div class="a-date">${tglIndo(p.tanggal)}</div>
-              <div class="a-body">${p.isi}</div>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>
+ recordedBlob=null;
+ recordedChunks=[];
 
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head">
-        <div><h3>Riwayat ngaji</h3><div class="sub">Bacaan terakhir ${jilid.nama}</div></div>
-      </div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Halaman terakhir</th><th>Status</th><th>Pesan ustadzah</th><th>Lihat halaman</th></tr></thead>
-        <tbody>
-          ${riwayatBacaan.length===0 ? `<tr><td colspan="5"><div class="empty-note">Belum ada riwayat ngaji.</div></td></tr>` :
-          riwayatBacaan.map((r,i)=>`
-            <tr>
-              <td>${i+1}</td>
-              <td>Halaman ${r.halaman}</td>
-              <td>${r.status==='naik' ? '<span class="badge badge-green"><i class="fa-solid fa-arrow-up"></i> Naik</span>' : '<span class="badge badge-brick"><i class="fa-solid fa-rotate-left"></i> Mengulang</span>'}</td>
-              <td>${r.pesanTipe==='suara' ? `<div class="voice-msg"><button class="vm-play" onclick="showToast('Memutar pesan suara (simulasi)')"><i class="fa-solid fa-play"></i></button>${r.pesan}</div>` : r.pesan}</td>
-              <td><button class="btn btn-ghost btn-sm" onclick="viewPage('${jilid.bukuBacaan}', ${r.halaman})"><i class="fa-solid fa-eye"></i> Lihat</button></td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
+ document.getElementById("learningModal")
+  .style.display="block";
+};
 
-    <div class="panel">
-      <div class="panel-head"><div><h3>Riwayat keuangan</h3><div class="sub">Tagihan SPP &amp; tabungan</div></div></div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Tagihan bulanan</th><th>Nilai tagihan</th><th>Terbayar</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${keuangan.map((k,i)=>`
-            <tr>
-              <td>${i+1}</td>
-              <td>${k.label}</td>
-              <td>${rupiah(k.nominal)}</td>
-              <td>${k.status==='lunas'
-                  ? `<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Lunas · ${tglIndo(k.tanggal)}</span>`
-                  : `<span class="badge badge-brick"><i class="fa-solid fa-circle-exclamation"></i> Belum bayar</span>`}</td>
-              <td>${k.status==='lunas'
-                  ? `<span style="font-size:12px;color:var(--ink-faint);">via ${k.metode}</span>`
-                  : `<button class="btn btn-gold btn-sm" onclick="openQrisModal('${k.id}','${santri.id}')"><i class="fa-solid fa-qrcode"></i> Bayar QRIS</button>`}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  `;
-}
+window.toggleRecording=
+async function(){
 
-function viewPage(buku, halaman){
-  openModal(`
-    <div class="modal-head">
-      <div><h3>Halaman terakhir dibaca</h3><div class="sub">${buku}</div></div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="page-viewer">
-        <div class="pv-book">${buku}</div>
-        <div class="pv-page">Hal. ${halaman}</div>
-        <div class="pv-note">Pratinjau halaman ditampilkan di aplikasi asli menggunakan file PDF yang diunggah admin.</div>
-      </div>
-      <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Ini adalah tampilan sederhana untuk prototype. Pada aplikasi final, halaman ini akan menampilkan cuplikan halaman PDF sesuai buku yang diatur admin untuk jilid santri.</p>
-    </div>
-  `);
-}
+ if(mediaRecorder &&
+    mediaRecorder.state==="recording"){
 
-function openQrisModal(keuanganId, santriId){
-  const item = DB.keuangan[santriId].find(k=>k.id===keuanganId);
-  const qrInner = DB.settings.qris ? `<img src="${DB.settings.qris}" alt="Kode QRIS TPQ Wardatul Wathon">` : `
-        <svg viewBox="0 0 100 100" width="100%" height="100%">
-          <rect width="100" height="100" fill="#fff"/>
-          <g fill="#12332D">
-            <rect x="4" y="4" width="24" height="24"/><rect x="72" y="4" width="24" height="24"/><rect x="4" y="72" width="24" height="24"/>
-            <rect x="10" y="10" width="12" height="12" fill="#fff"/><rect x="78" y="10" width="12" height="12" fill="#fff"/><rect x="10" y="78" width="12" height="12" fill="#fff"/>
-            <rect x="36" y="4" width="6" height="6"/><rect x="48" y="4" width="6" height="6"/><rect x="60" y="10" width="6" height="6"/>
-            <rect x="36" y="16" width="6" height="6"/><rect x="54" y="22" width="6" height="6"/><rect x="42" y="34" width="6" height="6"/>
-            <rect x="60" y="34" width="6" height="6"/><rect x="72" y="40" width="6" height="6"/><rect x="84" y="46" width="6" height="6"/>
-            <rect x="36" y="46" width="6" height="6"/><rect x="48" y="52" width="6" height="6"/><rect x="4" y="40" width="6" height="6"/>
-            <rect x="16" y="46" width="6" height="6"/><rect x="4" y="58" width="6" height="6"/><rect x="60" y="60" width="6" height="6"/>
-            <rect x="72" y="66" width="6" height="6"/><rect x="84" y="72" width="6" height="6"/><rect x="36" y="66" width="6" height="6"/>
-            <rect x="48" y="72" width="6" height="6"/><rect x="60" y="84" width="6" height="6"/><rect x="72" y="90" width="6" height="6"/>
-            <rect x="42" y="90" width="6" height="6"/>
-          </g>
-        </svg>`;
-  openModal(`
-    <div class="modal-head">
-      <div><h3>Pembayaran QRIS</h3><div class="sub">${item.label}</div></div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body" style="text-align:center;">
-      <div class="qr-box">${qrInner}</div>
-      <div style="font-size:13px;color:var(--ink-faint);">Nominal tagihan</div>
-      <div style="font-family:'Fraunces',serif;font-size:26px;margin:2px 0 14px;">${rupiah(item.nominal)}</div>
-      <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;">Pindai kode QRIS di atas menggunakan aplikasi m-banking atau e-wallet mana pun. Status pembayaran akan diperbarui otomatis setelah pembayaran berhasil.</p>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal()">Tutup</button>
-      <button class="btn btn-primary" onclick="simulateBayar('${keuanganId}','${santriId}')">Simulasikan pembayaran berhasil</button>
-    </div>
-  `);
-}
-function simulateBayar(keuanganId, santriId){
-  const item = DB.keuangan[santriId].find(k=>k.id===keuanganId);
-  item.status='lunas'; item.metode='QRIS'; item.tanggal=new Date().toISOString().slice(0,10);
-  closeModal();
-  showToast('Pembayaran berhasil dicatat via QRIS');
-  renderWaliDashboard();
-}
+  mediaRecorder.stop();
 
-/* ============================================================
-   PORTAL USTADZAH
-   ============================================================ */
-function renderUstadzahDashboard(){
-  const ustadzah = findUstadzah(session.id);
-  const jilid = findJilid(ustadzah.jilidId);
-  const daftarSantri = DB.santri.filter(s=>s.jilidId===jilid.id);
+  document.getElementById("recordBtn")
+   .textContent="🎙 Mulai Rekam";
 
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="hero">
-      <div class="hero-eyebrow">Assalamu'alaikum, ${ustadzah.nama}</div>
-      <h2>${jilid.nama}</h2>
-      <p>Anda mengampu ${daftarSantri.length} santri pada kelas ini. Kelola bacaan, hafalan, dan keuangan santri langsung dari daftar di bawah.</p>
-    </div>
+  return;
+ }
 
-    <div class="grid grid-3" style="margin-bottom:16px;">
-      <div class="stat-card">
-        <div class="stat-label">Jumlah santri</div>
-        <div class="stat-value">${daftarSantri.length}</div>
-        <div class="stat-note">di ${jilid.nama}</div>
-      </div>
-      <div class="stat-card gold">
-        <div class="stat-label">Buku bacaan</div>
-        <div class="stat-value" style="font-size:16px;">${jilid.bukuBacaan}</div>
-        <div class="stat-note">diatur oleh admin</div>
-      </div>
-      <div class="stat-card brick">
-        <div class="stat-label">Buku hafalan</div>
-        <div class="stat-value" style="font-size:16px;">${jilid.bukuHafalan}</div>
-        <div class="stat-note">diatur oleh admin</div>
-      </div>
-    </div>
+ try{
 
-    <div class="panel">
-      <div class="panel-head"><div><h3>Daftar santri</h3><div class="sub">${jilid.nama}</div></div></div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Nama santri</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${daftarSantri.map((s,i)=>`
-            <tr>
-              <td>${i+1}</td>
-              <td>
-                <div class="person-row">
-                  <div class="avatar small">${initials(s.nama)}</div>
-                  <span style="font-weight:600;">${s.nama}</span>
-                </div>
-              </td>
-              <td>
-                <button class="action-icon" title="Buku dibaca" onclick="openBookModal('${s.id}','bacaan')"><i class="fa-solid fa-book-open"></i></button>
-                <button class="action-icon gold" title="Buku dihafal" onclick="openBookModal('${s.id}','hafalan')"><i class="fa-solid fa-bookmark"></i></button>
-                <button class="action-icon brick" title="Keuangan" onclick="openFinanceModal('${s.id}')"><i class="fa-solid fa-wallet"></i></button>
-              </td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  `;
-}
+  const stream=
+   await navigator.mediaDevices
+    .getUserMedia({audio:true});
 
-function openBookModal(santriId, jenis){
-  ui.selectedSantriId = santriId;
-  const santri = findSantri(santriId);
-  const jilid = findJilid(santri.jilidId);
-  const buku = jenis==='bacaan' ? jilid.bukuBacaan : jilid.bukuHafalan;
-  if(!DB.riwayat[santriId]) DB.riwayat[santriId] = { bacaan:[], hafalan:[] };
-  const list = DB.riwayat[santriId][jenis];
-  const last = list[0] || { halaman:1, status:'naik' };
-  const label = jenis==='bacaan' ? 'Buku dibaca' : 'Buku dihafal';
+  recordedChunks=[];
 
-  openModal(`
-    <div class="modal-head">
-      <div><h3>${label} — ${santri.nama}</h3><div class="sub">${buku}</div></div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body" id="book-modal-body">
-      ${renderBookModalBody(santriId, jenis, buku, last, list)}
-    </div>
-  `, true);
-}
+  mediaRecorder=
+   new MediaRecorder(stream);
 
-function renderBookModalBody(santriId, jenis, buku, last, list){
-  return `
-    <div class="page-viewer">
-      <div class="pv-book">${buku}</div>
-      <div class="pv-page">Hal. ${last.halaman}</div>
-      <div class="pv-note">Terakhir dibuka — pertemuan berikutnya otomatis membuka halaman ini</div>
-    </div>
+  mediaRecorder.ondataavailable=
+   e=>{
 
-    <div class="two-col" style="margin-bottom:14px;">
-      <div class="form-row" style="margin-bottom:0;">
-        <label>Tandai halaman ini</label>
-        <input type="number" id="halaman-input" value="${last.halaman}" min="1">
-      </div>
-      <div class="form-row" style="margin-bottom:0;display:flex;flex-direction:column;">
-        <label>&nbsp;</label>
-        <button class="btn btn-primary" style="width:100%;" onclick="markHalaman('${santriId}','${jenis}')"><i class="fa-solid fa-bookmark"></i> Simpan halaman</button>
-      </div>
-    </div>
+    if(e.data.size>0)
+     recordedChunks.push(e.data);
+   };
 
-    <div class="two-col" style="margin-bottom:16px;">
-      <button class="btn btn-ghost" onclick="addRiwayat('${santriId}','${jenis}','naik')"><i class="fa-solid fa-arrow-up"></i> Tandai naik</button>
-      <button class="btn btn-ghost" onclick="addRiwayat('${santriId}','${jenis}','mengulang')"><i class="fa-solid fa-rotate-left"></i> Tandai mengulang</button>
-    </div>
+  mediaRecorder.onstop=()=>{
 
-    <div class="form-row">
-      <label>Pesan untuk wali santri</label>
-      <textarea id="pesan-teks" placeholder="Tuliskan catatan singkat untuk wali santri..."></textarea>
-    </div>
-    <div class="mic-box">
-      <button class="mic-circle ${ui.recording?'recording':''}" id="mic-btn" onclick="toggleRecording('${santriId}','${jenis}')"><i class="fa-solid ${ui.recording?'fa-stop':'fa-microphone'}"></i></button>
-      <div class="wave" id="mic-wave">${wavebars()}</div>
-      <div class="mic-time" id="mic-time">${fmtTime(ui.recordSeconds)}</div>
-    </div>
-    <button class="btn btn-gold" style="width:100%;margin-bottom:18px;" onclick="sendPesan('${santriId}','${jenis}')"><i class="fa-solid fa-paper-plane"></i> Kirim pesan ke wali</button>
+   recordedBlob=
+    new Blob(
+     recordedChunks,
+     {type:"audio/webm"}
+    );
 
-    <div class="panel-head" style="margin-bottom:8px;"><h3 style="font-size:14px;">Riwayat</h3></div>
-    <div class="table-scroll">
-    <table>
-      <thead><tr><th>No.</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Tanggal</th></tr></thead>
-      <tbody>
-        ${list.length===0 ? `<tr><td colspan="5"><div class="empty-note">Belum ada riwayat.</div></td></tr>` :
-        list.map((r,i)=>`
-          <tr>
-            <td>${i+1}</td>
-            <td>Hal. ${r.halaman}</td>
-            <td>${r.status==='naik' ? '<span class="badge badge-green">Naik</span>' : '<span class="badge badge-brick">Mengulang</span>'}</td>
-            <td>${r.pesanTipe==='suara' ? `<div class="voice-msg"><button class="vm-play" onclick="showToast('Memutar pesan suara (simulasi)')"><i class="fa-solid fa-play"></i></button>${r.pesan}</div>` : (r.pesan||'—')}</td>
-            <td style="white-space:nowrap;font-size:12px;color:var(--ink-faint);">${tglIndo(r.tanggal)}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>
-    </div>
-  `;
-}
-function wavebars(){
-  let h=[8,14,20,12,24,10,18,9,16,22,11,7];
-  return h.map(v=>`<span style="height:${v}px;"></span>`).join('');
-}
-function fmtTime(s){ const m=Math.floor(s/60); const ss=s%60; return m+':'+String(ss).padStart(2,'0'); }
+   const url=
+    URL.createObjectURL(
+     recordedBlob
+    );
 
-function refreshBookModal(santriId, jenis){
-  const santri = findSantri(santriId);
-  const jilid = findJilid(santri.jilidId);
-  const buku = jenis==='bacaan' ? jilid.bukuBacaan : jilid.bukuHafalan;
-  const list = DB.riwayat[santriId][jenis];
-  const last = list[0] || { halaman:1, status:'naik' };
-  document.getElementById('book-modal-body').innerHTML = renderBookModalBody(santriId, jenis, buku, last, list);
-}
+   const preview=
+    document.getElementById(
+     "recordPreview"
+    );
 
-function markHalaman(santriId, jenis){
-  const val = parseInt(document.getElementById('halaman-input').value)||1;
-  if(!DB.riwayat[santriId]) DB.riwayat[santriId]={bacaan:[],hafalan:[]};
-  DB.riwayat[santriId][jenis].unshift({ halaman:val, status:'naik', pesan:'Halaman ditandai oleh ustadzah.', pesanTipe:'teks', tanggal:new Date().toISOString().slice(0,10) });
-  showToast('Halaman terakhir tersimpan — pertemuan berikutnya otomatis dibuka di halaman ini');
-  refreshBookModal(santriId, jenis);
-}
-function addRiwayat(santriId, jenis, status){
-  const list = DB.riwayat[santriId][jenis];
-  const last = list[0] || { halaman:1 };
-  list.unshift({ halaman:last.halaman, status, pesan: status==='naik' ? 'Alhamdulillah, bacaan sudah baik.' : 'Perlu diulang, latihan sedikit lagi ya.', pesanTipe:'teks', tanggal:new Date().toISOString().slice(0,10) });
-  showToast(status==='naik' ? 'Ditandai naik' : 'Ditandai mengulang');
-  refreshBookModal(santriId, jenis);
-}
-function toggleRecording(santriId, jenis){
-  ui.recording = !ui.recording;
-  if(ui.recording){
-    ui.recordSeconds = 0;
-    ui.recordTimer = setInterval(()=>{
-      ui.recordSeconds++;
-      const mt=document.getElementById('mic-time'); if(mt) mt.textContent=fmtTime(ui.recordSeconds);
-      const wv=document.getElementById('mic-wave'); if(wv){ [...wv.children].forEach(b=>b.style.height=(6+Math.random()*20)+'px'); }
-    },350);
-    showToast('Merekam pesan suara...');
-  } else {
-    clearInterval(ui.recordTimer); ui.recordTimer=null;
-    showToast('Rekaman selesai — tekan "Kirim pesan ke wali" untuk mengirim');
-  }
-  refreshBookModal(santriId, jenis);
-}
-function sendPesan(santriId, jenis){
-  const teks = document.getElementById('pesan-teks').value.trim();
-  const list = DB.riwayat[santriId][jenis];
-  const last = list[0] || { halaman:1, status:'naik' };
-  if(ui.recordSeconds>0){
-    list.unshift({ halaman:last.halaman, status:last.status||'naik', pesan:`Pesan suara (${fmtTime(ui.recordSeconds)})`, pesanTipe:'suara', tanggal:new Date().toISOString().slice(0,10) });
-  } else if(teks){
-    list.unshift({ halaman:last.halaman, status:last.status||'naik', pesan:teks, pesanTipe:'teks', tanggal:new Date().toISOString().slice(0,10) });
-  } else {
-    showToast('Tulis pesan atau rekam pesan suara terlebih dahulu'); return;
-  }
-  ui.recording=false; ui.recordSeconds=0; clearInterval(ui.recordTimer); ui.recordTimer=null;
-  showToast('Pesan terkirim ke wali santri');
-  refreshBookModal(santriId, jenis);
-}
+   preview.src=url;
+   preview.classList.remove("hidden");
 
-/* ---- keuangan (ustadzah view) ---- */
-function openFinanceModal(santriId){
-  ui.selectedSantriId = santriId; ui.financeTab='SPP';
-  const santri = findSantri(santriId);
-  openModal(`
-    <div class="modal-head">
-      <div><h3>Keuangan — ${santri.nama}</h3><div class="sub">SPP, tabungan &amp; iuran kegiatan</div></div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body" id="finance-modal-body">${renderFinanceModalBody(santriId)}</div>
-  `, true);
-}
-function renderFinanceModalBody(santriId){
-  const santri = findSantri(santriId);
-  if(!DB.keuangan[santriId]) DB.keuangan[santriId]=[];
-  const all = DB.keuangan[santriId];
-  const tab = ui.financeTab;
-  const filtered = all.filter(k=>k.jenis===tab);
+   stream.getTracks()
+    .forEach(t=>t.stop());
 
-  let extra='';
-  if(tab==='SPP'){
-    extra = `<p style="font-size:12px;color:var(--ink-faint);margin-bottom:12px;">Nominal SPP: ${rupiah(DB.settings.spp.nominal)} · jatuh tempo tanggal ${DB.settings.spp.jatuhTempo} tiap bulan (diatur admin).</p>`;
-  } else if(tab==='Tabungan'){
-    extra = `<p style="font-size:12px;color:var(--ink-faint);margin-bottom:12px;">Minimal setoran ${rupiah(DB.settings.tabungan.minSetor)}/bulan. ${DB.settings.tabungan.keterangan}</p>`;
-  } else {
-    extra = `<p style="font-size:12px;color:var(--ink-faint);margin-bottom:12px;">Daftar iuran kegiatan aktif diatur oleh admin.</p>`;
-  }
-
-  return `
-    <div class="tabs">
-      <button class="tab-btn ${tab==='SPP'?'active':''}" onclick="setFinanceTab('${santriId}','SPP')">SPP</button>
-      <button class="tab-btn ${tab==='Tabungan'?'active':''}" onclick="setFinanceTab('${santriId}','Tabungan')">Tabungan</button>
-      <button class="tab-btn ${tab==='Iuran'?'active':''}" onclick="setFinanceTab('${santriId}','Iuran')">Iuran kegiatan</button>
-    </div>
-    ${extra}
-    <div class="table-scroll">
-    <table>
-      <thead><tr><th>Label</th><th>Nominal</th><th>Status</th><th>Aksi</th></tr></thead>
-      <tbody>
-        ${filtered.length===0 ? `<tr><td colspan="4"><div class="empty-note">Belum ada catatan.</div></td></tr>` :
-        filtered.map(k=>`
-          <tr>
-            <td>${k.label}</td>
-            <td>${rupiah(k.nominal)}</td>
-            <td>${k.status==='lunas' ? `<span class="badge badge-green">Lunas · ${tglIndo(k.tanggal)}</span>` : `<span class="badge badge-brick">Belum lunas</span>`}</td>
-            <td>${k.status==='lunas' ? `<span style="font-size:12px;color:var(--ink-faint);">via ${k.metode}</span>` : `<button class="btn btn-ghost btn-sm" onclick="markLunas('${santriId}','${k.id}')">Tandai lunas (tunai)</button>`}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>
-    </div>
-    ${tab==='Tabungan' ? `<button class="btn btn-gold" style="margin-top:14px;" onclick="tambahSetoran('${santriId}')"><i class="fa-solid fa-plus"></i> Catat setoran tabungan baru</button>` : ''}
-  `;
-}
-function setFinanceTab(santriId, tab){ ui.financeTab=tab; document.getElementById('finance-modal-body').innerHTML = renderFinanceModalBody(santriId); }
-function markLunas(santriId, kId){
-  const item = DB.keuangan[santriId].find(k=>k.id===kId);
-  item.status='lunas'; item.metode='Tunai'; item.tanggal=new Date().toISOString().slice(0,10);
-  showToast('Ditandai lunas (tunai)');
-  document.getElementById('finance-modal-body').innerHTML = renderFinanceModalBody(santriId);
-}
-function tambahSetoran(santriId){
-  const bulan=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  const d=new Date();
-  const id='k'+Math.random().toString(36).slice(2,7);
-  DB.keuangan[santriId].push({ id, jenis:'Tabungan', label:`Tabungan ${bulan[d.getMonth()]} ${d.getFullYear()}`, nominal:DB.settings.tabungan.minSetor, status:'belum', metode:'-', tanggal:'-' });
-  showToast('Tagihan tabungan baru ditambahkan');
-  document.getElementById('finance-modal-body').innerHTML = renderFinanceModalBody(santriId);
-}
-
-/* ============================================================
-   PORTAL ADMIN
-   ============================================================ */
-function renderAdmin(){
-  if(ui.adminTab==='dashboard') return renderAdminDashboard();
-  if(ui.adminTab==='santri') return renderAdminSantri();
-  if(ui.adminTab==='guru') return renderAdminGuru();
-  if(ui.adminTab==='jilid') return renderAdminJilid();
-  if(ui.adminTab==='pengaturan') return renderAdminPengaturan();
-}
-
-function renderAdminDashboard(){
-  const totalSantri = DB.santri.length;
-  const totalGuru = DB.ustadzah.length;
-  const totalJilid = DB.jilid.length;
-  let pendapatan=0;
-  Object.values(DB.keuangan).forEach(list=>list.forEach(k=>{ if(k.status==='lunas') pendapatan+=k.nominal; }));
-
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="hero">
-      <div class="hero-eyebrow">Assalamu'alaikum, ${findAdminName()}</div>
-      <h2>Ringkasan TPQ Wardatul Wathon</h2>
-      <p>Tukum Kidul, Lumajang — pantau data santri, guru, kelas, dan keuangan dari satu tempat.</p>
-    </div>
-    <div class="grid grid-4" style="margin-bottom:18px;">
-      <div class="stat-card"><div class="stat-label">Total santri</div><div class="stat-value">${totalSantri}</div><div class="stat-note">aktif terdaftar</div></div>
-      <div class="stat-card gold"><div class="stat-label">Total ustadzah</div><div class="stat-value">${totalGuru}</div><div class="stat-note">pengajar aktif</div></div>
-      <div class="stat-card"><div class="stat-label">Jilid / kelas</div><div class="stat-value">${totalJilid}</div><div class="stat-note">kelas berjalan</div></div>
-      <div class="stat-card brick"><div class="stat-label">Pendapatan tercatat</div><div class="stat-value" style="font-size:19px;">${rupiah(pendapatan)}</div><div class="stat-note">dari pembayaran lunas</div></div>
-    </div>
-    <div class="grid grid-2">
-      <div class="panel">
-        <div class="panel-head"><h3>Distribusi santri per jilid</h3></div>
-        ${DB.jilid.map(j=>{
-          const n = DB.santri.filter(s=>s.jilidId===j.id).length;
-          const u = findUstadzah(j.ustadzahId);
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);">
-            <div><div style="font-weight:600;font-size:13.5px;">${j.nama}</div><div style="font-size:11.5px;color:var(--ink-faint);">Diampu ${u.nama}</div></div>
-            <span class="badge badge-green">${n} santri</span>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h3>Pengumuman terbaru</h3></div>
-        ${DB.pengumuman.slice(0,3).map(p=>`
-          <div class="announce-item"><div class="a-title">${p.judul}</div><div class="a-date">${tglIndo(p.tanggal)}</div></div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-function findAdminName(){ return DB.admin.find(a=>a.id===session.id).nama; }
-
-/* ---- data santri ---- */
-function renderAdminSantri(){
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="panel">
-      <div class="panel-head">
-        <div><h3>Data santri</h3><div class="sub">${DB.santri.length} santri terdaftar</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openSantriForm()"><i class="fa-solid fa-plus"></i> Tambah santri</button>
-      </div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Nama santri</th><th>Jilid / kelas</th><th>Wali</th><th>No. HP wali</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.santri.map((s,i)=>{
-            const jilid=findJilid(s.jilidId); const wali=findWali(s.waliId);
-            return `<tr>
-              <td>${i+1}</td>
-              <td style="font-weight:600;">${s.nama}</td>
-              <td>${jilid.nama}</td>
-              <td>${wali.nama}</td>
-              <td>${wali.hp}</td>
-              <td>
-                <button class="action-icon" title="Ubah" onclick="openSantriForm('${s.id}')"><i class="fa-solid fa-pen"></i></button>
-                <button class="action-icon brick" title="Hapus" onclick="hapusSantri('${s.id}')"><i class="fa-solid fa-trash"></i></button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  `;
-}
-function openSantriForm(id){
-  const s = id ? findSantri(id) : null;
-  const wali = s ? findWali(s.waliId) : null;
-  openModal(`
-    <div class="modal-head">
-      <div><h3>${s?'Ubah data santri':'Tambah santri baru'}</h3></div>
-      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row"><label>Nama santri</label><input id="f-nama" value="${s?s.nama:''}" placeholder="Nama lengkap santri"></div>
-      <div class="form-row"><label>Jilid / kelas</label>
-        <select id="f-jilid">${DB.jilid.map(j=>`<option value="${j.id}" ${s&&s.jilidId===j.id?'selected':''}>${j.nama}</option>`).join('')}</select>
-      </div>
-      <div class="form-row"><label>Nama wali</label><input id="f-wali-nama" value="${wali?wali.nama:''}" placeholder="Nama wali santri"></div>
-      <div class="form-row"><label>No. HP wali</label><input id="f-wali-hp" value="${wali?wali.hp:''}" placeholder="08xx-xxxx-xxxx"></div>
-      ${!s ? `<div class="form-row"><label>Username akun wali (untuk diunduh wali)</label><input id="f-wali-username" placeholder="wali.namapanggilan"></div>` : ''}
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
-      <button class="btn btn-primary" onclick="simpanSantri('${id||''}')">Simpan</button>
-    </div>
-  `);
-}
-function simpanSantri(id){
-  const nama = document.getElementById('f-nama').value.trim();
-  const jilidId = document.getElementById('f-jilid').value;
-  const waliNama = document.getElementById('f-wali-nama').value.trim();
-  const waliHp = document.getElementById('f-wali-hp').value.trim();
-  if(!nama || !waliNama){ showToast('Nama santri dan wali wajib diisi'); return; }
-
-  if(id){
-    const s = findSantri(id); s.nama=nama; s.jilidId=jilidId;
-    const w = findWali(s.waliId); w.nama=waliNama; w.hp=waliHp;
-    showToast('Data santri diperbarui');
-  } else {
-    const newSantriId = 's'+Math.random().toString(36).slice(2,7);
-    const newWaliId = 'w'+Math.random().toString(36).slice(2,7);
-    const usernameEl = document.getElementById('f-wali-username');
-    const uname = (usernameEl && usernameEl.value.trim()) || ('wali.'+nama.split(' ')[0].toLowerCase());
-    DB.wali.push({ id:newWaliId, nama:waliNama, username:uname, hp:waliHp, santriId:newSantriId });
-    DB.santri.push({ id:newSantriId, nama, jilidId, waliId:newWaliId });
-    DB.keuangan[newSantriId]=[]; DB.riwayat[newSantriId]={bacaan:[],hafalan:[]};
-    showToast('Santri baru ditambahkan — akun wali "'+uname+'" siap diunduh');
-  }
-  closeModal(); renderAdminSantri();
-}
-function hapusSantri(id){
-  const s = findSantri(id);
-  DB.santri = DB.santri.filter(x=>x.id!==id);
-  DB.wali = DB.wali.filter(w=>w.id!==s.waliId);
-  showToast('Data santri dihapus');
-  renderAdminSantri();
-}
-
-/* ---- data guru ---- */
-function renderAdminGuru(){
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="panel">
-      <div class="panel-head">
-        <div><h3>Data guru (ustadzah)</h3><div class="sub">${DB.ustadzah.length} pengajar</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openGuruForm()"><i class="fa-solid fa-plus"></i> Tambah guru</button>
-      </div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Nama</th><th>Kelas diampu</th><th>No. HP</th><th>Username akun</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.ustadzah.map((u,i)=>{
-            const j=findJilid(u.jilidId);
-            return `<tr>
-              <td>${i+1}</td>
-              <td style="font-weight:600;">${u.nama}</td>
-              <td>${j?j.nama:'—'}</td>
-              <td>${u.hp}</td>
-              <td><code>${u.username}</code></td>
-              <td>
-                <button class="action-icon" title="Ubah" onclick="openGuruForm('${u.id}')"><i class="fa-solid fa-pen"></i></button>
-                <button class="action-icon brick" title="Hapus" onclick="hapusGuru('${u.id}')"><i class="fa-solid fa-trash"></i></button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  `;
-}
-function openGuruForm(id){
-  const u = id ? findUstadzah(id) : null;
-  openModal(`
-    <div class="modal-head"><div><h3>${u?'Ubah data guru':'Tambah guru baru'}</h3></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="modal-body">
-      <div class="form-row"><label>Nama ustadzah</label><input id="f-g-nama" value="${u?u.nama:''}" placeholder="Nama lengkap"></div>
-      <div class="form-row"><label>No. HP</label><input id="f-g-hp" value="${u?u.hp:''}" placeholder="08xx-xxxx-xxxx"></div>
-      <div class="form-row"><label>Username akun (untuk diunduh)</label><input id="f-g-username" value="${u?u.username:''}" placeholder="ustadzah.namapanggilan" ${u?'disabled':''}></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanGuru('${id||''}')">Simpan</button></div>
-  `);
-}
-function simpanGuru(id){
-  const nama=document.getElementById('f-g-nama').value.trim();
-  const hp=document.getElementById('f-g-hp').value.trim();
-  if(!nama){ showToast('Nama wajib diisi'); return; }
-  if(id){ const u=findUstadzah(id); u.nama=nama; u.hp=hp; showToast('Data guru diperbarui'); }
-  else {
-    const uname=document.getElementById('f-g-username').value.trim() || 'ustadzah.'+nama.split(' ')[0].toLowerCase();
-    DB.ustadzah.push({ id:'u'+Math.random().toString(36).slice(2,7), nama, username:uname, hp, jilidId:null });
-    showToast('Guru baru ditambahkan — akun "'+uname+'" siap diunduh');
-  }
-  closeModal(); renderAdminGuru();
-}
-function hapusGuru(id){ DB.ustadzah=DB.ustadzah.filter(u=>u.id!==id); showToast('Data guru dihapus'); renderAdminGuru(); }
-
-/* ---- jilid / kelas ---- */
-function renderAdminJilid(){
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="panel">
-      <div class="panel-head">
-        <div><h3>Jilid / kelas</h3><div class="sub">Pengampu &amp; buku ditetapkan di sini</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openJilidForm()"><i class="fa-solid fa-plus"></i> Tambah jilid</button>
-      </div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>Nama jilid / kelas</th><th>Ustadzah pengampu</th><th>Jumlah santri</th><th>Buku bacaan</th><th>Buku hafalan</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.jilid.map(j=>{
-            const u=findUstadzah(j.ustadzahId); const n=DB.santri.filter(s=>s.jilidId===j.id).length;
-            return `<tr>
-              <td style="font-weight:600;">${j.nama}</td>
-              <td>${u?u.nama:'—'}</td>
-              <td>${n}</td>
-              <td>${j.bukuBacaan}</td>
-              <td>${j.bukuHafalan}</td>
-              <td><button class="action-icon" title="Ubah" onclick="openJilidForm('${j.id}')"><i class="fa-solid fa-pen"></i></button></td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-  `;
-}
-function openJilidForm(id){
-  const j = id ? findJilid(id) : null;
-  openModal(`
-    <div class="modal-head"><div><h3>${j?'Ubah jilid / kelas':'Tambah jilid / kelas'}</h3></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="modal-body">
-      <div class="form-row"><label>Nama jilid / kelas</label><input id="f-j-nama" value="${j?j.nama:''}" placeholder="Contoh: Jilid 3"></div>
-      <div class="form-row"><label>Ustadzah pengampu</label>
-        <select id="f-j-ustadzah"><option value="">— Belum ditentukan —</option>${DB.ustadzah.map(u=>`<option value="${u.id}" ${j&&j.ustadzahId===u.id?'selected':''}>${u.nama}</option>`).join('')}</select>
-      </div>
-      <div class="form-row">
-        <label>Buku dibaca (unggah PDF)</label>
-        <div class="upload-row">
-          <input type="file" class="file-input" accept="application/pdf" onchange="onPickBookFile(this,'bacaan')">
-          <div class="upload-current" id="f-j-bacaan-current"><i class="fa-solid fa-file-pdf"></i> ${j?j.bukuBacaan:'Belum ada file'}</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <label>Buku dihafal (unggah PDF)</label>
-        <div class="upload-row">
-          <input type="file" class="file-input" accept="application/pdf" onchange="onPickBookFile(this,'hafalan')">
-          <div class="upload-current" id="f-j-hafalan-current"><i class="fa-solid fa-file-pdf"></i> ${j?j.bukuHafalan:'Belum ada file'}</div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanJilid('${id||''}')">Simpan</button></div>
-  `);
-  ui.tempJilidFiles = { bacaan: j?j.bukuBacaan:'', hafalan: j?j.bukuHafalan:'' };
-}
-function onPickBookFile(input, jenis){
-  const f = input.files[0];
-  if(!f) return;
-  if(f.type!=='application/pdf' && !f.name.toLowerCase().endsWith('.pdf')){
-    showToast('Mohon unggah file berformat PDF'); return;
-  }
-  ui.tempJilidFiles[jenis] = f.name;
-  document.getElementById('f-j-'+jenis+'-current').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--pine);"></i> ${f.name} (siap disimpan)`;
-}
-function simpanJilid(id){
-  const nama=document.getElementById('f-j-nama').value.trim();
-  const ustadzahId=document.getElementById('f-j-ustadzah').value || null;
-  const bacaan=(ui.tempJilidFiles && ui.tempJilidFiles.bacaan) || '';
-  const hafalan=(ui.tempJilidFiles && ui.tempJilidFiles.hafalan) || '';
-  if(!nama){ showToast('Nama jilid wajib diisi'); return; }
-  if(id){ const j=findJilid(id); j.nama=nama; j.ustadzahId=ustadzahId; j.bukuBacaan=bacaan; j.bukuHafalan=hafalan; showToast('Jilid diperbarui'); }
-  else { DB.jilid.push({ id:'j'+Math.random().toString(36).slice(2,7), nama, ustadzahId, bukuBacaan:bacaan, bukuHafalan:hafalan }); showToast('Jilid baru ditambahkan'); }
-  if(ustadzahId){ const u=findUstadzah(ustadzahId); u.jilidId = id || DB.jilid[DB.jilid.length-1].id; }
-  closeModal(); renderAdminJilid();
-}
-
-/* ---- pengaturan ---- */
-function openAccountForm(){
-  openModal(`
-    <div class="modal-head"><div><h3>Tambah akun pengguna</h3><div class="sub">Akun dibuat langsung di Firebase Authentication</div></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="modal-body">
-      <div class="form-row"><label>Nama lengkap</label><input id="f-a-nama" placeholder="Nama lengkap pengguna"></div>
-      <div class="form-row"><label>Username</label><input id="f-a-username" placeholder="contoh: wali.ahmad"></div>
-      <div class="form-row"><label>Peran akun</label><select id="f-a-role" onchange="updateAccountRelationForm()"><option value="wali">Wali</option><option value="ustadzah">Ustadzah</option><option value="admin">Admin</option></select></div>
-      <div id="account-relation-form"></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="createManagedAccount()">Buat akun</button></div>
-  `, true);
-  updateAccountRelationForm();
-}
-function updateAccountRelationForm(){
-  const role=$("f-a-role")?.value;
-  const box=$("account-relation-form");
-  if(!box)return;
-  if(role==='wali'){
-    box.innerHTML=`<div class="form-row"><label>Santri yang terhubung</label><select id="f-a-santri"><option value="">— Pilih santri —</option>${DB.santri.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('')}</select></div>`;
-  }else if(role==='ustadzah'){
-    box.innerHTML=`<div class="form-row"><label>Jilid / kelas yang diampu</label><select id="f-a-jilid"><option value="">— Belum ditentukan —</option>${DB.jilid.map(j=>`<option value="${j.id}">${j.nama}</option>`).join('')}</select></div>`;
-  }else box.innerHTML='';
-}
-async function createManagedAccount(){
-  const nama=$("f-a-nama").value.trim();
-  let username=$("f-a-username").value.trim().toLowerCase().replace(/\s+/g,'.');
-  const role=$("f-a-role").value;
-  if(!nama){showToast("Nama wajib diisi");return}
-  if(!username)username=(role==='wali'?'wali.':'ustadzah.')+nama.split(' ')[0].toLowerCase();
-  if(!/^[a-z0-9._-]{3,50}$/.test(username)){showToast("Username tidak valid");return}
-  if(DB.users.some(u=>String(u.username||'').toLowerCase()===username)){showToast("Username sudah digunakan");return}
-  const password=fbGeneratePassword();
-  const base={nama,username,role,aktif:true};
-  const docId=fbId();
-  if(role==='wali'){
-    const santriId=$("f-a-santri")?.value;
-    if(!santriId){showToast("Pilih santri untuk akun wali");return}
-    const santri=findSantri(santriId);
-    if(!santri){showToast("Santri tidak ditemukan");return}
-    base.waliId=docId;base.santriId=santriId;
-    if(santri.waliId)base.waliId=santri.waliId;
-  }else if(role==='ustadzah'){
-    base.jilidId=$("f-a-jilid")?.value||null;
-  }
-  try{
-    let collection=role==='admin'?'admin':role;
-    const collectionId=role==='wali'&&base.waliId?base.waliId:docId;
-    const uid=await fbCreateAccount(username,password,base,collection,collectionId);
-    if(role==='wali'){
-      const santri=findSantri(base.santriId);
-      if(santri)await fbWrite("santri",santri.id,{waliId:collectionId});
-    }
-    if(role==='ustadzah'&&base.jilidId)await fbWrite("jilid",base.jilidId,{ustadzahId:docId});
-    if(role==='admin')await fbWrite("admin",docId,{...base,uid});
-    closeModal();
-    alert("Akun berhasil dibuat\n\nNama: "+nama+"\nUsername: "+username+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada pengguna.");
-    showToast("Akun baru berhasil dibuat");
-  }catch(e){
-    console.error(e);
-    showToast(e.code==='auth/email-already-in-use'?"Username sudah digunakan.":e.message||"Gagal membuat akun.");
-  }
-}
-async function toggleAccountStatus(uid){
-  const u=DB.users.find(x=>x.id===uid);
-  if(!u)return;
-  const aktif=u.aktif!==false;
-  if(!confirm(aktif?`Nonaktifkan akun ${u.username||u.nama}?`:`Aktifkan akun ${u.username||u.nama}?`))return;
-  try{
-    await fbWrite("users",uid,{aktif:!aktif});
-    const collection=u.role==='admin'?'admin':u.role;
-    const profileId=u.role==='admin'?(DB.admin.find(a=>a.uid===uid)?.id||DB.admin.find(a=>a.username===u.username)?.id):u.role==='wali'?(DB.wali.find(w=>w.uid===uid)?.id||u.waliId):u.role==='ustadzah'?(DB.ustadzah.find(g=>g.uid===uid)?.id):null;
-    if(collection&&profileId)await fbWrite(collection,profileId,{aktif:!aktif});
-    showToast(aktif?"Akun dinonaktifkan":"Akun diaktifkan");
-  }catch(e){console.error(e);showToast(e.message||"Gagal mengubah status akun")}
-}
-
-function renderAdminPengaturan(){
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><div><h3>Kelola semua akun</h3><div class="sub">Admin, ustadzah, dan wali yang terhubung ke Firebase Authentication</div></div><button class="btn btn-primary btn-sm" onclick="openAccountForm()"><i class="fa-solid fa-user-plus"></i> Tambah akun</button></div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>No.</th><th>Nama</th><th>Username</th><th>Peran</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.users.map((u,i)=>{
-            const role=u.role==='admin'?'Admin':u.role==='ustadzah'?'Ustadzah':u.role==='wali'?'Wali':u.role||'—';
-            const aktif=u.aktif!==false;
-            return `<tr>
-              <td>${i+1}</td>
-              <td style="font-weight:600;">${u.nama||'—'}</td>
-              <td><code>${u.username||'—'}</code></td>
-              <td>${role}</td>
-              <td>${aktif?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-brick">Nonaktif</span>'}</td>
-              <td>${u.id===session?.id?'<span style="font-size:12px;color:var(--ink-faint);">Akun saat ini</span>':`<button class="action-icon ${aktif?'brick':''}" title="${aktif?'Nonaktifkan':'Aktifkan'}" onclick="toggleAccountStatus('${u.id}')"><i class="fa-solid ${aktif?'fa-user-slash':'fa-user-check'}"></i></button>`}</td>
-            </tr>`;
-          }).join('')}
-          ${DB.users.length===0?'<tr><td colspan="6"><div class="empty-note">Belum ada profil akun di Firestore.</div></td></tr>':''}
-        </tbody>
-      </table>
-      </div>
-    </div>
-
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><div><h3>Identitas &amp; pembayaran lembaga</h3><div class="sub">Logo tampil di halaman login &amp; header, QRIS tampil saat wali membayar</div></div></div>
-      <div class="grid grid-2">
-        <div>
-          <span class="setting-label">Logo TPQ</span>
-          <div class="upload-preview-row">
-            <div class="logo-preview" id="logo-preview">${DB.settings.logo ? `<img src="${DB.settings.logo}" alt="Pratinjau logo">` : 'TW'}</div>
-            <div>
-              <input type="file" class="file-input" accept="image/*" onchange="onPickLogo(this)">
-              <div style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">Format PNG/JPG, disarankan bentuk persegi.</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <span class="setting-label">QRIS pembayaran lembaga</span>
-          <div class="upload-preview-row">
-            <div class="qris-preview" id="qris-preview">${DB.settings.qris ? `<img src="${DB.settings.qris}" alt="Pratinjau QRIS">` : '<i class="fa-solid fa-qrcode"></i>'}</div>
-            <div>
-              <input type="file" class="file-input" accept="image/*" onchange="onPickQris(this)">
-              <div style="font-size:11.5px;color:var(--ink-faint);margin-top:6px;">Unggah gambar QRIS statis resmi TPQ.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="panel">
-        <div class="panel-head"><h3>Tagihan SPP</h3></div>
-        <div class="form-row"><label>Nominal SPP per bulan</label><input type="number" id="s-spp-nominal" value="${DB.settings.spp.nominal}"></div>
-        <div class="form-row"><label>Tanggal jatuh tempo (tiap bulan)</label><input type="number" id="s-spp-jatuh" value="${DB.settings.spp.jatuhTempo}" min="1" max="28"></div>
-        <button class="btn btn-primary btn-sm" onclick="simpanSpp()">Simpan pengaturan SPP</button>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><h3>Tabungan</h3></div>
-        <div class="form-row"><label>Minimal setoran per bulan</label><input type="number" id="s-tab-nominal" value="${DB.settings.tabungan.minSetor}"></div>
-        <div class="form-row"><label>Keterangan</label><textarea id="s-tab-ket">${DB.settings.tabungan.keterangan}</textarea></div>
-        <button class="btn btn-primary btn-sm" onclick="simpanTabungan()">Simpan pengaturan tabungan</button>
-      </div>
-    </div>
-
-    <div class="panel" style="margin-top:16px;">
-      <div class="panel-head"><div><h3>Iuran kegiatan</h3></div><button class="btn btn-gold btn-sm" onclick="tambahIuranSetting()"><i class="fa-solid fa-plus"></i> Tambah iuran</button></div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>Nama iuran</th><th>Nominal</th><th>Batas waktu</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.settings.iuran.map(it=>`
-            <tr><td>${it.nama}</td><td>${rupiah(it.nominal)}</td><td>${tglIndo(it.deadline)}</td>
-            <td><button class="action-icon brick" title="Hapus" onclick="hapusIuranSetting('${it.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>
-          `).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-
-    <div class="panel" style="margin-top:16px;">
-      <div class="panel-head"><div><h3>Buku PDF per jilid</h3><div class="sub">Ditampilkan otomatis di portal ustadzah &amp; wali</div></div></div>
-      <div class="table-scroll">
-      <table>
-        <thead><tr><th>Jilid / kelas</th><th>Buku bacaan</th><th>Buku hafalan</th><th>Aksi</th></tr></thead>
-        <tbody>
-          ${DB.jilid.map(j=>`<tr><td style="font-weight:600;">${j.nama}</td><td>${j.bukuBacaan}</td><td>${j.bukuHafalan}</td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openJilidForm('${j.id}')"><i class="fa-solid fa-file-pdf"></i> Atur buku</button></td></tr>`).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>
-
-    <div class="panel" style="margin-top:16px;">
-      <div class="panel-head"><div><h3>Info pengumuman</h3></div><button class="btn btn-gold btn-sm" onclick="openPengumumanForm()"><i class="fa-solid fa-plus"></i> Buat pengumuman</button></div>
-      ${DB.pengumuman.map(p=>`
-        <div class="announce-item" style="display:flex;justify-content:space-between;gap:10px;">
-          <div>
-            <div class="a-title">${p.judul}</div>
-            <div class="a-date">${tglIndo(p.tanggal)}</div>
-            <div class="a-body">${p.isi}</div>
-          </div>
-          <button class="action-icon brick" title="Hapus" onclick="hapusPengumuman('${p.id}')" style="flex-shrink:0;height:32px;"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-function onPickLogo(input){
-  const f = input.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    DB.settings.logo = e.target.result;
-    document.getElementById('logo-preview').innerHTML = `<img src="${DB.settings.logo}" alt="Pratinjau logo">`;
-    applyBranding();
-    showToast('Logo lembaga diperbarui');
+   document.getElementById("recordStatus")
+    .textContent=
+    "Rekaman siap disimpan.";
   };
-  reader.readAsDataURL(f);
-}
-function onPickQris(input){
-  const f = input.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    DB.settings.qris = e.target.result;
-    document.getElementById('qris-preview').innerHTML = `<img src="${DB.settings.qris}" alt="Pratinjau QRIS">`;
-    showToast('QRIS lembaga diperbarui');
-  };
-  reader.readAsDataURL(f);
-}
-function simpanSpp(){
-  DB.settings.spp.nominal = parseInt(document.getElementById('s-spp-nominal').value)||0;
-  DB.settings.spp.jatuhTempo = parseInt(document.getElementById('s-spp-jatuh').value)||10;
-  showToast('Pengaturan SPP disimpan');
-}
-function simpanTabungan(){
-  DB.settings.tabungan.minSetor = parseInt(document.getElementById('s-tab-nominal').value)||0;
-  DB.settings.tabungan.keterangan = document.getElementById('s-tab-ket').value;
-  showToast('Pengaturan tabungan disimpan');
-}
-function tambahIuranSetting(){
-  openModal(`
-    <div class="modal-head"><div><h3>Tambah iuran kegiatan</h3></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="modal-body">
-      <div class="form-row"><label>Nama kegiatan</label><input id="f-iuran-nama" placeholder="Contoh: Iuran Pondok Ramadhan"></div>
-      <div class="form-row"><label>Nominal</label><input type="number" id="f-iuran-nominal" placeholder="0"></div>
-      <div class="form-row"><label>Batas waktu</label><input type="date" id="f-iuran-deadline"></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanIuranSetting()">Simpan</button></div>
-  `);
-}
-function simpanIuranSetting(){
-  const nama=document.getElementById('f-iuran-nama').value.trim();
-  const nominal=parseInt(document.getElementById('f-iuran-nominal').value)||0;
-  const deadline=document.getElementById('f-iuran-deadline').value || new Date().toISOString().slice(0,10);
-  if(!nama){ showToast('Nama iuran wajib diisi'); return; }
-  DB.settings.iuran.push({ id:'ik'+Math.random().toString(36).slice(2,7), nama, nominal, deadline });
-  // otomatis tambahkan tagihan ke semua santri
-  DB.santri.forEach(s=>{
-    if(!DB.keuangan[s.id]) DB.keuangan[s.id]=[];
-    DB.keuangan[s.id].push({ id:'k'+Math.random().toString(36).slice(2,7), jenis:'Iuran', label:nama, nominal, status:'belum', metode:'-', tanggal:'-' });
-  });
-  showToast('Iuran baru dibuat dan tagihan dikirim ke seluruh santri');
-  closeModal(); renderAdminPengaturan();
-}
-function hapusIuranSetting(id){ DB.settings.iuran = DB.settings.iuran.filter(i=>i.id!==id); showToast('Iuran dihapus dari pengaturan'); renderAdminPengaturan(); }
 
-function openPengumumanForm(){
-  openModal(`
-    <div class="modal-head"><div><h3>Buat pengumuman</h3></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="modal-body">
-      <div class="form-row"><label>Judul</label><input id="f-p-judul" placeholder="Judul pengumuman"></div>
-      <div class="form-row"><label>Isi pengumuman</label><textarea id="f-p-isi" placeholder="Tuliskan isi pengumuman untuk wali santri..."></textarea></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanPengumuman()">Terbitkan</button></div>
-  `);
-}
-function simpanPengumuman(){
-  const judul=document.getElementById('f-p-judul').value.trim();
-  const isi=document.getElementById('f-p-isi').value.trim();
-  if(!judul || !isi){ showToast('Judul dan isi wajib diisi'); return; }
-  DB.pengumuman.unshift({ id:'p'+Math.random().toString(36).slice(2,7), judul, isi, tanggal:new Date().toISOString().slice(0,10) });
-  showToast('Pengumuman diterbitkan ke seluruh wali santri');
-  closeModal(); renderAdminPengaturan();
-}
-function hapusPengumuman(id){ DB.pengumuman = DB.pengumuman.filter(p=>p.id!==id); showToast('Pengumuman dihapus'); renderAdminPengaturan(); }
+  mediaRecorder.start();
 
-applyBranding();
-</script>
+  document.getElementById("recordBtn")
+   .textContent="⏹ Stop Rekam";
 
-<script>
-const FIREBASE_CONFIG={
-  apiKey:"AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
-  authDomain:"tpqwardah.firebaseapp.com",
-  projectId:"tpqwardah",
-  storageBucket:"tpqwardah.firebasestorage.app",
-  messagingSenderId:"308318249706",
-  appId:"1:308318249706:web:ad1f631acee81a2fe6ad93",
-  measurementId:"G-ZVC3M0L8XJ"
+  document.getElementById("recordStatus")
+   .textContent="Sedang merekam...";
+
+ }catch(e){
+
+  alert(
+   "Microphone tidak dapat digunakan."
+  );
+
+  console.error(e);
+ }
 };
 
-const $=id=>document.getElementById(id);
-function clearLoginError(){const e=$("login-error");if(e)e.style.display="none";}
-function showLoginError(msg){const e=$("login-error");if(e){e.textContent=msg;e.style.display="block";}}
+window.saveLearning=
+async function(){
 
-let fbApp=null,fbAuth=null,fbDb=null,fbStorage=null;
-let fbUnsubs=[];
-let fbReady=false;
+ if(!learningTarget)return;
 
-function firebaseConfigured(){
-  return Object.values(FIREBASE_CONFIG).every(v=>v&&String(v).indexOf("ISI_")!==0);
-}
+ const status=
+  document.getElementById("learningStatus")
+   .value;
 
-function fbDate(){
-  return new Date().toISOString().slice(0,10);
-}
+ const message=
+  document.getElementById("learningMessage")
+   .value.trim();
 
-function fbUsernameEmail(username){
-  return String(username||"").trim().toLowerCase()+"@tpq.local";
-}
+ try{
 
-function fbId(){
-  return "id_"+crypto.randomUUID();
-}
+  let audioUrl=null;
 
-function fbObject(docSnap){
-  return {id:docSnap.id,...docSnap.data()};
-}
+  if(recordedBlob){
 
-function fbClearListeners(){
-  fbUnsubs.forEach(u=>{try{u()}catch(e){}});
-  fbUnsubs=[];
-}
+   const path=
+    `rekaman/${learningTarget.santriId}/${Date.now()}.webm`;
 
-function fbRefresh(){
-  if(!session)return;
-  try{
-    renderSidebar();
-    if(session.role==="wali")renderWaliDashboard();
-    if(session.role==="ustadzah")renderUstadzahDashboard();
-    if(session.role==="admin")renderAdmin();
-  }catch(e){console.error(e)}
-}
+   const storageRef=
+    ref(storage,path);
 
-function fbListen(name,target){
-  const u=fbDb.collection(name).onSnapshot(snap=>{
-    DB[target]=snap.docs.map(fbObject);
-    fbRefresh();
-  },e=>console.error("Firestore listener:",name,e));
-  fbUnsubs.push(u);
-}
+   const snap=
+    await uploadBytesResumable(
+     storageRef,
+     recordedBlob,
+     {
+      contentType:"audio/webm"
+     }
+    );
 
-function fbListenNested(name,target){
-  const u=fbDb.collection(name).onSnapshot(snap=>{
-    DB[target]={};
-    snap.docs.forEach(d=>DB[target][d.id]=d.data());
-    fbRefresh();
-  },e=>console.error("Firestore listener:",name,e));
-  fbUnsubs.push(u);
-}
+   audioUrl=
+    await getDownloadURL(
+     snap.ref
+    );
+  }
 
-function fbListenFinance(){
-  const u=fbDb.collection("keuangan").onSnapshot(snap=>{
-    DB.keuangan={};
-    snap.docs.forEach(d=>DB.keuangan[d.id]=d.data().items||[]);
-    fbRefresh();
-  },e=>console.error("Firestore listener: keuangan",e));
-  fbUnsubs.push(u);
-}
+  await addDoc(
+   collection(db,"pembelajaran"),
+   {
+    santriId:
+     learningTarget.santriId,
 
-function fbListenSettings(){
-  const u=fbDb.collection("settings").doc("main").onSnapshot(snap=>{
-    if(snap.exists)DB.settings={...DB.settings,...snap.data()};
-    applyBranding();
-    fbRefresh();
-  },e=>console.error("Firestore listener: settings",e));
-  fbUnsubs.push(u);
-}
+    mode:
+     learningTarget.mode,
 
-function fbStartRealtime(){
-  fbClearListeners();
-  fbListen("jilid","jilid");
-  fbListen("ustadzah","ustadzah");
-  fbListen("santri","santri");
-  fbListen("wali","wali");
-  fbListen("admin","admin");
-  fbListen("users","users");
-  fbListen("pengumuman","pengumuman");
-  fbListenNested("riwayat","riwayat");
-  fbListenFinance();
-  fbListenSettings();
-}
+    page:
+     learningTarget.page,
 
-function fbProfile(uid){
-  return fbDb.collection("users").doc(uid).get().then(snap=>{
-    if(!snap.exists)throw new Error("Profil pengguna belum dibuat di Firestore.");
-    return {id:uid,...snap.data()};
+    status,
+
+    pesan:
+     message,
+
+    audioUrl,
+
+    ustadzahUid:
+     currentUser.uid,
+
+    ustadzahNama:
+     currentProfile?.nama||
+     currentUser.email,
+
+    createdAt:
+     serverTimestamp()
+   }
+  );
+
+  /*
+   Halaman yang sedang ditandai juga
+   disimpan sebagai progress.
+  */
+
+  await setDoc(
+   doc(
+    db,
+    "progress_buku",
+    `${learningTarget.santriId}_${learningTarget.mode}`
+   ),
+   {
+    santriId:
+     learningTarget.santriId,
+
+    mode:
+     learningTarget.mode,
+
+    page:
+     learningTarget.page,
+
+    updatedAt:
+     serverTimestamp()
+   },
+   {merge:true}
+  );
+
+  closeModal("learningModal");
+
+  await loadAll();
+
+  alert("Hasil pembelajaran berhasil disimpan.");
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Gagal menyimpan hasil pembelajaran: "+
+   (e.message||e)
+  );
+ }
+};
+
+/* =========================================================
+ KEUANGAN
+========================================================= */
+
+function populateTagihanSelector(){
+
+ const el=
+  document.getElementById("tagihanSantri");
+
+ if(!el)return;
+
+ el.innerHTML=
+  `<option value="">-- Pilih Santri --</option>`;
+
+ getVisibleStudents()
+  .forEach(s=>{
+
+   el.innerHTML+=`
+    <option value="${s.id}">
+     ${esc(s.nama)}
+    </option>
+   `;
   });
 }
 
-function fbShowLogin(){
-  $("login-screen").style.display="flex";
-  $("app-shell").style.display="none";
-  const username=localStorage.getItem("tpq_device_username")||"";
-  const account=$("account-display");
-  const usernameInput=$("device-username");
-  if(username){
-    if(account)account.textContent=username;
-    if(usernameInput)usernameInput.style.display="none";
-    $("login-password").focus();
-  }else{
-    if(account)account.textContent="Belum ada akun perangkat";
-    if(usernameInput){usernameInput.style.display="block";usernameInput.value="";}
-  }
-  const note=$("login-note");
-  if(note)note.textContent=username?"Masukkan kata sandi akun "+username+".":"Masukkan username akun yang diberikan admin, lalu kata sandi.";
-}
+window.openTagihanModal=function(){
 
-function fbSetSession(profile){
-  session={role:profile.role,id:profile.id,nama:profile.nama,username:profile.username};
-  localStorage.setItem("tpq_device_username",profile.username||"");
-  localStorage.setItem("tpq_session_uid",profile.id);
-  $("login-screen").style.display="none";
-  $("app-shell").style.display="block";
-  $("topbar-role-label").textContent=profile.role==="wali"?"Portal Wali":profile.role==="ustadzah"?"Portal Ustadzah":"Portal Admin";
-  $("topbar-username").textContent=profile.nama||profile.username||"-";
-  $("topbar-usersub").textContent="@"+(profile.username||"-");
-  renderSidebar();
-}
+ populateTagihanSelector();
 
-async function doLogin(){
-  clearLoginError();
-  if(!fbReady){
-    showLoginError("Firebase belum siap. Periksa koneksi internet dan konfigurasi Firebase.");
-    return;
-  }
-  let username=localStorage.getItem("tpq_device_username")||"";
-  if(!username){
-    username=$("device-username")?.value.trim().toLowerCase()||"";
-    if(!username){
-      showLoginError("Username wajib diisi pada perangkat ini.");
-      return;
-    }
-    if(!/^[a-z0-9._-]{3,50}$/.test(username)){
-      showLoginError("Format username tidak valid.");
-      return;
-    }
-    localStorage.setItem("tpq_device_username",username);
-  }
-  const pass=$("login-password").value;
-  if(!pass){
-    showLoginError("Kata sandi wajib diisi.");
-    return;
-  }
-  try{
-    const cred=await fbAuth.signInWithEmailAndPassword(fbUsernameEmail(username),pass);
-    const profile=await fbProfile(cred.user.uid);
-    if(profile.aktif===false)throw new Error("Akun ini sudah dinonaktifkan.");
-    if(!profile.role)throw new Error("Role pengguna belum diatur.");
-    if(String(profile.username||"").toLowerCase()!==username.toLowerCase())throw new Error("Username akun tidak sesuai.");
-    fbSetSession(profile);
-    fbStartRealtime();
-    fbRefresh();
-  }catch(e){
-    console.error(e);
-    showLoginError(e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"||e.code==="auth/user-not-found"?"Kata sandi atau akun tidak valid.":e.message||"Login gagal.");
-  }
-}
+ document.getElementById("tagihanKeterangan")
+  .value="";
 
-async function doLogout(){
-  fbClearListeners();
-  session=null;
-  localStorage.removeItem("tpq_session_uid");
-  if(fbAuth)await fbAuth.signOut();
-  $("app-shell").style.display="none";
-  $("login-screen").style.display="flex";
-  $("login-password").value="";
-  fbShowLogin();
-}
+ document.getElementById("tagihanNilai")
+  .value="";
 
-function onPickAccount(){
-  const el=$("device-username");
-  if(el&&el.value.trim()){
-    localStorage.setItem("tpq_device_username",el.value.trim().toLowerCase());
-    fbShowLogin();
-  }
-}
+ document.getElementById("tagihanModal")
+  .style.display="block";
+};
 
-function findWali(id){
-  return DB.wali.find(w=>w.id===id)||DB.wali.find(w=>w.uid===id)||DB.wali.find(w=>w.username===session?.username);
-}
+window.saveTagihan=async function(){
 
-function findUstadzah(id){
-  return DB.ustadzah.find(u=>u.id===id)||DB.ustadzah.find(u=>u.uid===id)||DB.ustadzah.find(u=>u.username===session?.username);
-}
+ const data={
 
-function findAdminName(){
-  return DB.admin.find(a=>a.id===session?.id)?.nama||DB.admin.find(a=>a.uid===session?.id)?.nama||session?.nama||"Admin TPQ";
-}
+  santriId:
+   document.getElementById("tagihanSantri")
+    .value,
 
-async function fbWrite(collectionName,id,data){
-  const payload={...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-  await fbDb.collection(collectionName).doc(id).set(payload,{merge:true});
-}
+  jenis:
+   document.getElementById("tagihanJenis")
+    .value,
 
-async function fbDelete(collectionName,id){
-  await fbDb.collection(collectionName).doc(id).delete();
-}
+  keterangan:
+   document.getElementById("tagihanKeterangan")
+    .value.trim(),
 
-async function saveRiwayat(sid,data){
-  const current=DB.riwayat[sid]||{bacaan:[],hafalan:[]};
-  current[data.jenis]=data.list;
-  await fbWrite("riwayat",sid,current);
-}
+  nilai:
+   Number(
+    document.getElementById("tagihanNilai")
+     .value
+   ),
 
-async function markHalaman(sid,jenis){
-  const val=parseInt($("halaman-input").value)||1;
-  const current=DB.riwayat[sid]||{bacaan:[],hafalan:[]};
-  const list=[...(current[jenis]||[])];
-  list.unshift({halaman:val,status:"naik",pesan:"Halaman ditandai oleh ustadzah.",pesanTipe:"teks",tanggal:fbDate()});
-  await saveRiwayat(sid,{jenis,list});
-  showToast("Halaman terakhir tersimpan");
-}
+  terbayar:0,
 
-async function addRiwayat(sid,jenis,status){
-  const current=DB.riwayat[sid]||{bacaan:[],hafalan:[]};
-  const list=[...(current[jenis]||[])];
-  const last=list[0]||{halaman:1};
-  list.unshift({halaman:last.halaman,status,pesan:status==="naik"?"Alhamdulillah, bacaan sudah baik.":"Perlu diulang, latihan sedikit lagi ya.",pesanTipe:"teks",tanggal:fbDate()});
-  await saveRiwayat(sid,{jenis,list});
-  showToast(status==="naik"?"Ditandai naik":"Ditandai mengulang");
-}
+  qris:false,
 
-async function sendPesan(sid,jenis){
-  const teks=$("pesan-teks")?.value.trim();
-  const current=DB.riwayat[sid]||{bacaan:[],hafalan:[]};
-  const list=[...(current[jenis]||[])];
-  const last=list[0]||{halaman:1,status:"naik"};
-  if(ui.recordSeconds>0){
-    list.unshift({halaman:last.halaman,status:last.status||"naik",pesan:`Pesan suara (${fmtTime(ui.recordSeconds)})`,pesanTipe:"suara",tanggal:fbDate()});
-  }else if(teks){
-    list.unshift({halaman:last.halaman,status:last.status||"naik",pesan:teks,pesanTipe:"teks",tanggal:fbDate()});
-  }else{
-    showToast("Tulis pesan atau rekam pesan suara terlebih dahulu");
-    return;
-  }
-  await saveRiwayat(sid,{jenis,list});
-  ui.recording=false;
-  ui.recordSeconds=0;
-  clearInterval(ui.recordTimer);
-  ui.recordTimer=null;
-  showToast("Pesan tersimpan realtime");
-}
+  createdAt:serverTimestamp()
+ };
 
-async function markLunas(sid,kid){
-  const list=[...(DB.keuangan[sid]||[])];
-  const item=list.find(k=>k.id===kid);
-  if(!item)return;
-  item.status="lunas";
-  item.metode="Tunai";
-  item.tanggal=fbDate();
-  await fbWrite("keuangan",sid,{items:list});
-  showToast("Ditandai lunas");
-}
+ if(!data.santriId){
 
-async function tambahSetoran(sid){
-  const d=new Date();
-  const bulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-  const list=[...(DB.keuangan[sid]||[])];
-  list.push({id:fbId(),jenis:"Tabungan",label:`Tabungan ${bulan[d.getMonth()]} ${d.getFullYear()}`,nominal:Number(DB.settings.tabungan.minSetor||0),status:"belum",metode:"-",tanggal:"-"});
-  await fbWrite("keuangan",sid,{items:list});
-  showToast("Catatan tabungan ditambahkan");
-}
+  alert("Pilih santri.");
+  return;
+ }
 
-function fbGeneratePassword(){
-  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const a=new Uint32Array(10);
-  crypto.getRandomValues(a);
-  return Array.from(a,x=>chars[x%chars.length]).join("");
-}
+ if(!data.nilai){
 
-async function fbCreateAccount(username,password,profile,collectionName,docId){
-  const appName="tpq-provisioner";
-  let app=firebase.apps.find(a=>a.name===appName);
-  if(!app)app=firebase.initializeApp(FIREBASE_CONFIG,appName);
-  const auth=app.auth();
-  let cred=null;
-  try{
-    cred=await auth.createUserWithEmailAndPassword(fbUsernameEmail(username),password);
-    const uid=cred.user.uid;
-    await fbWrite("users",uid,{username:username.toLowerCase(),nama:profile.nama,role:profile.role,...profile,aktif:true});
-    await fbWrite(collectionName,docId,{...profile,uid,username:username.toLowerCase(),aktif:true});
-    await auth.signOut();
-    return uid;
-  }catch(e){
-    if(cred?.user){try{await cred.user.delete()}catch(x){}}
-    try{await auth.signOut()}catch(x){}
-    throw e;
-  }
-}
+  alert("Masukkan nilai tagihan.");
+  return;
+ }
 
-async function simpanSantri(id){
-  const nama=$("f-nama").value.trim();
-  const jilidId=$("f-jilid").value;
-  const waliNama=$("f-wali-nama").value.trim();
-  const waliHp=$("f-wali-hp").value.trim();
-  if(!nama||!waliNama){showToast("Nama santri dan wali wajib diisi");return}
-  if(id){
-    const s=findSantri(id);
-    const w=findWali(s?.waliId);
-    await fbWrite("santri",id,{nama,jilidId});
-    if(w)await fbWrite("wali",w.id,{nama:waliNama,hp:waliHp});
-    showToast("Data santri diperbarui");
-  }else{
-    const sid=fbId();
-    const wid=fbId();
-    let uname=($("f-wali-username")?.value.trim().toLowerCase()||"wali."+nama.split(" ")[0].toLowerCase()).replace(/\s+/g,".");
-    if(!/^[a-z0-9._-]{3,50}$/.test(uname)){showToast("Username wali tidak valid");return}
-    const password=fbGeneratePassword();
-    try{
-      const uid=await fbCreateAccount(uname,password,{nama:waliNama,role:"wali",waliId:wid,santriId:sid},"wali",wid);
-      await fbWrite("santri",sid,{nama,jilidId,waliId:wid});
-      await fbWrite("keuangan",sid,{items:[]});
-      await fbWrite("riwayat",sid,{bacaan:[],hafalan:[]});
-      closeModal();
-      alert("Akun wali berhasil dibuat\n\nUsername: "+uname+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada wali. Pada perangkat wali, username cukup dimasukkan sekali.");
-      showToast("Santri dan akun wali berhasil dibuat");
-      return uid;
-    }catch(e){
-      console.error(e);
-      showToast(e.code==="auth/email-already-in-use"?"Username wali sudah digunakan.":e.message||"Gagal membuat akun wali.");
-      return;
-    }
-  }
-  closeModal();
-}
+ await addDoc(
+  collection(db,"tagihan"),
+  data
+ );
 
-async function hapusSantri(id){
-  const s=findSantri(id);
-  if(!s||!confirm("Hapus data santri ini?"))return;
-  await fbDelete("santri",id);
-  if(s.waliId)await fbDelete("wali",s.waliId);
-  await fbDelete("keuangan",id);
-  await fbDelete("riwayat",id);
-  showToast("Data santri dihapus");
-}
+ closeModal("tagihanModal");
 
-async function simpanGuru(id){
-  const nama=$("f-g-nama").value.trim();
-  const hp=$("f-g-hp").value.trim();
-  if(!nama){showToast("Nama wajib diisi");return}
-  if(id){
-    await fbWrite("ustadzah",id,{nama,hp});
-    showToast("Data guru diperbarui");
-  }else{
-    let uname=($("f-g-username").value.trim().toLowerCase()||"ustadzah."+nama.split(" ")[0].toLowerCase()).replace(/\s+/g,".");
-    if(!/^[a-z0-9._-]{3,50}$/.test(uname)){showToast("Username ustadzah tidak valid");return}
-    const uidDoc=fbId();
-    const password=fbGeneratePassword();
-    try{
-      const uid=await fbCreateAccount(uname,password,{nama,hp,role:"ustadzah",jilidId:null},"ustadzah",uidDoc);
-      closeModal();
-      alert("Akun ustadzah berhasil dibuat\n\nUsername: "+uname+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada ustadzah. Pada perangkat ustadzah, username cukup dimasukkan sekali.");
-      showToast("Profil dan akun ustadzah berhasil dibuat");
-      return uid;
-    }catch(e){
-      console.error(e);
-      showToast(e.code==="auth/email-already-in-use"?"Username ustadzah sudah digunakan.":e.message||"Gagal membuat akun ustadzah.");
-      return;
-    }
-  }
-  closeModal();
-}
+ await loadAll();
 
-async function hapusGuru(id){
-  const u=findUstadzah(id);
-  if(!u||!confirm("Nonaktifkan akun guru ini?"))return;
-  await fbWrite("ustadzah",id,{aktif:false});
-  if(u.uid)await fbWrite("users",u.uid,{aktif:false});
-  showToast("Akun guru dinonaktifkan");
-}
+ alert("Tagihan berhasil dibuat.");
+};
 
-async function simpanJilid(id){
-  const nama=$("f-j-nama").value.trim();
-  const ustadzahId=$("f-j-ustadzah").value||null;
-  if(!nama){showToast("Nama jilid wajib diisi");return}
-  let bacaan=ui.tempJilidFiles?.bacaan||"";
-  let hafalan=ui.tempJilidFiles?.hafalan||"";
-  if(bacaan instanceof File)bacaan=await fbUpload(bacaan,"buku");
-  if(hafalan instanceof File)hafalan=await fbUpload(hafalan,"buku");
-  const jid=id||fbId();
-  await fbWrite("jilid",jid,{nama,ustadzahId,bukuBacaan:bacaan,bukuHafalan:hafalan});
-  if(ustadzahId)await fbWrite("ustadzah",ustadzahId,{jilidId:jid});
-  closeModal();
-  showToast("Jilid disimpan");
-}
+function renderKeuangan(){
 
-async function fbUpload(file,folder){
-  const path=`${folder}/${Date.now()}_${fbId()}_${file.name}`;
-  const snapshot=await fbStorage.ref(path).put(file);
-  return await snapshot.ref.getDownloadURL();
-}
+ const tbody=
+  document.getElementById("keuanganTable");
 
-async function onPickLogo(input){
-  const f=input.files[0];
-  if(!f)return;
-  const url=await fbUpload(f,"branding");
-  await fbWrite("settings","main",{logo:url});
-  showToast("Logo lembaga diperbarui");
-}
+ tbody.innerHTML="";
 
-async function onPickQris(input){
-  const f=input.files[0];
-  if(!f)return;
-  const url=await fbUpload(f,"branding");
-  await fbWrite("settings","main",{qris:url});
-  showToast("QRIS lembaga diperbarui");
-}
+ let list=
+  [...tagihanData];
 
-async function simpanSpp(){
-  const nominal=parseInt($("s-spp-nominal").value)||0;
-  const jatuhTempo=parseInt($("s-spp-jatuh").value)||10;
-  await fbWrite("settings","main",{spp:{nominal,jatuhTempo}});
-  showToast("Pengaturan SPP disimpan");
-}
+ if(currentProfile?.role==="wali"){
 
-async function simpanTabungan(){
-  const minSetor=parseInt($("s-tab-nominal").value)||0;
-  const keterangan=$("s-tab-ket").value;
-  await fbWrite("settings","main",{tabungan:{minSetor,keterangan}});
-  showToast("Pengaturan tabungan disimpan");
-}
+  list=
+   list.filter(t=>{
 
-async function simpanPengumuman(){
-  const judul=$("f-p-judul").value.trim();
-  const isi=$("f-p-isi").value.trim();
-  if(!judul||!isi){showToast("Judul dan isi wajib diisi");return}
-  await fbWrite("pengumuman",fbId(),{judul,isi,tanggal:fbDate(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  closeModal();
-  showToast("Pengumuman diterbitkan");
-}
+    const s=
+     santriData.find(
+      x=>x.id===t.santriId
+     );
 
-async function hapusPengumuman(id){
-  if(!confirm("Hapus pengumuman ini?"))return;
-  await fbDelete("pengumuman",id);
-  showToast("Pengumuman dihapus");
-}
+    return s?.waliUid===currentUser.uid;
+   });
+ }
 
-async function tambahIuranSetting(){
-  openModal(`<div class="modal-head"><div><h3>Tambah iuran kegiatan</h3></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body"><div class="form-row"><label>Nama kegiatan</label><input id="f-iuran-nama"></div><div class="form-row"><label>Nominal</label><input type="number" id="f-iuran-nominal"></div><div class="form-row"><label>Batas waktu</label><input type="date" id="f-iuran-deadline"></div></div><div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="simpanIuranSetting()">Simpan</button></div>`);
-}
+ if(currentProfile?.role==="ustadzah"){
 
-async function simpanIuranSetting(){
-  const nama=$("f-iuran-nama").value.trim();
-  const nominal=parseInt($("f-iuran-nominal").value)||0;
-  const deadline=$("f-iuran-deadline").value||fbDate();
-  if(!nama){showToast("Nama iuran wajib diisi");return}
-  const settings={...DB.settings,iuran:[...(DB.settings.iuran||[]),{id:fbId(),nama,nominal,deadline}]};
-  await fbWrite("settings","main",{iuran:settings.iuran});
-  const batch=fbDb.batch();
-  DB.santri.forEach(s=>{
-    const list=[...(DB.keuangan[s.id]||[])];
-    list.push({id:fbId(),jenis:"Iuran",label:nama,nominal,status:"belum",metode:"-",tanggal:"-"});
-    batch.set(fbDb.collection("keuangan").doc(s.id),{items:list,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  });
-  await batch.commit();
-  closeModal();
-  showToast("Iuran dibuat dan ditambahkan ke santri");
-}
+  const u=
+   ustadzahData.find(
+    x=>x.email===currentUser.email
+   );
 
-async function hapusIuranSetting(id){
-  const list=(DB.settings.iuran||[]).filter(x=>x.id!==id);
-  await fbWrite("settings","main",{iuran:list});
-  showToast("Iuran dihapus dari pengaturan");
-}
+  if(u){
 
-async function bootstrapFirebase(){
-  if(!firebaseConfigured()){
-    fbShowLogin();
-    return;
-  }
-  try{
-    fbApp=firebase.initializeApp(FIREBASE_CONFIG);
-    fbAuth=firebase.auth();
-    fbDb=firebase.firestore();
-    fbStorage=firebase.storage();
-    fbReady=true;
-    fbAuth.onAuthStateChanged(async user=>{
-      if(user){
-        try{
-          const profile=await fbProfile(user.uid);
-          fbSetSession(profile);
-          fbStartRealtime();
-          fbRefresh();
-        }catch(e){
-          console.error(e);
-          await fbAuth.signOut();
-          fbShowLogin();
-        }
-      }else{
-        fbShowLogin();
-      }
-      fbShowLogin();
+   list=
+    list.filter(t=>{
+
+     const s=
+      santriData.find(
+       x=>x.id===t.santriId
+      );
+
+     return s?.kelasId===u.kelasId;
     });
-  }catch(e){
-    console.error(e);
-    fbShowLogin();
-    showLoginError("Firebase gagal diinisialisasi: "+e.message);
   }
+ }
+
+ if(!list.length){
+
+  tbody.innerHTML=`
+   <tr>
+    <td colspan="7" class="empty">
+     Belum ada data tagihan.
+    </td>
+   </tr>
+  `;
+
+  return;
+ }
+
+ list.forEach((t,i)=>{
+
+  const s=
+   santriData.find(
+    x=>x.id===t.santriId
+   );
+
+  tbody.innerHTML+=`
+   <tr>
+
+    <td>${i+1}</td>
+
+    <td>${esc(s?.nama||"-")}</td>
+
+    <td>
+     ${esc(
+      t.keterangan||
+      t.jenis||
+      "-"
+     )}
+    </td>
+
+    <td>
+     Rp ${rupiah(t.nilai)}
+    </td>
+
+    <td>
+     ${
+      t.terbayar
+      ? `<span class="badge green">
+          Lunas
+         </span>`
+      : `<span class="badge yellow">
+          Belum
+         </span>`
+     }
+    </td>
+
+    <td>
+     ${
+      t.qris
+      ? `<span class="badge green">
+          ✓ QRIS
+         </span>`
+      : `<span class="badge yellow">
+          Belum
+         </span>`
+     }
+    </td>
+
+    <td>
+
+     ${
+      currentProfile?.role==="admin"
+      ?`
+       <button
+        class="btn btn-blue btn-sm"
+        onclick="markPaid('${t.id}')">
+        Tandai Lunas
+       </button>
+      `
+      :""
+     }
+
+    </td>
+
+   </tr>
+  `;
+ });
 }
 
-window.doLogin=doLogin;
-window.doLogout=doLogout;
-window.onPickAccount=onPickAccount;
-window.markHalaman=markHalaman;
-window.addRiwayat=addRiwayat;
-window.sendPesan=sendPesan;
-window.markLunas=markLunas;
-window.tambahSetoran=tambahSetoran;
-window.simpanSantri=simpanSantri;
-window.hapusSantri=hapusSantri;
-window.simpanGuru=simpanGuru;
-window.hapusGuru=hapusGuru;
-window.simpanJilid=simpanJilid;
-window.onPickLogo=onPickLogo;
-window.onPickQris=onPickQris;
-window.simpanSpp=simpanSpp;
-window.simpanTabungan=simpanTabungan;
-window.simpanPengumuman=simpanPengumuman;
-window.hapusPengumuman=hapusPengumuman;
-window.tambahIuranSetting=tambahIuranSetting;
-window.simpanIuranSetting=simpanIuranSetting;
-window.hapusIuranSetting=hapusIuranSetting;
-window.openSantriForm=openSantriForm;
-window.openGuruForm=openGuruForm;
-window.openJilidForm=openJilidForm;
-window.openPengumumanForm=openPengumumanForm;
-window.openAccountForm=openAccountForm;
-window.updateAccountRelationForm=updateAccountRelationForm;
-window.createManagedAccount=createManagedAccount;
-window.toggleAccountStatus=toggleAccountStatus;
-window.openFinanceModal=openFinanceModal;
-window.openBookModal=openBookModal;
-window.openQrisModal=openQrisModal;
-window.viewPage=viewPage;
-window.toggleRecording=toggleRecording;
-window.closeModal=closeModal;
-window.showToast=showToast;
-window.setAdminTab=setAdminTab;
-window.setFinanceTab=setFinanceTab;
-window.onPickBookFile=onPickBookFile;
+window.markPaid=
+async function(id){
 
-bootstrapFirebase();
+ await updateDoc(
+  doc(db,"tagihan",id),
+  {
+   terbayar:true,
+   qris:true,
+   paidAt:serverTimestamp()
+  }
+ );
+
+ await loadAll();
+};
+
+/* =========================================================
+ PENGUMUMAN
+========================================================= */
+
+window.openPengumumanModal=function(){
+
+ document.getElementById("pengumumanJudul")
+  .value="";
+
+ document.getElementById("pengumumanIsi")
+  .value="";
+
+ document.getElementById("pengumumanModal")
+  .style.display="block";
+};
+
+window.savePengumuman=async function(){
+
+ const judul=
+  document.getElementById("pengumumanJudul")
+   .value.trim();
+
+ const isi=
+  document.getElementById("pengumumanIsi")
+   .value.trim();
+
+ if(!judul||!isi){
+
+  alert("Judul dan isi wajib diisi.");
+  return;
+ }
+
+ await addDoc(
+  collection(db,"pengumuman"),
+  {
+   judul,
+   isi,
+   authorUid:currentUser.uid,
+   createdAt:serverTimestamp()
+  }
+ );
+
+ closeModal("pengumumanModal");
+
+ await loadAll();
+
+ alert("Pengumuman dipublikasikan.");
+};
+
+function renderPengumuman(){
+
+ const el=
+  document.getElementById("pengumumanList");
+
+ if(!pengumumanData.length){
+
+  el.innerHTML=`
+   <div class="card empty">
+    Belum ada pengumuman.
+   </div>
+  `;
+
+  return;
+ }
+
+ el.innerHTML=
+  pengumumanData
+   .slice()
+   .reverse()
+   .map(p=>`
+
+    <div class="card announcement">
+
+     <h3>
+      📢 ${esc(p.judul)}
+     </h3>
+
+     <p>
+      ${esc(p.isi)}
+     </p>
+
+     ${
+      currentProfile?.role==="admin"
+      ?`
+       <button class="btn btn-danger btn-sm"
+        onclick="deleteData(
+         'pengumuman',
+         '${p.id}'
+        )">
+        Hapus
+       </button>
+      `
+      :""
+     }
+
+    </div>
+
+   `)
+   .join("");
+}
+
+/* =========================================================
+ DELETE
+========================================================= */
+
+window.deleteData=
+async function(collectionName,id){
+
+ if(currentProfile?.role!=="admin"){
+
+  alert("Hanya admin yang dapat menghapus data.");
+  return;
+ }
+
+ if(!confirm("Yakin ingin menghapus data ini?"))
+  return;
+
+ await deleteDoc(
+  doc(db,collectionName,id)
+ );
+
+ await loadAll();
+};
+
+/* =========================================================
+ UTIL
+========================================================= */
+
+function rupiah(value){
+
+ return new Intl.NumberFormat(
+  "id-ID"
+ ).format(
+  Number(value)||0
+ );
+}
+
+function esc(value){
+
+ return String(value??"")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+}
+
+function attr(value){
+
+ return String(value??"")
+  .replaceAll("\\","\\\\")
+  .replaceAll("'","\\'");
+}
+
+/* =========================================================
+ WALI: RIWAYAT PEMBELAJARAN
+========================================================= */
+
+async function getStudentLearningHistory(
+ santriId,
+ mode
+){
+
+ const snap=
+  await getDocs(
+   query(
+    collection(db,"pembelajaran"),
+    where("santriId","==",santriId),
+    where("mode","==",mode)
+   )
+  );
+
+ return snap.docs.map(d=>({
+  id:d.id,
+  ...d.data()
+ }));
+}
+
+/*
+  Fungsi ini sengaja tersedia agar bisa dipakai
+  ketika dashboard wali diperluas menjadi
+  tabel riwayat lengkap.
+*/
+
+window.showLearningHistory=
+async function(santriId,mode){
+
+ const data=
+  await getStudentLearningHistory(
+   santriId,
+   mode
+  );
+
+ console.table(data);
+};
+
+/* =========================================================
+ CLOSE MODALS WHEN CLICK OUTSIDE
+========================================================= */
+
+document.querySelectorAll(".modal")
+ .forEach(modal=>{
+
+  modal.addEventListener(
+   "click",
+   e=>{
+
+    if(e.target===modal)
+     modal.style.display="none";
+   }
+  );
+ });
+
 </script>
+
 </body>
 </html>
