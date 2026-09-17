@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TPQ Wardatul Wathon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -537,6 +536,7 @@ const DB = {
   santri:[],
   wali:[],
   admin:[],
+  users:[],
   riwayat:{},
   keuangan:{},
   pengumuman:[],
@@ -1359,9 +1359,109 @@ function simpanJilid(id){
 }
 
 /* ---- pengaturan ---- */
+function openAccountForm(){
+  openModal(`
+    <div class="modal-head"><div><h3>Tambah akun pengguna</h3><div class="sub">Akun dibuat langsung di Firebase Authentication</div></div><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Nama lengkap</label><input id="f-a-nama" placeholder="Nama lengkap pengguna"></div>
+      <div class="form-row"><label>Username</label><input id="f-a-username" placeholder="contoh: wali.ahmad"></div>
+      <div class="form-row"><label>Peran akun</label><select id="f-a-role" onchange="updateAccountRelationForm()"><option value="wali">Wali</option><option value="ustadzah">Ustadzah</option><option value="admin">Admin</option></select></div>
+      <div id="account-relation-form"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="createManagedAccount()">Buat akun</button></div>
+  `, true);
+  updateAccountRelationForm();
+}
+function updateAccountRelationForm(){
+  const role=$("f-a-role")?.value;
+  const box=$("account-relation-form");
+  if(!box)return;
+  if(role==='wali'){
+    box.innerHTML=`<div class="form-row"><label>Santri yang terhubung</label><select id="f-a-santri"><option value="">— Pilih santri —</option>${DB.santri.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('')}</select></div>`;
+  }else if(role==='ustadzah'){
+    box.innerHTML=`<div class="form-row"><label>Jilid / kelas yang diampu</label><select id="f-a-jilid"><option value="">— Belum ditentukan —</option>${DB.jilid.map(j=>`<option value="${j.id}">${j.nama}</option>`).join('')}</select></div>`;
+  }else box.innerHTML='';
+}
+async function createManagedAccount(){
+  const nama=$("f-a-nama").value.trim();
+  let username=$("f-a-username").value.trim().toLowerCase().replace(/\s+/g,'.');
+  const role=$("f-a-role").value;
+  if(!nama){showToast("Nama wajib diisi");return}
+  if(!username)username=(role==='wali'?'wali.':'ustadzah.')+nama.split(' ')[0].toLowerCase();
+  if(!/^[a-z0-9._-]{3,50}$/.test(username)){showToast("Username tidak valid");return}
+  if(DB.users.some(u=>String(u.username||'').toLowerCase()===username)){showToast("Username sudah digunakan");return}
+  const password=fbGeneratePassword();
+  const base={nama,username,role,aktif:true};
+  const docId=fbId();
+  if(role==='wali'){
+    const santriId=$("f-a-santri")?.value;
+    if(!santriId){showToast("Pilih santri untuk akun wali");return}
+    const santri=findSantri(santriId);
+    if(!santri){showToast("Santri tidak ditemukan");return}
+    base.waliId=docId;base.santriId=santriId;
+    if(santri.waliId)base.waliId=santri.waliId;
+  }else if(role==='ustadzah'){
+    base.jilidId=$("f-a-jilid")?.value||null;
+  }
+  try{
+    let collection=role==='admin'?'admin':role;
+    const collectionId=role==='wali'&&base.waliId?base.waliId:docId;
+    const uid=await fbCreateAccount(username,password,base,collection,collectionId);
+    if(role==='wali'){
+      const santri=findSantri(base.santriId);
+      if(santri)await fbWrite("santri",santri.id,{waliId:collectionId});
+    }
+    if(role==='ustadzah'&&base.jilidId)await fbWrite("jilid",base.jilidId,{ustadzahId:docId});
+    if(role==='admin')await fbWrite("admin",docId,{...base,uid});
+    closeModal();
+    alert("Akun berhasil dibuat\n\nNama: "+nama+"\nUsername: "+username+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada pengguna.");
+    showToast("Akun baru berhasil dibuat");
+  }catch(e){
+    console.error(e);
+    showToast(e.code==='auth/email-already-in-use'?"Username sudah digunakan.":e.message||"Gagal membuat akun.");
+  }
+}
+async function toggleAccountStatus(uid){
+  const u=DB.users.find(x=>x.id===uid);
+  if(!u)return;
+  const aktif=u.aktif!==false;
+  if(!confirm(aktif?`Nonaktifkan akun ${u.username||u.nama}?`:`Aktifkan akun ${u.username||u.nama}?`))return;
+  try{
+    await fbWrite("users",uid,{aktif:!aktif});
+    const collection=u.role==='admin'?'admin':u.role;
+    const profileId=u.role==='admin'?(DB.admin.find(a=>a.uid===uid)?.id||DB.admin.find(a=>a.username===u.username)?.id):u.role==='wali'?(DB.wali.find(w=>w.uid===uid)?.id||u.waliId):u.role==='ustadzah'?(DB.ustadzah.find(g=>g.uid===uid)?.id):null;
+    if(collection&&profileId)await fbWrite(collection,profileId,{aktif:!aktif});
+    showToast(aktif?"Akun dinonaktifkan":"Akun diaktifkan");
+  }catch(e){console.error(e);showToast(e.message||"Gagal mengubah status akun")}
+}
+
 function renderAdminPengaturan(){
   const c = document.getElementById('content');
   c.innerHTML = `
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><div><h3>Kelola semua akun</h3><div class="sub">Admin, ustadzah, dan wali yang terhubung ke Firebase Authentication</div></div><button class="btn btn-primary btn-sm" onclick="openAccountForm()"><i class="fa-solid fa-user-plus"></i> Tambah akun</button></div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>No.</th><th>Nama</th><th>Username</th><th>Peran</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${DB.users.map((u,i)=>{
+            const role=u.role==='admin'?'Admin':u.role==='ustadzah'?'Ustadzah':u.role==='wali'?'Wali':u.role||'—';
+            const aktif=u.aktif!==false;
+            return `<tr>
+              <td>${i+1}</td>
+              <td style="font-weight:600;">${u.nama||'—'}</td>
+              <td><code>${u.username||'—'}</code></td>
+              <td>${role}</td>
+              <td>${aktif?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-brick">Nonaktif</span>'}</td>
+              <td>${u.id===session?.id?'<span style="font-size:12px;color:var(--ink-faint);">Akun saat ini</span>':`<button class="action-icon ${aktif?'brick':''}" title="${aktif?'Nonaktifkan':'Aktifkan'}" onclick="toggleAccountStatus('${u.id}')"><i class="fa-solid ${aktif?'fa-user-slash':'fa-user-check'}"></i></button>`}</td>
+            </tr>`;
+          }).join('')}
+          ${DB.users.length===0?'<tr><td colspan="6"><div class="empty-note">Belum ada profil akun di Firestore.</div></td></tr>':''}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
     <div class="panel" style="margin-bottom:16px;">
       <div class="panel-head"><div><h3>Identitas &amp; pembayaran lembaga</h3><div class="sub">Logo tampil di halaman login &amp; header, QRIS tampil saat wali membayar</div></div></div>
       <div class="grid grid-2">
@@ -1625,6 +1725,7 @@ function fbStartRealtime(){
   fbListen("santri","santri");
   fbListen("wali","wali");
   fbListen("admin","admin");
+  fbListen("users","users");
   fbListen("pengumuman","pengumuman");
   fbListenNested("riwayat","riwayat");
   fbListenFinance();
@@ -1692,13 +1793,10 @@ async function doLogin(){
     showLoginError("Kata sandi wajib diisi.");
     return;
   }
-  if(!pass){
-    showLoginError("Kata sandi wajib diisi.");
-    return;
-  }
   try{
     const cred=await fbAuth.signInWithEmailAndPassword(fbUsernameEmail(username),pass);
     const profile=await fbProfile(cred.user.uid);
+    if(profile.aktif===false)throw new Error("Akun ini sudah dinonaktifkan.");
     if(!profile.role)throw new Error("Role pengguna belum diatur.");
     if(String(profile.username||"").toLowerCase()!==username.toLowerCase())throw new Error("Username akun tidak sesuai.");
     fbSetSession(profile);
@@ -1815,6 +1913,33 @@ async function tambahSetoran(sid){
   showToast("Catatan tabungan ditambahkan");
 }
 
+function fbGeneratePassword(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const a=new Uint32Array(10);
+  crypto.getRandomValues(a);
+  return Array.from(a,x=>chars[x%chars.length]).join("");
+}
+
+async function fbCreateAccount(username,password,profile,collectionName,docId){
+  const appName="tpq-provisioner";
+  let app=firebase.apps.find(a=>a.name===appName);
+  if(!app)app=firebase.initializeApp(FIREBASE_CONFIG,appName);
+  const auth=app.auth();
+  let cred=null;
+  try{
+    cred=await auth.createUserWithEmailAndPassword(fbUsernameEmail(username),password);
+    const uid=cred.user.uid;
+    await fbWrite("users",uid,{username:username.toLowerCase(),nama:profile.nama,role:profile.role,...profile,aktif:true});
+    await fbWrite(collectionName,docId,{...profile,uid,username:username.toLowerCase(),aktif:true});
+    await auth.signOut();
+    return uid;
+  }catch(e){
+    if(cred?.user){try{await cred.user.delete()}catch(x){}}
+    try{await auth.signOut()}catch(x){}
+    throw e;
+  }
+}
+
 async function simpanSantri(id){
   const nama=$("f-nama").value.trim();
   const jilidId=$("f-jilid").value;
@@ -1830,12 +1955,23 @@ async function simpanSantri(id){
   }else{
     const sid=fbId();
     const wid=fbId();
-    const uname=($("f-wali-username")?.value.trim()||"wali."+nama.split(" ")[0].toLowerCase());
-    await fbWrite("wali",wid,{nama:waliNama,username:uname,hp:waliHp,santriId:sid,role:"wali"});
-    await fbWrite("santri",sid,{nama,jilidId,waliId:wid});
-    await fbWrite("keuangan",sid,{items:[]});
-    await fbWrite("riwayat",sid,{bacaan:[],hafalan:[]});
-    showToast("Data santri ditambahkan");
+    let uname=($("f-wali-username")?.value.trim().toLowerCase()||"wali."+nama.split(" ")[0].toLowerCase()).replace(/\s+/g,".");
+    if(!/^[a-z0-9._-]{3,50}$/.test(uname)){showToast("Username wali tidak valid");return}
+    const password=fbGeneratePassword();
+    try{
+      const uid=await fbCreateAccount(uname,password,{nama:waliNama,role:"wali",waliId:wid,santriId:sid},"wali",wid);
+      await fbWrite("santri",sid,{nama,jilidId,waliId:wid});
+      await fbWrite("keuangan",sid,{items:[]});
+      await fbWrite("riwayat",sid,{bacaan:[],hafalan:[]});
+      closeModal();
+      alert("Akun wali berhasil dibuat\n\nUsername: "+uname+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada wali. Pada perangkat wali, username cukup dimasukkan sekali.");
+      showToast("Santri dan akun wali berhasil dibuat");
+      return uid;
+    }catch(e){
+      console.error(e);
+      showToast(e.code==="auth/email-already-in-use"?"Username wali sudah digunakan.":e.message||"Gagal membuat akun wali.");
+      return;
+    }
   }
   closeModal();
 }
@@ -1858,17 +1994,31 @@ async function simpanGuru(id){
     await fbWrite("ustadzah",id,{nama,hp});
     showToast("Data guru diperbarui");
   }else{
-    const uname=$("f-g-username").value.trim()||"ustadzah."+nama.split(" ")[0].toLowerCase();
-    await fbWrite("ustadzah",fbId(),{nama,username:uname,hp,jilidId:null,role:"ustadzah"});
-    showToast("Profil guru ditambahkan");
+    let uname=($("f-g-username").value.trim().toLowerCase()||"ustadzah."+nama.split(" ")[0].toLowerCase()).replace(/\s+/g,".");
+    if(!/^[a-z0-9._-]{3,50}$/.test(uname)){showToast("Username ustadzah tidak valid");return}
+    const uidDoc=fbId();
+    const password=fbGeneratePassword();
+    try{
+      const uid=await fbCreateAccount(uname,password,{nama,hp,role:"ustadzah",jilidId:null},"ustadzah",uidDoc);
+      closeModal();
+      alert("Akun ustadzah berhasil dibuat\n\nUsername: "+uname+"\nPassword awal: "+password+"\n\nSimpan password ini dan berikan kepada ustadzah. Pada perangkat ustadzah, username cukup dimasukkan sekali.");
+      showToast("Profil dan akun ustadzah berhasil dibuat");
+      return uid;
+    }catch(e){
+      console.error(e);
+      showToast(e.code==="auth/email-already-in-use"?"Username ustadzah sudah digunakan.":e.message||"Gagal membuat akun ustadzah.");
+      return;
+    }
   }
   closeModal();
 }
 
 async function hapusGuru(id){
-  if(!confirm("Hapus data guru ini?"))return;
-  await fbDelete("ustadzah",id);
-  showToast("Data guru dihapus");
+  const u=findUstadzah(id);
+  if(!u||!confirm("Nonaktifkan akun guru ini?"))return;
+  await fbWrite("ustadzah",id,{aktif:false});
+  if(u.uid)await fbWrite("users",u.uid,{aktif:false});
+  showToast("Akun guru dinonaktifkan");
 }
 
 async function simpanJilid(id){
@@ -2026,6 +2176,10 @@ window.openSantriForm=openSantriForm;
 window.openGuruForm=openGuruForm;
 window.openJilidForm=openJilidForm;
 window.openPengumumanForm=openPengumumanForm;
+window.openAccountForm=openAccountForm;
+window.updateAccountRelationForm=updateAccountRelationForm;
+window.createManagedAccount=createManagedAccount;
+window.toggleAccountStatus=toggleAccountStatus;
 window.openFinanceModal=openFinanceModal;
 window.openBookModal=openBookModal;
 window.openQrisModal=openQrisModal;
