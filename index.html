@@ -1,2181 +1,1839 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <meta name="theme-color" content="#166534">
-  <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
-
-  <link rel="manifest" href="./manifest.json">
-
-  <title>TPQ Wardatul Wathon</title>
-
-  <style>
-    :root{
-      --primary:#166534;
-      --primary-dark:#14532d;
-      --primary-light:#22c55e;
-      --bg:#f4f7f5;
-      --card:#ffffff;
-      --text:#172033;
-      --muted:#64748b;
-      --border:#e2e8f0;
-      --danger:#dc2626;
-      --warning:#d97706;
-      --info:#2563eb;
-      --success:#16a34a;
-      --sidebar:250px;
-    }
-
-    *{
-      box-sizing:border-box;
-    }
-
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-    }
-
-    button,
-    input,
-    select,
-    textarea{
-      font:inherit;
-    }
-
-    button{
-      cursor:pointer;
-    }
-
-    .hidden{
-      display:none!important;
-    }
-
-    /* =========================
-       LOGIN
-    ========================= */
-
-    #loginScreen{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      background:
-        radial-gradient(circle at top left,#22c55e 0,#166534 35%,#052e16 100%);
-    }
-
-    .login-card{
-      width:100%;
-      max-width:430px;
-      background:white;
-      border-radius:24px;
-      padding:30px;
-      box-shadow:0 25px 80px rgba(0,0,0,.25);
-    }
-
-    .login-logo{
-      width:72px;
-      height:72px;
-      margin:0 auto 18px;
-      border-radius:20px;
-      background:var(--primary);
-      color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:32px;
-    }
-
-    .login-title{
-      text-align:center;
-      margin:0;
-    }
-
-    .login-subtitle{
-      text-align:center;
-      color:var(--muted);
-      margin-top:7px;
-    }
-
-    .form-group{
-      margin-bottom:15px;
-    }
-
-    .form-group label{
-      display:block;
-      font-size:13px;
-      font-weight:700;
-      margin-bottom:6px;
-    }
-
-    input,
-    select,
-    textarea{
-      width:100%;
-      padding:11px 12px;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:white;
-      color:var(--text);
-      outline:none;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus{
-      border-color:var(--primary);
-      box-shadow:0 0 0 3px rgba(22,101,52,.1);
-    }
-
-    .btn{
-      border:0;
-      border-radius:10px;
-      padding:10px 15px;
-      background:var(--primary);
-      color:white;
-      font-weight:700;
-      transition:.15s;
-    }
-
-    .btn:hover{
-      background:var(--primary-dark);
-    }
-
-    .btn-full{
-      width:100%;
-    }
-
-    .btn-danger{
-      background:var(--danger);
-    }
-
-    .btn-warning{
-      background:var(--warning);
-    }
-
-    .btn-info{
-      background:var(--info);
-    }
-
-    .btn-success{
-      background:var(--success);
-    }
-
-    .btn-light{
-      background:#e2e8f0;
-      color:var(--text);
-    }
-
-    .btn-sm{
-      padding:7px 10px;
-      font-size:12px;
-    }
-
-    .setup-link{
-      border:0;
-      background:none;
-      color:var(--primary);
-      font-weight:700;
-      margin-top:15px;
-    }
-
-    .login-error{
-      min-height:20px;
-      color:var(--danger);
-      text-align:center;
-      font-size:13px;
-      margin-top:12px;
-    }
-
-    /* =========================
-       APP
-    ========================= */
-
-    .app{
-      min-height:100vh;
-    }
-
-    .sidebar{
-      position:fixed;
-      left:0;
-      top:0;
-      bottom:0;
-      width:var(--sidebar);
-      background:var(--primary-dark);
-      color:white;
-      z-index:100;
-      padding:16px 13px;
-      overflow-y:auto;
-      transition:.2s;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:7px 6px 20px;
-    }
-
-    .brand-icon{
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      background:var(--primary-light);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px;
-      flex-shrink:0;
-    }
-
-    .brand-name{
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .brand-role{
-      display:block;
-      margin-top:3px;
-      color:#bbf7d0;
-      font-size:11px;
-    }
-
-    .nav{
-      display:grid;
-      gap:5px;
-    }
-
-    .nav button{
-      border:0;
-      background:transparent;
-      color:#dcfce7;
-      width:100%;
-      text-align:left;
-      border-radius:9px;
-      padding:11px 12px;
-    }
-
-    .nav button:hover,
-    .nav button.active{
-      background:rgba(255,255,255,.13);
-      color:white;
-    }
-
-    .main{
-      margin-left:var(--sidebar);
-      min-height:100vh;
-    }
-
-    .topbar{
-      height:68px;
-      background:white;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 24px;
-      position:sticky;
-      top:0;
-      z-index:50;
-    }
-
-    .top-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .page-title{
-      font-weight:800;
-    }
-
-    .user-area{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-size:13px;
-    }
-
-    .page{
-      padding:24px;
-      max-width:1500px;
-      margin:auto;
-    }
-
-    .mobile-menu{
-      display:none;
-    }
-
-    /* =========================
-       CARDS
-    ========================= */
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:15px;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:15px;
-      padding:18px;
-    }
-
-    .stat-card{
-      position:relative;
-      overflow:hidden;
-    }
-
-    .stat-icon{
-      font-size:25px;
-    }
-
-    .stat-label{
-      color:var(--muted);
-      font-size:13px;
-      margin-top:8px;
-    }
-
-    .stat-value{
-      font-size:28px;
-      font-weight:800;
-      margin-top:3px;
-    }
-
-    .section-title{
-      margin:0 0 4px;
-    }
-
-    .muted{
-      color:var(--muted);
-    }
-
-    .toolbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:16px;
-    }
-
-    .actions{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-    }
-
-    /* =========================
-       TABLE
-    ========================= */
-
-    .table-container{
-      background:white;
-      border:1px solid var(--border);
-      border-radius:15px;
-      overflow:auto;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:700px;
-    }
-
-    th,
-    td{
-      padding:12px;
-      border-bottom:1px solid var(--border);
-      font-size:14px;
-      text-align:left;
-    }
-
-    th{
-      background:#f8fafc;
-      font-size:12px;
-      color:#475569;
-    }
-
-    tr:last-child td{
-      border-bottom:0;
-    }
-
-    .empty{
-      text-align:center;
-      padding:35px;
-      color:var(--muted);
-    }
-
-    .badge{
-      display:inline-block;
-      padding:4px 9px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:800;
-    }
-
-    .badge-green{
-      background:#dcfce7;
-      color:#166534;
-    }
-
-    .badge-yellow{
-      background:#fef3c7;
-      color:#92400e;
-    }
-
-    .badge-red{
-      background:#fee2e2;
-      color:#991b1b;
-    }
-
-    .badge-blue{
-      background:#dbeafe;
-      color:#1e40af;
-    }
-
-    /* =========================
-       MODAL
-    ========================= */
-
-    .modal{
-      position:fixed;
-      inset:0;
-      z-index:500;
-      background:rgba(0,0,0,.65);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:15px;
-    }
-
-    .modal-box{
-      width:100%;
-      max-width:720px;
-      max-height:90vh;
-      overflow:auto;
-      background:white;
-      border-radius:18px;
-      padding:22px;
-    }
-
-    .modal-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:15px;
-      margin-bottom:18px;
-    }
-
-    .modal-header h3{
-      margin:0;
-    }
-
-    .modal-close{
-      width:34px;
-      height:34px;
-      border:0;
-      border-radius:50%;
-      background:#e2e8f0;
-      font-size:20px;
-    }
-
-    .row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    /* =========================
-       NOTICE
-    ========================= */
-
-    .notice{
-      border-left:4px solid var(--primary);
-      background:#f0fdf4;
-      padding:14px;
-      border-radius:8px;
-      margin-bottom:10px;
-    }
-
-    /* =========================
-       TOAST
-    ========================= */
-
-    .toast{
-      position:fixed;
-      right:18px;
-      bottom:18px;
-      background:#172033;
-      color:white;
-      padding:12px 16px;
-      border-radius:10px;
-      z-index:1000;
-      box-shadow:0 10px 30px rgba(0,0,0,.2);
-    }
-
-    /* =========================
-       RESPONSIVE
-    ========================= */
-
-    @media(max-width:1000px){
-      .grid{
-        grid-template-columns:repeat(2,1fr);
-      }
-    }
-
-    @media(max-width:800px){
-      .sidebar{
-        transform:translateX(-100%);
-      }
-
-      .sidebar.open{
-        transform:translateX(0);
-      }
-
-      .main{
-        margin-left:0;
-      }
-
-      .mobile-menu{
-        display:inline-flex;
-      }
-
-      .topbar{
-        padding:0 15px;
-      }
-
-      .user-name{
-        display:none;
-      }
-    }
-
-    @media(max-width:600px){
-      .page{
-        padding:15px;
-      }
-
-      .grid{
-        grid-template-columns:1fr;
-      }
-
-      .row{
-        grid-template-columns:1fr;
-      }
-
-      .login-card{
-        padding:24px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#166534">
+<meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
+<link rel="manifest" href="./manifest.json">
+<title>TPQ Wardatul Wathon</title>
+<style>
+:root{
+  --primary:#166534; --primary-dark:#14532d; --primary-light:#22c55e;
+  --bg:#f4f7f5; --card:#ffffff; --text:#172033; --muted:#64748b; --border:#e2e8f0;
+  --danger:#dc2626; --warning:#d97706; --info:#2563eb; --success:#16a34a; --sidebar:250px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top left,#22c55e 0,#166534 35%,#052e16 100%)}
+.login-card{width:100%;max-width:430px;background:#fff;border-radius:24px;padding:30px;box-shadow:0 25px 80px rgba(0,0,0,.25)}
+.login-logo{width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px}
+.login-title,.login-subtitle{text-align:center;margin:0}
+.login-subtitle{color:var(--muted);margin-top:7px}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.1)}
+input:disabled{background:#f1f5f9;color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--primary);color:#fff;font-weight:700;transition:.15s}
+.btn:hover{background:var(--primary-dark)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-full{width:100%}
+.btn-danger{background:var(--danger)}
+.btn-warning{background:var(--warning)}
+.btn-info{background:var(--info)}
+.btn-success{background:var(--success)}
+.btn-light{background:#e2e8f0;color:var(--text)}
+.btn-sm{padding:7px 10px;font-size:12px}
+.setup-link{border:0;background:none;color:var(--primary);font-weight:700;margin-top:15px}
+.login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:12px}
+.app{min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:16px 13px;overflow-y:auto;transition:.2s}
+.brand{display:flex;align-items:center;gap:10px;padding:7px 6px 20px}
+.brand-icon{width:42px;height:42px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.brand-name{font-size:13px;font-weight:800}
+.brand-role{display:block;margin-top:3px;color:#bbf7d0;font-size:11px}
+.nav{display:grid;gap:5px}
+.nav button{border:0;background:transparent;color:#dcfce7;width:100%;text-align:left;border-radius:9px;padding:11px 12px;display:flex;align-items:center;gap:8px}
+.nav button:hover,.nav button.active{background:rgba(255,255,255,.13);color:#fff}
+.main{margin-left:var(--sidebar);min-height:100vh}
+.topbar{height:68px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
+.top-left{display:flex;align-items:center;gap:10px}
+.page-title{font-weight:800}
+.user-area{display:flex;align-items:center;gap:10px;font-size:13px}
+.page{padding:24px;max-width:1500px;margin:auto}
+.mobile-menu{display:none}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:18px}
+.stat-card{position:relative;overflow:hidden}
+.stat-icon{font-size:25px}
+.stat-label{color:var(--muted);font-size:13px;margin-top:8px}
+.stat-value{font-size:28px;font-weight:800;margin-top:3px}
+.section-title{margin:0 0 4px}
+.muted{color:var(--muted)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.search-box{max-width:260px}
+.table-container{background:#fff;border:1px solid var(--border);border-radius:15px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:12px;border-bottom:1px solid var(--border);font-size:14px;text-align:left}
+th{background:#f8fafc;font-size:12px;color:#475569}
+tr:last-child td{border-bottom:0}
+.empty{text-align:center;padding:35px;color:var(--muted)}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-yellow{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-gray{background:#e2e8f0;color:#334155}
+.modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:15px}
+.modal-box{width:100%;max-width:720px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}
+.modal-header{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}
+.modal-header h3{margin:0}
+.modal-close{width:34px;height:34px;border:0;border-radius:50%;background:#e2e8f0;font-size:20px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.notice{border-left:4px solid var(--primary);background:#f0fdf4;padding:14px;border-radius:8px;margin-bottom:10px}
+.notice-warn{border-left-color:var(--warning);background:#fffbeb}
+.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 16px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:320px}
+.toast.error{background:var(--danger)}
+.spinner{width:22px;height:22px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:30px;justify-content:center}
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){
+  .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0} .mobile-menu{display:inline-flex} .topbar{padding:0 15px} .user-name{display:none}
+}
+@media(max-width:600px){
+  .page{padding:15px} .grid{grid-template-columns:1fr} .row{grid-template-columns:1fr}
+  .login-card{padding:24px} .summary-strip{grid-template-columns:1fr}
+}
+</style>
 </head>
-
 <body>
 
-<!-- =====================================================
-     LOGIN
-===================================================== -->
-
 <section id="loginScreen">
-
   <div class="login-card">
-
-    <div class="login-logo">
-      📖
-    </div>
-
-    <h1 class="login-title">
-      TPQ Wardatul Wathon
-    </h1>
-
-    <div class="login-subtitle">
-      Tukum Kidul • Lumajang
-    </div>
-
+    <div class="login-logo">📖</div>
+    <h1 class="login-title">TPQ Wardatul Wathon</h1>
+    <div class="login-subtitle">Tukum Kidul • Lumajang</div>
     <form id="loginForm" style="margin-top:25px">
-
       <div class="form-group">
-        <label for="loginEmail">
-          Email
-        </label>
-
-        <input
-          id="loginEmail"
-          type="email"
-          autocomplete="username"
-          placeholder="email@contoh.com"
-          required
-        >
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" placeholder="email@contoh.com" required>
       </div>
-
       <div class="form-group">
-        <label for="loginPassword">
-          Password
-        </label>
-
-        <input
-          id="loginPassword"
-          type="password"
-          autocomplete="current-password"
-          placeholder="Password"
-          required
-        >
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" required>
       </div>
-
-      <button
-        type="submit"
-        class="btn btn-full"
-      >
-        Masuk
-      </button>
-
+      <button type="submit" class="btn btn-full" id="loginSubmitBtn">Masuk</button>
     </form>
-
     <div class="login-error" id="loginError"></div>
-
     <div style="text-align:center">
-      <button
-        type="button"
-        class="setup-link"
-        id="setupAdminButton"
-      >
-        Setup Admin Pertama
-      </button>
+      <button type="button" class="setup-link" id="setupAdminButton">Setup Admin Pertama</button>
     </div>
-
   </div>
-
 </section>
-
-
-<!-- =====================================================
-     APPLICATION
-===================================================== -->
 
 <section id="app" class="app hidden">
-
   <aside id="sidebar" class="sidebar">
-
     <div class="brand">
-
-      <div class="brand-icon">
-        📖
-      </div>
-
+      <div class="brand-icon">📖</div>
       <div>
-        <div class="brand-name">
-          TPQ Wardatul Wathon
-        </div>
-
-        <span
-          id="brandRole"
-          class="brand-role"
-        >
-          Portal
-        </span>
+        <div class="brand-name">TPQ Wardatul Wathon</div>
+        <span id="brandRole" class="brand-role">Portal</span>
       </div>
-
     </div>
-
-    <nav
-      id="navigation"
-      class="nav"
-    ></nav>
-
+    <nav id="navigation" class="nav"></nav>
   </aside>
-
-
   <main class="main">
-
     <header class="topbar">
-
       <div class="top-left">
-
-        <button
-          type="button"
-          class="btn btn-light mobile-menu"
-          id="mobileMenuButton"
-        >
-          ☰
-        </button>
-
-        <span
-          id="pageTitle"
-          class="page-title"
-        >
-          Dashboard
-        </span>
-
+        <button type="button" class="btn btn-light mobile-menu" id="mobileMenuButton">☰</button>
+        <span id="pageTitle" class="page-title">Dashboard</span>
       </div>
-
       <div class="user-area">
-
-        <span
-          id="userName"
-          class="user-name"
-        >
-          -
-        </span>
-
-        <button
-          type="button"
-          class="btn btn-danger btn-sm"
-          id="logoutButton"
-        >
-          Keluar
-        </button>
-
+        <span id="userName" class="user-name">-</span>
+        <button type="button" class="btn btn-danger btn-sm" id="logoutButton">Keluar</button>
       </div>
-
     </header>
-
-
-    <section
-      id="page"
-      class="page"
-    ></section>
-
+    <section id="page" class="page"></section>
   </main>
-
 </section>
 
-
-<!-- =====================================================
-     MODAL
-===================================================== -->
-
-<div
-  id="modal"
-  class="modal hidden"
->
-
+<div id="modal" class="modal hidden">
   <div class="modal-box">
-
     <div class="modal-header">
-
-      <h3 id="modalTitle">
-        Modal
-      </h3>
-
-      <button
-        type="button"
-        class="modal-close"
-        id="modalClose"
-      >
-        ×
-      </button>
-
+      <h3 id="modalTitle">Modal</h3>
+      <button type="button" class="modal-close" id="modalClose">×</button>
     </div>
-
     <div id="modalContent"></div>
-
   </div>
-
 </div>
 
-
-<!-- =====================================================
-     TOAST
-===================================================== -->
-
-<div
-  id="toast"
-  class="toast hidden"
-></div>
-
-
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
+<div id="toast" class="toast hidden"></div>
 
 <script type="module">
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut, sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc,
+  addDoc, collection, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
-  import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+/* =========================================================
+   FIREBASE CONFIG & INIT
+   NOTE: a client-side apiKey is not a secret in Firebase's
+   model -- real security comes from the Firestore/Storage
+   security rules shipped alongside this file (see
+   firestore.rules and storage.rules). Deploy those before
+   putting this app in front of real users.
+========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
+  authDomain: "tpqwardah.firebaseapp.com",
+  projectId: "tpqwardah",
+  storageBucket: "tpqwardah.firebasestorage.app",
+  messagingSenderId: "308318249706",
+  appId: "1:308318249706:web:ad1f631acee81a2fe6ad93",
+  measurementId: "G-ZVC3M0L8XJ"
+};
 
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+const primaryApp = initializeApp(firebaseConfig);
+// Secondary app instance: lets an admin create Wali/Ustadzah/Admin
+// accounts without Firebase silently switching the active session
+// over to the newly created user (a well-known footgun of
+// createUserWithEmailAndPassword on the primary auth instance).
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+const auth = getAuth(primaryApp);
+const secondaryAuth = getAuth(secondaryApp);
+const db = getFirestore(primaryApp);
+const storage = getStorage(primaryApp);
 
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
+let currentUser = null;
+let currentProfile = null;
+let currentPage = "dashboard";
+let activeRecorder = null;
+let activeAudioChunks = [];
 
-  /* =====================================================
-     FIREBASE CONFIG
-  ===================================================== */
+/* =========================================================
+   DOM / FORMAT HELPERS
+========================================================= */
+const $ = id => document.getElementById(id);
 
-  const firebaseConfig = {
-
-    apiKey:
-      "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
-
-    authDomain:
-      "tpqwardah.firebaseapp.com",
-
-    projectId:
-      "tpqwardah",
-
-    storageBucket:
-      "tpqwardah.firebasestorage.app",
-
-    messagingSenderId:
-      "308318249706",
-
-    appId:
-      "1:308318249706:web:ad1f631acee81a2fe6ad93",
-
-    measurementId:
-      "G-ZVC3M0L8XJ"
-
+function escapeHTML(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+// Safe to interpolate inside a single-quoted JS string literal
+// that itself sits inside a double-quoted HTML attribute.
+function escapeAttr(value){
+  return String(value ?? "")
+    .replace(/\\/g,"\\\\").replace(/'/g,"\\'")
+    .replace(/"/g,"&quot;").replace(/[\r\n]/g," ");
+}
+function formatRupiah(value){
+  return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(value||0));
+}
+function formatTanggal(timestamp){
+  if(!timestamp) return "-";
+  try{
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(date);
+  }catch{ return "-"; }
+}
+function showToast(message, isError=false){
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.remove("hidden");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toast.classList.add("hidden"), 3200);
+}
+function openModal(title, content){
+  $("modalTitle").textContent = title;
+  $("modalContent").innerHTML = content;
+  $("modal").classList.remove("hidden");
+}
+function closeModal(){ $("modal").classList.add("hidden"); }
+function pageLoading(){
+  $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat data...</div>`;
+}
+function withButtonLoading(button, busyText, fn){
+  return async (...args)=>{
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = busyText;
+    try{ await fn(...args); }
+    finally{ button.disabled = false; button.textContent = original; }
   };
+}
+function statCard(icon,label,value){
+  return `
+    <div class="card stat-card">
+      <div class="stat-icon">${icon}</div>
+      <div class="stat-label">${escapeHTML(label)}</div>
+      <div class="stat-value">${escapeHTML(value)}</div>
+    </div>`;
+}
+function attachTableSearch(inputId, tableId){
+  const input = $(inputId);
+  const table = $(tableId);
+  if(!input || !table) return;
+  input.addEventListener("input", ()=>{
+    const term = input.value.trim().toLowerCase();
+    table.querySelectorAll("tbody tr[data-row]").forEach(row=>{
+      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+    });
+  });
+}
+function firebaseError(error){
+  const messages = {
+    "auth/invalid-credential": "Email atau password salah.",
+    "auth/invalid-email": "Format email tidak valid.",
+    "auth/email-already-in-use": "Email tersebut sudah digunakan.",
+    "auth/weak-password": "Password minimal 6 karakter.",
+    "auth/operation-not-allowed": "Login Email/Password belum diaktifkan di Firebase.",
+    "auth/network-request-failed": "Koneksi internet bermasalah.",
+    "auth/too-many-requests": "Terlalu banyak percobaan. Coba lagi nanti."
+  };
+  return messages[error.code] || error.message || "Terjadi kesalahan.";
+}
 
+/* =========================================================
+   GENERIC FIRESTORE HELPERS
+========================================================= */
+async function getCollectionData(collectionName){
+  const snapshot = await getDocs(collection(db, collectionName));
+  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+}
+async function addCollectionData(collectionName, data){
+  return await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+}
+async function updateCollectionData(collectionName, id, data){
+  await updateDoc(doc(db, collectionName, id), { ...data, updatedAt: serverTimestamp() });
+}
+async function deleteCollectionData(collectionName, id){
+  await deleteDoc(doc(db, collectionName, id));
+}
+async function uploadFile(path, file){
+  const fileRef = ref(storage, path);
+  await uploadBytes(fileRef, file, { contentType: file.type });
+  return await getDownloadURL(fileRef);
+}
 
-  /* =====================================================
-     INIT
-  ===================================================== */
+/* =========================================================
+   ACCOUNT PROVISIONING (Wali / Ustadzah / Admin)
+========================================================= */
+async function createManagedAccount({ email, password, role, profile }){
+  const credential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+  const uid = credential.user.uid;
+  const base = { uid, email, role, aktif: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...profile };
+  await setDoc(doc(db, "users", uid), base);
+  await setDoc(doc(db, role, uid), base); // role-specific collection, same doc id = uid
+  await signOut(secondaryAuth); // never leave the secondary session signed in
+  return uid;
+}
+async function updateManagedAccount(uid, role, data){
+  await updateCollectionData("users", uid, data);
+  await updateCollectionData(role, uid, data);
+}
+async function deleteManagedAccountRecord(uid, role){
+  // Client SDKs cannot delete Firebase Auth accounts belonging to
+  // other users -- that requires the Admin SDK / a Cloud Function.
+  // We remove the Firestore profile (revoking app access) and make
+  // that limitation explicit to the admin in the UI.
+  await deleteCollectionData("users", uid).catch(()=>{});
+  await deleteCollectionData(role, uid).catch(()=>{});
+}
 
-  const firebaseApp =
-    initializeApp(firebaseConfig);
-
-  const auth =
-    getAuth(firebaseApp);
-
-  const db =
-    getFirestore(firebaseApp);
-
-
-  /* =====================================================
-     GLOBAL STATE
-  ===================================================== */
-
-  let currentUser = null;
-  let currentProfile = null;
-  let currentPage = "dashboard";
-
-
-  /* =====================================================
-     HELPER
-  ===================================================== */
-
-  const $ = id =>
-    document.getElementById(id);
-
-
-  function escapeHTML(value){
-
-    return String(value ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-
+function requireRole(role){
+  if(!currentProfile || currentProfile.role !== role){
+    alert("Akses ditolak untuk peran ini.");
+    return false;
   }
+  return true;
+}
 
+/* =========================================================
+   AUTH: SETUP FIRST ADMIN
+========================================================= */
+$("setupAdminButton").addEventListener("click", openAdminSetup);
 
-  function showToast(message){
+function openAdminSetup(){
+  openModal("Setup Admin Pertama", `
+    <form id="adminSetupForm">
+      <div class="form-group"><label>Nama Admin</label><input id="adminName" value="Administrator" required></div>
+      <div class="form-group"><label>Email Admin</label><input id="adminEmail" type="email" placeholder="admin@tpqwardah.com" required></div>
+      <div class="form-group"><label>Password</label><input id="adminPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required></div>
+      <div class="notice notice-warn">Gunakan tombol ini hanya sekali untuk membuat akun admin pertama. Setelah itu, buat akun tambahan lewat menu "Data Wali" / "Data Ustadzah" di dalam aplikasi.</div>
+      <button type="submit" class="btn btn-full" id="adminSetupBtn">Buat Akun Admin</button>
+    </form>
+  `);
+  $("adminSetupForm").addEventListener("submit", async event=>{
+    event.preventDefault();
+    const btn = $("adminSetupBtn");
+    const nama = $("adminName").value.trim();
+    const email = $("adminEmail").value.trim();
+    const password = $("adminPassword").value;
+    await withButtonLoading(btn, "Membuat akun...", async ()=>{
+      try{
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = credential.user.uid;
+        const profile = { uid, nama, email, role: "admin", aktif: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+        await setDoc(doc(db, "users", uid), profile);
+        await setDoc(doc(db, "admin", uid), profile);
+        closeModal();
+        showToast("Akun admin berhasil dibuat.");
+      }catch(error){
+        alert(firebaseError(error));
+      }
+    })();
+  });
+}
 
-    const toast = $("toast");
-
-    toast.textContent = message;
-
-    toast.classList.remove("hidden");
-
-    setTimeout(() => {
-
-      toast.classList.add("hidden");
-
-    },2500);
-
+/* =========================================================
+   AUTH: LOGIN / LOGOUT
+========================================================= */
+$("loginForm").addEventListener("submit", async event=>{
+  event.preventDefault();
+  $("loginError").textContent = "";
+  const btn = $("loginSubmitBtn");
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+  btn.disabled = true; btn.textContent = "Memproses...";
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+  }catch(error){
+    $("loginError").textContent = firebaseError(error);
+  }finally{
+    btn.disabled = false; btn.textContent = "Masuk";
   }
+});
 
+$("logoutButton").addEventListener("click", async ()=>{ await signOut(auth); });
 
-  function openModal(title,content){
+$("mobileMenuButton").addEventListener("click", ()=>{ $("sidebar").classList.toggle("open"); });
+$("modalClose").addEventListener("click", closeModal);
+$("modal").addEventListener("click", event=>{ if(event.target === $("modal")) closeModal(); });
 
-    $("modalTitle").textContent =
-      title;
-
-    $("modalContent").innerHTML =
-      content;
-
-    $("modal").classList.remove("hidden");
-
+onAuthStateChanged(auth, async user=>{
+  if(!user){
+    currentUser = null; currentProfile = null;
+    $("loginScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+    return;
   }
-
-
-  function closeModal(){
-
-    $("modal").classList.add("hidden");
-
+  try{
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if(!snap.exists()){
+      alert("Akun berhasil login tetapi profil aplikasi belum dibuat. Hubungi admin.");
+      await signOut(auth);
+      return;
+    }
+    const profile = snap.data();
+    if(!["admin","ustadzah","wali"].includes(profile.role)){
+      alert("Role akun tidak valid.");
+      await signOut(auth);
+      return;
+    }
+    if(profile.aktif === false){
+      alert("Akun ini sedang dinonaktifkan. Hubungi admin.");
+      await signOut(auth);
+      return;
+    }
+    currentUser = user;
+    currentProfile = profile;
+    $("loginScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    $("userName").textContent = profile.nama || user.email;
+    $("brandRole").textContent = "Portal " + roleLabel(profile.role);
+    buildNavigation();
+    navigate("dashboard");
+  }catch(error){
+    console.error(error);
+    alert("Gagal membaca profil pengguna: " + error.message);
+    await signOut(auth);
   }
+});
 
+function roleLabel(role){
+  return { admin:"Admin", ustadzah:"Ustadzah", wali:"Wali Santri" }[role] || role;
+}
 
-  function firebaseError(error){
+/* =========================================================
+   NAVIGATION
+========================================================= */
+const MENUS = {
+  admin: [
+    { page:"dashboard", icon:"🏠", label:"Dashboard" },
+    { page:"santri", icon:"👨‍🎓", label:"Data Santri" },
+    { page:"wali", icon:"👨‍👩‍👧", label:"Data Wali" },
+    { page:"ustadzah", icon:"👩‍🏫", label:"Data Ustadzah" },
+    { page:"jilid", icon:"📚", label:"Jilid / Kelas" },
+    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
+    { page:"tagihan", icon:"🧾", label:"Master Tagihan" },
+    { page:"keuangan", icon:"💰", label:"Keuangan" },
+    { page:"settings", icon:"⚙️", label:"Pengaturan" },
+    { page:"profil", icon:"👤", label:"Profil" }
+  ],
+  ustadzah: [
+    { page:"dashboard", icon:"🏠", label:"Dashboard" },
+    { page:"daftarSantri", icon:"👨‍🎓", label:"Santri Kelas" },
+    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
+    { page:"profil", icon:"👤", label:"Profil" }
+  ],
+  wali: [
+    { page:"dashboard", icon:"🏠", label:"Dashboard" },
+    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
+    { page:"profil", icon:"👤", label:"Profil" }
+  ]
+};
 
-    const messages = {
+const PAGE_TITLES = {
+  dashboard:"Dashboard", santri:"Data Santri", wali:"Data Wali", ustadzah:"Data Ustadzah",
+  jilid:"Jilid / Kelas", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
+  settings:"Pengaturan", profil:"Profil", daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
+};
 
-      "auth/invalid-credential":
-        "Email atau password salah.",
+const HANDLERS = {
+  dashboard: renderDashboard,
+  santri: renderSantriAdmin,
+  wali: renderWaliAdmin,
+  ustadzah: renderUstadzahAdmin,
+  jilid: renderJilidAdmin,
+  pengumuman: renderPengumuman,
+  tagihan: renderTagihanAdmin,
+  keuangan: renderKeuanganAdmin,
+  settings: renderSettingsAdmin,
+  profil: renderProfil,
+  daftarSantri: renderDaftarSantriUstadzah,
+  pembelajaran: renderPembelajaranWaliOrUstadzah
+};
 
-      "auth/invalid-email":
-        "Format email tidak valid.",
+function buildNavigation(){
+  const items = MENUS[currentProfile.role] || [];
+  $("navigation").innerHTML = items.map(item=>`
+    <button type="button" data-page="${item.page}">${item.icon} ${escapeHTML(item.label)}</button>
+  `).join("");
+  $("navigation").querySelectorAll("button").forEach(button=>{
+    button.addEventListener("click", ()=>navigate(button.dataset.page));
+  });
+}
 
-      "auth/email-already-in-use":
-        "Email tersebut sudah digunakan.",
+async function navigate(page){
+  currentPage = page;
+  $("pageTitle").textContent = PAGE_TITLES[page] || "Dashboard";
+  $("navigation").querySelectorAll("button").forEach(button=>{
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+  $("sidebar").classList.remove("open");
+  const handler = HANDLERS[page] || renderDashboard;
+  pageLoading();
+  try{
+    await handler();
+  }catch(error){
+    console.error(error);
+    $("page").innerHTML = `<div class="card empty">Gagal memuat halaman: ${escapeHTML(error.message)}</div>`;
+  }
+}
+window.navigate = navigate;
 
-      "auth/weak-password":
-        "Password minimal 6 karakter.",
+/* =========================================================
+   DASHBOARD
+========================================================= */
+async function renderDashboard(){
+  if(currentProfile.role === "admin") return renderDashboardAdmin();
+  if(currentProfile.role === "ustadzah") return renderDashboardUstadzah();
+  return renderDashboardWali();
+}
 
-      "auth/operation-not-allowed":
-        "Login Email/Password belum diaktifkan di Firebase.",
+async function renderDashboardAdmin(){
+  const [santri, wali, ustadzah, jilid] = await Promise.all([
+    getCollectionData("santri"), getCollectionData("wali"), getCollectionData("ustadzah"), getCollectionData("jilid")
+  ]);
+  $("page").innerHTML = `
+    <h2 class="section-title">Dashboard Admin</h2>
+    <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama)}.</p>
+    <div class="grid" style="margin-top:18px">
+      ${statCard("👨‍🎓","Santri Aktif", santri.filter(x=>x.aktif!==false).length)}
+      ${statCard("👩‍🏫","Ustadzah Aktif", ustadzah.filter(x=>x.aktif!==false).length)}
+      ${statCard("👨‍👩‍👧","Wali Aktif", wali.filter(x=>x.aktif!==false).length)}
+      ${statCard("📚","Kelas / Jilid", jilid.filter(x=>x.aktif!==false).length)}
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>Ringkasan Sistem</h3>
+      <p class="muted">Gunakan menu di samping untuk mengelola data santri, wali, ustadzah, kelas/jilid, pengumuman, tagihan dan keuangan.</p>
+    </div>`;
+}
 
-      "auth/network-request-failed":
-        "Koneksi internet bermasalah."
+async function renderDashboardUstadzah(){
+  const santri = await getSantriUstadzah();
+  $("page").innerHTML = `
+    <h2 class="section-title">Dashboard Ustadzah</h2>
+    <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama || "Ustadzah")}.</p>
+    <div class="grid" style="margin-top:18px">
+      ${statCard("👨‍🎓","Santri Kelas", santri.length)}
+      ${statCard("📚","Kelas Diampu", currentProfile.jilidNama || "Belum diatur")}
+      ${statCard("🟢","Santri Aktif", santri.filter(x=>x.aktif!==false).length)}
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>Petunjuk</h3>
+      <p class="muted">Buka menu <b>Santri Kelas</b> untuk mencatat baca, hafalan, dan pembayaran setiap santri.</p>
+      ${!currentProfile.jilidId ? `<div class="notice notice-warn">Anda belum ditugaskan ke kelas/jilid manapun. Hubungi admin.</div>` : ""}
+    </div>`;
+}
 
+async function renderDashboardWali(){
+  const santri = await getSantriWali();
+  const pengumuman = await getCollectionData("pengumuman");
+  const pengumumanAktif = pengumuman.filter(x=>x.aktif!==false)
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  let pendamping = null;
+  if(santri[0]) pendamping = await getUstadzahPendamping(santri[0]);
+
+  $("page").innerHTML = `
+    <h2 class="section-title">Dashboard Wali</h2>
+    <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama || "Wali Santri")}.</p>
+    <div class="grid" style="margin-top:18px">
+      ${statCard("👨‍🎓","Jumlah Santri", santri.length)}
+      ${statCard("📢","Pengumuman", pengumumanAktif.length)}
+      <div class="card">
+        <div class="stat-icon">👩‍🏫</div>
+        <div class="stat-label">Ustadzah Pendamping</div>
+        <div style="font-weight:800;margin-top:6px">${escapeHTML(pendamping?.nama || "Belum ditentukan")}</div>
+      </div>
+    </div>
+    ${santri.length ? `
+      <div class="card" style="margin-top:18px">
+        <h3>Santri Anda</h3>
+        <div class="grid" style="margin-top:12px">
+          ${santri.map(s=>`
+            <div class="card" style="background:#f8fafc">
+              <h3 style="margin:0">${escapeHTML(s.nama || "-")}</h3>
+              <p class="muted">${escapeHTML(s.jilidNama || "-")}</p>
+              <button class="btn btn-sm" data-santri-id="${s.id}" data-action="lihat-santri">Lihat Pembelajaran &amp; Keuangan</button>
+            </div>`).join("")}
+        </div>
+      </div>` : `<div class="card" style="margin-top:18px"><div class="empty">Belum ada data santri yang terhubung dengan akun wali Anda. Hubungi admin.</div></div>`}
+    <div class="card" style="margin-top:18px">
+      <h3>📢 Pengumuman Terbaru</h3>
+      <div style="display:grid;gap:12px;margin-top:12px">
+        ${pengumumanAktif.length ? pengumumanAktif.slice(0,5).map(item=>`
+          <div class="notice">
+            <b>${escapeHTML(item.judul || "-")}</b>
+            <div class="muted" style="font-size:12px;margin-top:4px">${formatTanggal(item.createdAt)}</div>
+            <p style="white-space:pre-wrap;margin-bottom:0">${escapeHTML(item.isi || "")}</p>
+          </div>`).join("") : `<div class="empty">Belum ada pengumuman.</div>`}
+      </div>
+    </div>`;
+
+  $("page").querySelectorAll('[data-action="lihat-santri"]').forEach(btn=>{
+    btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.santriId));
+  });
+}
+
+/* =========================================================
+   ADMIN: DATA SANTRI
+========================================================= */
+async function renderSantriAdmin(){
+  if(!requireRole("admin")) return;
+  const data = await getCollectionData("santri");
+
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div>
+        <h2 class="section-title">Data Santri</h2>
+        <p class="muted">Kelola data santri TPQ.</p>
+      </div>
+      <div class="actions">
+        <input id="searchSantri" class="search-box" placeholder="Cari nama santri...">
+        <button class="btn" id="addSantri">+ Tambah Santri</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <table id="tableSantri">
+        <thead><tr><th>No</th><th>Nama Santri</th><th>Jenis Kelamin</th><th>Kelas/Jilid</th><th>Wali</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${data.length ? data.map((item,index)=>`
+            <tr data-row>
+              <td>${index+1}</td>
+              <td><b>${escapeHTML(item.nama)}</b></td>
+              <td>${escapeHTML(item.jenisKelamin || "-")}</td>
+              <td>${escapeHTML(item.jilidNama || "-")}</td>
+              <td>${escapeHTML(item.waliNama || "-")}</td>
+              <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+              <td><div class="actions">
+                <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+              </div></td>
+            </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+
+  attachTableSearch("searchSantri","tableSantri");
+  $("addSantri").addEventListener("click", ()=>openSantriForm());
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("santri")).find(x=>x.id===btn.dataset.edit);
+    if(item) openSantriForm(item);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus data santri ini?")) return;
+    try{ await deleteCollectionData("santri", btn.dataset.remove); showToast("Data santri dihapus."); renderSantriAdmin(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
+
+async function openSantriForm(item=null){
+  const [wali, jilid] = await Promise.all([getCollectionData("wali"), getCollectionData("jilid")]);
+  openModal(item ? "Edit Santri" : "Tambah Santri", `
+    <form id="santriForm">
+      <div class="form-group"><label>Nama Santri</label><input id="santriNama" value="${escapeHTML(item?.nama || "")}" required></div>
+      <div class="row">
+        <div class="form-group">
+          <label>Jenis Kelamin</label>
+          <select id="santriGender">
+            <option value="">Pilih</option>
+            <option value="Laki-laki" ${item?.jenisKelamin==="Laki-laki"?"selected":""}>Laki-laki</option>
+            <option value="Perempuan" ${item?.jenisKelamin==="Perempuan"?"selected":""}>Perempuan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kelas / Jilid</label>
+          <select id="santriJilid">
+            <option value="">Belum ditentukan</option>
+            ${jilid.map(k=>`<option value="${k.id}" ${item?.jilidId===k.id?"selected":""}>${escapeHTML(k.nama)}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Wali</label>
+        <select id="santriWali">
+          <option value="">Belum ditentukan</option>
+          ${wali.map(w=>`<option value="${w.id}" ${item?.waliUid===w.id?"selected":""}>${escapeHTML(w.nama || w.email || "-")}</option>`).join("")}
+        </select>
+        ${!wali.length ? `<div class="muted" style="font-size:12px;margin-top:6px">Belum ada akun wali. Buat lewat menu "Data Wali".</div>` : ""}
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="santriAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
+      </div>
+      <button class="btn btn-full" type="submit" id="santriSaveBtn">Simpan</button>
+    </form>`);
+
+  $("santriForm").addEventListener("submit", async event=>{
+    event.preventDefault();
+    const btn = $("santriSaveBtn");
+    const jilidSelect = $("santriJilid");
+    const waliSelect = $("santriWali");
+    const jilidOption = jilidSelect.options[jilidSelect.selectedIndex];
+    const waliOption = waliSelect.options[waliSelect.selectedIndex];
+    const payload = {
+      nama: $("santriNama").value.trim(),
+      jenisKelamin: $("santriGender").value,
+      jilidId: jilidSelect.value || null,
+      jilidNama: jilidSelect.value ? jilidOption.textContent.trim() : null,
+      waliUid: waliSelect.value || null,
+      waliNama: waliSelect.value ? waliOption.textContent.trim() : null,
+      aktif: $("santriAktif").value === "true"
     };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(item) await updateCollectionData("santri", item.id, payload);
+        else await addCollectionData("santri", payload);
+        closeModal();
+        showToast("Data santri berhasil disimpan.");
+        renderSantriAdmin();
+      }catch(error){ alert("Gagal menyimpan: " + error.message); }
+    })();
+  });
+}
 
-    return messages[error.code]
-      || error.message
-      || "Terjadi kesalahan.";
+/* =========================================================
+   ADMIN: DATA WALI (account management)
+========================================================= */
+async function renderWaliAdmin(){
+  if(!requireRole("admin")) return;
+  const data = await getCollectionData("wali");
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Data Wali</h2><p class="muted">Kelola akun login wali santri.</p></div>
+      <div class="actions">
+        <input id="searchWali" class="search-box" placeholder="Cari nama/email...">
+        <button class="btn" id="addWali">+ Buat Akun Wali</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <table id="tableWali">
+        <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Telepon</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${data.length ? data.map((item,index)=>`
+            <tr data-row>
+              <td>${index+1}</td><td><b>${escapeHTML(item.nama)}</b></td><td>${escapeHTML(item.email)}</td>
+              <td>${escapeHTML(item.telepon || "-")}</td>
+              <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+              <td><div class="actions">
+                <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus Data</button>
+              </div></td>
+            </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada akun wali.</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
 
-  }
+  attachTableSearch("searchWali","tableWali");
+  $("addWali").addEventListener("click", ()=>openWaliForm());
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("wali")).find(x=>x.id===btn.dataset.edit);
+    if(item) openWaliForm(item);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus profil wali ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console / Admin SDK.")) return;
+    try{ await deleteManagedAccountRecord(btn.dataset.remove, "wali"); showToast("Profil wali dihapus."); renderWaliAdmin(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
 
+function openWaliForm(item=null){
+  openModal(item ? "Edit Data Wali" : "Buat Akun Wali", `
+    <form id="waliForm">
+      <div class="form-group"><label>Nama</label><input id="waliNama" value="${escapeHTML(item?.nama || "")}" required></div>
+      <div class="form-group"><label>Email</label><input id="waliEmail" type="email" value="${escapeHTML(item?.email || "")}" ${item?"disabled":""} required></div>
+      ${!item ? `<div class="form-group"><label>Password Awal</label><input id="waliPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required></div>` : ""}
+      <div class="form-group"><label>Telepon</label><input id="waliTelepon" value="${escapeHTML(item?.telepon || "")}" placeholder="08xxxxxxxxxx"></div>
+      <div class="form-group"><label>Alamat</label><textarea id="waliAlamat" rows="2">${escapeHTML(item?.alamat || "")}</textarea></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="waliAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
+      </div>
+      <button class="btn btn-full" type="submit" id="waliSaveBtn">Simpan</button>
+    </form>`);
 
-  /* =====================================================
-     MODAL EVENTS
-  ===================================================== */
+  $("waliForm").addEventListener("submit", async event=>{
+    event.preventDefault();
+    const btn = $("waliSaveBtn");
+    const profile = {
+      nama: $("waliNama").value.trim(),
+      telepon: $("waliTelepon").value.trim(),
+      alamat: $("waliAlamat").value.trim(),
+      aktif: $("waliAktif").value === "true"
+    };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(item){
+          await updateManagedAccount(item.id, "wali", profile);
+        }else{
+          const email = $("waliEmail").value.trim();
+          const password = $("waliPassword").value;
+          await createManagedAccount({ email, password, role:"wali", profile });
+        }
+        closeModal();
+        showToast("Data wali berhasil disimpan.");
+        renderWaliAdmin();
+      }catch(error){ alert(firebaseError(error)); }
+    })();
+  });
+}
 
-  $("modalClose")
-    .addEventListener(
-      "click",
-      closeModal
-    );
+/* =========================================================
+   ADMIN: DATA USTADZAH (account management)
+========================================================= */
+async function renderUstadzahAdmin(){
+  if(!requireRole("admin")) return;
+  const [data, jilid] = await Promise.all([getCollectionData("ustadzah"), getCollectionData("jilid")]);
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Data Ustadzah</h2><p class="muted">Kelola akun login ustadzah dan penugasan kelas.</p></div>
+      <div class="actions">
+        <input id="searchUstadzah" class="search-box" placeholder="Cari nama/email...">
+        <button class="btn" id="addUstadzah">+ Buat Akun Ustadzah</button>
+      </div>
+    </div>
+    <div class="table-container">
+      <table id="tableUstadzah">
+        <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Kelas Diampu</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${data.length ? data.map((item,index)=>`
+            <tr data-row>
+              <td>${index+1}</td><td><b>${escapeHTML(item.nama)}</b></td><td>${escapeHTML(item.email)}</td>
+              <td>${escapeHTML(item.jilidNama || "Belum diatur")}</td>
+              <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+              <td><div class="actions">
+                <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus Data</button>
+              </div></td>
+            </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada akun ustadzah.</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
 
+  attachTableSearch("searchUstadzah","tableUstadzah");
+  $("addUstadzah").addEventListener("click", ()=>openUstadzahForm(null, jilid));
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("ustadzah")).find(x=>x.id===btn.dataset.edit);
+    if(item) openUstadzahForm(item, jilid);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus profil ustadzah ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console / Admin SDK.")) return;
+    try{ await deleteManagedAccountRecord(btn.dataset.remove, "ustadzah"); showToast("Profil ustadzah dihapus."); renderUstadzahAdmin(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
 
-  $("modal")
-    .addEventListener("click",event=>{
+function openUstadzahForm(item, jilidList){
+  openModal(item ? "Edit Data Ustadzah" : "Buat Akun Ustadzah", `
+    <form id="ustadzahForm">
+      <div class="form-group"><label>Nama</label><input id="ustadzahNama" value="${escapeHTML(item?.nama || "")}" required></div>
+      <div class="form-group"><label>Email</label><input id="ustadzahEmail" type="email" value="${escapeHTML(item?.email || "")}" ${item?"disabled":""} required></div>
+      ${!item ? `<div class="form-group"><label>Password Awal</label><input id="ustadzahPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required></div>` : ""}
+      <div class="form-group"><label>Telepon</label><input id="ustadzahTelepon" value="${escapeHTML(item?.telepon || "")}" placeholder="08xxxxxxxxxx"></div>
+      <div class="form-group">
+        <label>Kelas / Jilid Diampu</label>
+        <select id="ustadzahJilid">
+          <option value="">Belum ditentukan</option>
+          ${jilidList.map(k=>`<option value="${k.id}" ${item?.jilidId===k.id?"selected":""}>${escapeHTML(k.nama)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="ustadzahAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
+      </div>
+      <button class="btn btn-full" type="submit" id="ustadzahSaveBtn">Simpan</button>
+    </form>`);
 
-      if(event.target === $("modal")){
+  $("ustadzahForm").addEventListener("submit", async event=>{
+    event.preventDefault();
+    const btn = $("ustadzahSaveBtn");
+    const jilidSelect = $("ustadzahJilid");
+    const jilidOption = jilidSelect.options[jilidSelect.selectedIndex];
+    const profile = {
+      nama: $("ustadzahNama").value.trim(),
+      telepon: $("ustadzahTelepon").value.trim(),
+      jilidId: jilidSelect.value || null,
+      jilidNama: jilidSelect.value ? jilidOption.textContent.trim() : null,
+      aktif: $("ustadzahAktif").value === "true"
+    };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(item){
+          await updateManagedAccount(item.id, "ustadzah", profile);
+        }else{
+          const email = $("ustadzahEmail").value.trim();
+          const password = $("ustadzahPassword").value;
+          await createManagedAccount({ email, password, role:"ustadzah", profile });
+        }
+        closeModal();
+        showToast("Data ustadzah berhasil disimpan.");
+        renderUstadzahAdmin();
+      }catch(error){ alert(firebaseError(error)); }
+    })();
+  });
+}
+
+/* =========================================================
+   ADMIN: JILID / KELAS + PDF
+========================================================= */
+async function renderJilidAdmin(){
+  if(!requireRole("admin")) return;
+  const data = await getCollectionData("jilid");
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Jilid / Kelas</h2><p class="muted">Atur kelas serta buku PDF baca dan hafalan.</p></div>
+      <button class="btn" id="addJilid">+ Tambah Jilid / Kelas</button>
+    </div>
+    <div class="grid">
+      ${data.length ? data.map(item=>`
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div>
+              <h3 style="margin:0">📚 ${escapeHTML(item.nama)}</h3>
+              <div class="muted" style="margin-top:5px">${escapeHTML(item.keterangan || "")}</div>
+            </div>
+            ${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}
+          </div>
+          <hr style="border:0;border-top:1px solid var(--border);margin:15px 0">
+          <div style="display:grid;gap:8px">
+            <div><b>📖 Buku Baca</b><div class="muted" style="font-size:12px">${item.pdfBacaUrl ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
+            <div><b>🧠 Buku Hafalan</b><div class="muted" style="font-size:12px">${item.pdfHafalanUrl ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
+          </div>
+          <div class="actions" style="margin-top:15px">
+            <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
+            <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+          </div>
+        </div>`).join("") : `<div class="card empty">Belum ada kelas/jilid.</div>`}
+    </div>`;
+
+  $("addJilid").addEventListener("click", ()=>openJilidForm());
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("jilid")).find(x=>x.id===btn.dataset.edit);
+    if(item) openJilidForm(item);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus kelas/jilid ini?")) return;
+    try{ await deleteCollectionData("jilid", btn.dataset.remove); showToast("Jilid / kelas dihapus."); renderJilidAdmin(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
+
+function openJilidForm(item=null){
+  openModal(item ? "Edit Jilid / Kelas" : "Tambah Jilid / Kelas", `
+    <form id="jilidForm">
+      <div class="form-group"><label>Nama Jilid / Kelas</label><input id="jilidNama" value="${escapeHTML(item?.nama || "")}" placeholder="Contoh: Jilid 1" required></div>
+      <div class="form-group"><label>Keterangan</label><textarea id="jilidKeterangan" rows="3">${escapeHTML(item?.keterangan || "")}</textarea></div>
+      <div class="form-group">
+        <label>PDF Buku Baca</label>
+        <input id="jilidPdfBaca" type="file" accept="application/pdf">
+        ${item?.pdfBacaUrl ? `<div class="notice" style="margin-top:8px">PDF baca sudah tersedia. Pilih file baru untuk menggantinya.</div>` : ""}
+      </div>
+      <div class="form-group">
+        <label>PDF Buku Hafalan</label>
+        <input id="jilidPdfHafalan" type="file" accept="application/pdf">
+        ${item?.pdfHafalanUrl ? `<div class="notice" style="margin-top:8px">PDF hafalan sudah tersedia. Pilih file baru untuk menggantinya.</div>` : ""}
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="jilidAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-full" id="jilidSaveBtn">Simpan</button>
+    </form>`);
+
+  $("jilidForm").addEventListener("submit", async event=>{
+    event.preventDefault();
+    const btn = $("jilidSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        const nama = $("jilidNama").value.trim();
+        const keterangan = $("jilidKeterangan").value.trim();
+        const aktif = $("jilidAktif").value === "true";
+        const bacaFile = $("jilidPdfBaca").files[0];
+        const hafalanFile = $("jilidPdfHafalan").files[0];
+        validatePdf(bacaFile, "buku baca");
+        validatePdf(hafalanFile, "buku hafalan");
+
+        let targetId = item?.id;
+        if(!targetId){
+          const created = await addCollectionData("jilid", { nama, keterangan, aktif, pdfBacaUrl:null, pdfHafalanUrl:null });
+          targetId = created.id;
+        }
+
+        const updates = { nama, keterangan, aktif };
+        if(bacaFile) updates.pdfBacaUrl = await uploadFile(`buku/${targetId}/baca-${Date.now()}.pdf`, bacaFile);
+        if(hafalanFile) updates.pdfHafalanUrl = await uploadFile(`buku/${targetId}/hafalan-${Date.now()}.pdf`, hafalanFile);
+        await updateCollectionData("jilid", targetId, updates);
 
         closeModal();
-
-      }
-
-    });
-
-
-  /* =====================================================
-     SETUP ADMIN PERTAMA
-  ===================================================== */
-
-  $("setupAdminButton")
-    .addEventListener(
-      "click",
-      openAdminSetup
-    );
-
-
-  function openAdminSetup(){
-
-    openModal(
-
-      "Setup Admin Pertama",
-
-      `
-      <form id="adminSetupForm">
-
-        <div class="form-group">
-
-          <label>
-            Nama Admin
-          </label>
-
-          <input
-            id="adminName"
-            value="Administrator"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label>
-            Email Admin
-          </label>
-
-          <input
-            id="adminEmail"
-            type="email"
-            placeholder="admin@tpqwardah.com"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label>
-            Password
-          </label>
-
-          <input
-            id="adminPassword"
-            type="password"
-            minlength="6"
-            placeholder="Minimal 6 karakter"
-            required
-          >
-
-        </div>
-
-
-        <button
-          type="submit"
-          class="btn btn-full"
-        >
-          Buat Akun Admin
-        </button>
-
-      </form>
-      `
-    );
-
-
-    $("adminSetupForm")
-      .addEventListener(
-        "submit",
-        createFirstAdmin
-      );
-
-  }
-
-
-  async function createFirstAdmin(event){
-
-    event.preventDefault();
-
-    const name =
-      $("adminName").value.trim();
-
-    const email =
-      $("adminEmail").value.trim();
-
-    const password =
-      $("adminPassword").value;
-
-
-    try{
-
-      const credential =
-        await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-
-      const uid =
-        credential.user.uid;
-
-
-      /*
-       * PROFILE USER
-       */
-
-      await setDoc(
-        doc(db,"users",uid),
-        {
-
-          uid,
-
-          nama:name,
-
-          email,
-
-          role:"admin",
-
-          aktif:true,
-
-          createdAt:
-            serverTimestamp(),
-
-          updatedAt:
-            serverTimestamp()
-
-        }
-      );
-
-
-      /*
-       * PROFILE ADMIN
-       */
-
-      await setDoc(
-        doc(db,"admin",uid),
-        {
-
-          uid,
-
-          nama:name,
-
-          email,
-
-          role:"admin",
-
-          aktif:true,
-
-          createdAt:
-            serverTimestamp(),
-
-          updatedAt:
-            serverTimestamp()
-
-        }
-      );
-
-
-      closeModal();
-
-      showToast(
-        "Akun admin berhasil dibuat."
-      );
-
-
-    }catch(error){
-
-      alert(
-        firebaseError(error)
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     LOGIN
-  ===================================================== */
-
-  $("loginForm")
-    .addEventListener(
-      "submit",
-      login
-    );
-
-
-  async function login(event){
-
-    event.preventDefault();
-
-    $("loginError").textContent = "";
-
-    const email =
-      $("loginEmail").value.trim();
-
-    const password =
-      $("loginPassword").value;
-
-
-    try{
-
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    }catch(error){
-
-      $("loginError").textContent =
-        firebaseError(error);
-
-    }
-
-  }
-
-
-  /* =====================================================
-     LOGOUT
-  ===================================================== */
-
-  $("logoutButton")
-    .addEventListener(
-      "click",
-      async()=>{
-
-        await signOut(auth);
-
-      }
-    );
-
-
-  /* =====================================================
-     MOBILE MENU
-  ===================================================== */
-
-  $("mobileMenuButton")
-    .addEventListener(
-      "click",
-      ()=>{
-
-        $("sidebar")
-          .classList.toggle("open");
-
-      }
-    );
-
-
-  /* =====================================================
-     AUTH STATE
-  ===================================================== */
-
-  onAuthStateChanged(
-    auth,
-    async user=>{
-
-      if(!user){
-
-        currentUser = null;
-
-        currentProfile = null;
-
-        $("loginScreen")
-          .classList.remove("hidden");
-
-        $("app")
-          .classList.add("hidden");
-
-        return;
-
-      }
-
-
-      try{
-
-        const profileSnapshot =
-          await getDoc(
-            doc(
-              db,
-              "users",
-              user.uid
-            )
-          );
-
-
-        if(!profileSnapshot.exists()){
-
-          alert(
-            "Akun berhasil login tetapi profil aplikasi belum dibuat."
-          );
-
-          await signOut(auth);
-
-          return;
-
-        }
-
-
-        const profile =
-          profileSnapshot.data();
-
-
-        if(
-          !["admin","ustadzah","wali"]
-            .includes(profile.role)
-        ){
-
-          alert(
-            "Role akun tidak valid."
-          );
-
-          await signOut(auth);
-
-          return;
-
-        }
-
-
-        if(profile.aktif === false){
-
-          alert(
-            "Akun ini sedang dinonaktifkan."
-          );
-
-          await signOut(auth);
-
-          return;
-
-        }
-
-
-        currentUser =
-          user;
-
-        currentProfile =
-          profile;
-
-
-        $("loginScreen")
-          .classList.add("hidden");
-
-        $("app")
-          .classList.remove("hidden");
-
-
-        $("userName")
-          .textContent =
-            profile.nama
-            || user.email;
-
-
-        $("brandRole")
-          .textContent =
-            "Portal "
-            + profile.role;
-
-
-        buildNavigation();
-
-        navigate("dashboard");
-
-
-      }catch(error){
-
-        console.error(error);
-
-        alert(
-          "Gagal membaca profil pengguna: "
-          + error.message
-        );
-
-        await signOut(auth);
-
-      }
-
-    }
-  );
-
-
-  /* =====================================================
-     NAVIGATION
-  ===================================================== */
-
-  const pageTitles = {
-
-    dashboard:
-      "Dashboard",
-
-    santri:
-      "Data Santri",
-
-    wali:
-      "Data Wali",
-
-    ustadzah:
-      "Data Ustadzah",
-
-    kelas:
-      "Jilid / Kelas",
-
-    pengumuman:
-      "Pengumuman",
-
-    keuangan:
-      "Keuangan",
-
-    settings:
-      "Pengaturan",
-
-    kelasSantri:
-      "Santri Kelas",
-
-    pembelajaran:
-      "Pembelajaran",
-
-    keuanganUstadzah:
-      "Keuangan Santri",
-
-    belajar:
-      "Baca & Hafalan",
-
-    keuanganWali:
-      "Riwayat Keuangan",
-
-    profil:
-      "Profil"
-
-  };
-
-
-  function buildNavigation(){
-
-    const role =
-      currentProfile.role;
-
-    const items = [
-
-      {
-        page:"dashboard",
-        icon:"🏠",
-        label:"Dashboard",
-        roles:["admin","ustadzah","wali"]
-      },
-
-      {
-        page:"santri",
-        icon:"👨‍🎓",
-        label:"Data Santri",
-        roles:["admin"]
-      },
-
-      {
-        page:"wali",
-        icon:"👨‍👩‍👧",
-        label:"Data Wali",
-        roles:["admin"]
-      },
-
-      {
-        page:"ustadzah",
-        icon:"👩‍🏫",
-        label:"Data Ustadzah",
-        roles:["admin"]
-      },
-
-      {
-        page:"kelas",
-        icon:"📚",
-        label:"Jilid / Kelas",
-        roles:["admin"]
-      },
-
-      {
-        page:"pengumuman",
-        icon:"📢",
-        label:"Pengumuman",
-        roles:["admin","ustadzah","wali"]
-      },
-
-      {
-        page:"keuangan",
-        icon:"💰",
-        label:"Keuangan",
-        roles:["admin"]
-      },
-
-      {
-        page:"settings",
-        icon:"⚙️",
-        label:"Pengaturan",
-        roles:["admin"]
-      },
-
-      {
-        page:"kelasSantri",
-        icon:"👨‍🎓",
-        label:"Santri Kelas",
-        roles:["ustadzah"]
-      },
-
-      {
-        page:"pembelajaran",
-        icon:"📖",
-        label:"Pembelajaran",
-        roles:["ustadzah"]
-      },
-
-      {
-        page:"keuanganUstadzah",
-        icon:"💰",
-        label:"Keuangan Santri",
-        roles:["ustadzah"]
-      },
-
-      {
-        page:"belajar",
-        icon:"📖",
-        label:"Baca & Hafalan",
-        roles:["wali"]
-      },
-
-      {
-        page:"keuanganWali",
-        icon:"💰",
-        label:"Riwayat Keuangan",
-        roles:["wali"]
-      },
-
-      {
-        page:"profil",
-        icon:"👤",
-        label:"Profil",
-        roles:["admin","ustadzah","wali"]
-      }
-
-    ];
-
-
-    const visible =
-      items.filter(
-        item =>
-          item.roles.includes(role)
-      );
-
-
-    $("navigation").innerHTML =
-      visible.map(item=>`
-
-        <button
-          type="button"
-          data-page="${item.page}"
-        >
-
-          ${item.icon}
-          ${item.label}
-
-        </button>
-
-      `).join("");
-
-
-    $("navigation")
-      .querySelectorAll("button")
-      .forEach(button=>{
-
-        button.addEventListener(
-          "click",
-          ()=>{
-
-            navigate(
-              button.dataset.page
-            );
-
-          }
-        );
-
-      });
-
-  }
-
-
-  /* =====================================================
-     NAVIGATE
-  ===================================================== */
-
-  async function navigate(page){
-
-    currentPage = page;
-
-    $("pageTitle")
-      .textContent =
-        pageTitles[page]
-        || "Dashboard";
-
-
-    $("navigation")
-      .querySelectorAll("button")
-      .forEach(button=>{
-
-        button.classList.toggle(
-          "active",
-          button.dataset.page === page
-        );
-
-      });
-
-
-    $("sidebar")
-      .classList.remove("open");
-
-
-    const handlers = {
-
-      dashboard:
-        renderDashboard,
-
-      santri:
-        renderSantri,
-
-      wali:
-        renderWali,
-
-      ustadzah:
-        renderUstadzah,
-
-      kelas:
-        renderKelas,
-
-      pengumuman:
-        renderPengumuman,
-
-      keuangan:
-        renderKeuangan,
-
-      settings:
-        renderSettings,
-
-      kelasSantri:
-        renderKelasSantri,
-
-      pembelajaran:
-        renderPembelajaran,
-
-      keuanganUstadzah:
-        renderKeuanganUstadzah,
-
-      belajar:
-        renderBelajar,
-
-      keuanganWali:
-        renderKeuanganWali,
-
-      profil:
-        renderProfil
-
+        showToast("Jilid / kelas berhasil disimpan.");
+        renderJilidAdmin();
+      }catch(error){ alert("Gagal menyimpan: " + error.message); }
+    })();
+  });
+}
+
+function validatePdf(file, label){
+  if(!file) return;
+  if(file.type !== "application/pdf") throw new Error(`File ${label} harus berformat PDF.`);
+  if(file.size > 50 * 1024 * 1024) throw new Error(`Ukuran PDF ${label} maksimal 50 MB.`);
+}
+
+/* =========================================================
+   ADMIN + SHARED: PENGUMUMAN
+========================================================= */
+async function renderPengumuman(){
+  const isAdmin = currentProfile.role === "admin";
+  const data = (await getCollectionData("pengumuman"))
+    .filter(x => isAdmin || x.aktif !== false)
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Pengumuman</h2><p class="muted">${isAdmin ? "Informasi yang akan tampil di portal wali dan ustadzah." : "Informasi terbaru dari admin TPQ."}</p></div>
+      ${isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat Pengumuman</button>` : ""}
+    </div>
+    <div class="grid">
+      ${data.length ? data.map(item=>`
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div>
+              <h3 style="margin:0">${escapeHTML(item.judul || "-")}</h3>
+              <div class="muted" style="margin-top:5px;font-size:12px">${formatTanggal(item.createdAt)}</div>
+            </div>
+            ${isAdmin ? (item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`) : ""}
+          </div>
+          <p style="white-space:pre-wrap;line-height:1.6">${escapeHTML(item.isi || "")}</p>
+          ${isAdmin ? `<div class="actions">
+            <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
+            <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+          </div>` : ""}
+        </div>`).join("") : `<div class="card empty">Belum ada pengumuman.</div>`}
+    </div>`;
+
+  if(!isAdmin) return;
+  $("btnTambahPengumuman").addEventListener("click", ()=>openPengumumanForm());
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("pengumuman")).find(x=>x.id===btn.dataset.edit);
+    if(item) openPengumumanForm(item);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus pengumuman ini?")) return;
+    try{ await deleteCollectionData("pengumuman", btn.dataset.remove); showToast("Pengumuman dihapus."); renderPengumuman(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
+
+function openPengumumanForm(item=null){
+  openModal(item ? "Edit Pengumuman" : "Buat Pengumuman", `
+    <form id="pengumumanForm">
+      <div class="form-group"><label>Judul</label><input id="pengumumanJudul" value="${escapeHTML(item?.judul || "")}" required></div>
+      <div class="form-group"><label>Isi Pengumuman</label><textarea id="pengumumanIsi" rows="7" required>${escapeHTML(item?.isi || "")}</textarea></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="pengumumanAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Tampilkan</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Sembunyikan</option>
+        </select>
+      </div>
+      <button class="btn btn-full" type="submit" id="pengumumanSaveBtn">Simpan Pengumuman</button>
+    </form>`);
+
+  $("pengumumanForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn = $("pengumumanSaveBtn");
+    const payload = {
+      judul: $("pengumumanJudul").value.trim(),
+      isi: $("pengumumanIsi").value.trim(),
+      aktif: $("pengumumanAktif").value === "true"
     };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(item) await updateCollectionData("pengumuman", item.id, payload);
+        else await addCollectionData("pengumuman", payload);
+        closeModal(); showToast("Pengumuman berhasil disimpan."); renderPengumuman();
+      }catch(error){ alert("Gagal menyimpan: " + error.message); }
+    })();
+  });
+}
 
+/* =========================================================
+   ADMIN: MASTER TAGIHAN
+========================================================= */
+async function renderTagihanAdmin(){
+  if(!requireRole("admin")) return;
+  const data = await getCollectionData("tagihan");
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Master Tagihan</h2><p class="muted">Atur SPP, tabungan dan iuran kegiatan.</p></div>
+      <button class="btn" id="btnTambahTagihan">+ Tambah Tagihan</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>No</th><th>Nama Tagihan</th><th>Jenis</th><th>Nominal</th><th>Periode</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${data.length ? data.map((item,index)=>`
+            <tr>
+              <td>${index+1}</td><td><b>${escapeHTML(item.nama || "-")}</b></td><td>${escapeHTML(item.jenis || "-")}</td>
+              <td>${formatRupiah(item.nominal || 0)}</td><td>${escapeHTML(item.periode || "-")}</td>
+              <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+              <td><div class="actions">
+                <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
+                <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+              </div></td>
+            </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada master tagihan.</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
 
-    const handler =
-      handlers[page];
+  $("btnTambahTagihan").addEventListener("click", ()=>openTagihanForm());
+  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const item = (await getCollectionData("tagihan")).find(x=>x.id===btn.dataset.edit);
+    if(item) openTagihanForm(item);
+  }));
+  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    if(!confirm("Hapus master tagihan ini?")) return;
+    try{ await deleteCollectionData("tagihan", btn.dataset.remove); showToast("Tagihan dihapus."); renderTagihanAdmin(); }
+    catch(error){ showToast(error.message, true); }
+  }));
+}
 
-
-    if(handler){
-
-      await handler();
-
-    }else{
-
-      renderDashboard();
-
-    }
-
-  }
-
-
-  /* =====================================================
-     DASHBOARD
-  ===================================================== */
-
-  async function renderDashboard(){
-
-    const role =
-      currentProfile.role;
-
-
-    if(role === "admin"){
-
-      $("page").innerHTML = `
-
-        <h2 class="section-title">
-          Dashboard Admin
-        </h2>
-
-        <p class="muted">
-          Selamat datang,
-          ${escapeHTML(currentProfile.nama)}.
-        </p>
-
-        <div
-          class="grid"
-          style="margin-top:18px"
-        >
-
-          ${statCard(
-            "👨‍🎓",
-            "Santri",
-            "-"
-          )}
-
-          ${statCard(
-            "👩‍🏫",
-            "Ustadzah",
-            "-"
-          )}
-
-          ${statCard(
-            "👨‍👩‍👧",
-            "Wali",
-            "-"
-          )}
-
-          ${statCard(
-            "📚",
-            "Kelas / Jilid",
-            "-"
-          )}
-
+function openTagihanForm(item=null){
+  openModal(item ? "Edit Tagihan" : "Tambah Tagihan", `
+    <form id="tagihanForm">
+      <div class="form-group"><label>Nama Tagihan</label><input id="tagihanNama" value="${escapeHTML(item?.nama || "")}" placeholder="SPP September 2026" required></div>
+      <div class="row">
+        <div class="form-group">
+          <label>Jenis</label>
+          <select id="tagihanJenis">
+            <option value="SPP" ${item?.jenis==="SPP"?"selected":""}>SPP</option>
+            <option value="Tabungan" ${item?.jenis==="Tabungan"?"selected":""}>Tabungan</option>
+            <option value="Iuran Kegiatan" ${item?.jenis==="Iuran Kegiatan"?"selected":""}>Iuran Kegiatan</option>
+          </select>
         </div>
-
-        <div
-          class="card"
-          style="margin-top:18px"
-        >
-
-          <h3>
-            Sistem Informasi TPQ
-          </h3>
-
-          <p class="muted">
-            Modul administrasi, pembelajaran,
-            hafalan, keuangan dan pengumuman
-            akan tersedia di sini.
-          </p>
-
-        </div>
-
-      `;
-
-      return;
-
-    }
-
-
-    if(role === "ustadzah"){
-
-      $("page").innerHTML = `
-
-        <h2 class="section-title">
-          Dashboard Ustadzah
-        </h2>
-
-        <p class="muted">
-          Kelola pembelajaran santri,
-          hafalan dan keuangan.
-        </p>
-
-        <div
-          class="grid"
-          style="margin-top:18px"
-        >
-
-          ${statCard(
-            "👨‍🎓",
-            "Santri Binaan",
-            "-"
-          )}
-
-          ${statCard(
-            "📖",
-            "Baca",
-            "Modul"
-          )}
-
-          ${statCard(
-            "🧠",
-            "Hafalan",
-            "Modul"
-          )}
-
-          ${statCard(
-            "💰",
-            "Keuangan",
-            "Modul"
-          )}
-
-        </div>
-
-      `;
-
-      return;
-
-    }
-
-
-    $("page").innerHTML = `
-
-      <h2 class="section-title">
-        Dashboard Wali
-      </h2>
-
-      <p class="muted">
-        Pantau perkembangan pembelajaran
-        dan keuangan santri.
-      </p>
-
-      <div
-        class="grid"
-        style="margin-top:18px"
-      >
-
-        ${statCard(
-          "👨‍🎓",
-          "Santri",
-          "-"
-        )}
-
-        ${statCard(
-          "📖",
-          "Pembelajaran",
-          "Baca & Hafalan"
-        )}
-
-        ${statCard(
-          "💰",
-          "Keuangan",
-          "Tagihan"
-        )}
-
-        ${statCard(
-          "📢",
-          "Pengumuman",
-          "Informasi"
-        )}
-
+        <div class="form-group"><label>Nominal</label><input id="tagihanNominal" type="number" min="0" value="${item?.nominal || 0}" required></div>
       </div>
-
-    `;
-
-  }
-
-
-  function statCard(
-    icon,
-    label,
-    value
-  ){
-
-    return `
-
-      <div class="card stat-card">
-
-        <div class="stat-icon">
-          ${icon}
-        </div>
-
-        <div class="stat-label">
-          ${label}
-        </div>
-
-        <div class="stat-value">
-          ${escapeHTML(value)}
-        </div>
-
+      <div class="form-group"><label>Periode</label><input id="tagihanPeriode" value="${escapeHTML(item?.periode || "")}" placeholder="September 2026"></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="tagihanAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
       </div>
+      <button class="btn btn-full" type="submit" id="tagihanSaveBtn">Simpan</button>
+    </form>`);
 
-    `;
+  $("tagihanForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn = $("tagihanSaveBtn");
+    const payload = {
+      nama: $("tagihanNama").value.trim(),
+      jenis: $("tagihanJenis").value,
+      nominal: Number($("tagihanNominal").value),
+      periode: $("tagihanPeriode").value.trim(),
+      aktif: $("tagihanAktif").value === "true"
+    };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(item) await updateCollectionData("tagihan", item.id, payload);
+        else await addCollectionData("tagihan", payload);
+        closeModal(); showToast("Tagihan berhasil disimpan."); renderTagihanAdmin();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
 
-  }
+/* =========================================================
+   ADMIN: KEUANGAN (laporan global)
+========================================================= */
+async function renderKeuanganAdmin(){
+  if(!requireRole("admin")) return;
+  const [keuangan, santriList, tagihanList] = await Promise.all([
+    getCollectionData("keuangan"), getCollectionData("santri"), getCollectionData("tagihan")
+  ]);
 
+  const santriMap = Object.fromEntries(santriList.map(s=>[s.id, s]));
+  const rows = keuangan
+    .map(k=>({ ...k, santriNama: santriMap[k.santriId]?.nama || "(santri dihapus)" }))
+    .sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
 
-  /* =====================================================
-     PLACEHOLDER MODULES
-     Tahap berikutnya akan mengisi CRUD masing-masing.
-  ===================================================== */
+  const totalTagihan = rows.reduce((sum,r)=>sum+Number(r.nominalTagihan||0),0);
+  const totalTerbayar = rows.reduce((sum,r)=>sum+Number(r.terbayar||0),0);
+  const totalTunggakan = Math.max(0, totalTagihan - totalTerbayar);
 
-  async function renderSantri(){
-
-    placeholder(
-      "Data Santri",
-      "Modul data santri siap diintegrasikan dengan Firestore."
-    );
-
-  }
-
-
-  async function renderWali(){
-
-    placeholder(
-      "Data Wali",
-      "Modul data wali siap diintegrasikan dengan Firestore."
-    );
-
-  }
-
-
-  async function renderUstadzah(){
-
-    placeholder(
-      "Data Ustadzah",
-      "Modul data ustadzah siap diintegrasikan dengan Firestore."
-    );
-
-  }
-
-
-  async function renderKelas(){
-
-    placeholder(
-      "Jilid / Kelas",
-      "Modul kelas dan pengaturan PDF baca/hafalan akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderPengumuman(){
-
-    placeholder(
-      "Pengumuman",
-      "Modul pengumuman admin akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderKeuangan(){
-
-    placeholder(
-      "Keuangan",
-      "Modul SPP, tabungan dan iuran kegiatan akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderSettings(){
-
-    placeholder(
-      "Pengaturan",
-      "Pengaturan aplikasi akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderKelasSantri(){
-
-    placeholder(
-      "Santri Kelas",
-      "Daftar santri yang dibimbing ustadzah akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderPembelajaran(){
-
-    placeholder(
-      "Pembelajaran",
-      "Modul buku baca dan hafalan akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderKeuanganUstadzah(){
-
-    placeholder(
-      "Keuangan Santri",
-      "Modul keuangan santri untuk ustadzah akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderBelajar(){
-
-    placeholder(
-      "Baca & Hafalan",
-      "Modul PDF dan halaman terakhir akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderKeuanganWali(){
-
-    placeholder(
-      "Riwayat Keuangan",
-      "Riwayat SPP, tabungan dan iuran akan ditempatkan di sini."
-    );
-
-  }
-
-
-  async function renderProfil(){
-
-    $("page").innerHTML = `
-
-      <div class="toolbar">
-
-        <div>
-
-          <h2 class="section-title">
-            Profil
-          </h2>
-
-          <p class="muted">
-            Informasi akun yang sedang digunakan.
-          </p>
-
-        </div>
-
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Keuangan</h2><p class="muted">Rekap seluruh transaksi pembayaran santri.</p></div>
+      <div class="actions">
+        <input id="searchKeuangan" class="search-box" placeholder="Cari nama santri...">
+        <button class="btn" id="btnCatatPembayaran">+ Catat Pembayaran</button>
       </div>
+    </div>
+    <div class="summary-strip">
+      ${statCard("🧾","Total Transaksi", rows.length)}
+      ${statCard("💵","Total Tertagih", formatRupiah(totalTagihan))}
+      ${statCard("✅","Total Terbayar", formatRupiah(totalTerbayar))}
+      ${statCard("⚠️","Total Tunggakan", formatRupiah(totalTunggakan))}
+    </div>
+    <div class="table-container">
+      <table id="tableKeuangan">
+        <thead><tr><th>No</th><th>Santri</th><th>Tagihan</th><th>Nominal</th><th>Terbayar</th><th>Metode</th><th>Status</th><th>Tanggal</th></tr></thead>
+        <tbody>
+          ${rows.length ? rows.map((item,index)=>{
+            const lunas = Number(item.terbayar||0) >= Number(item.nominalTagihan||0);
+            return `<tr data-row>
+              <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${escapeHTML(item.tagihanNama || "-")}</td>
+              <td>${formatRupiah(item.nominalTagihan||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+              <td>${escapeHTML(item.metode || "-")}</td>
+              <td>${lunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-yellow">Belum Lunas</span>`}</td>
+              <td>${formatTanggal(item.tanggal)}</td>
+            </tr>`;
+          }).join("") : `<tr><td colspan="8" class="empty">Belum ada transaksi keuangan.</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
 
+  attachTableSearch("searchKeuangan","tableKeuangan");
+  $("btnCatatPembayaran").addEventListener("click", ()=>openCatatPembayaranModal(null, santriList, tagihanList));
+}
 
-      <div class="card">
+async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null, tagihanListArg=null){
+  const santriList = santriListArg || await getCollectionData("santri");
+  const tagihanList = (tagihanListArg || await getCollectionData("tagihan")).filter(x=>x.aktif!==false);
+  const keuangan = await getCollectionData("keuangan");
 
+  openModal("Catat Pembayaran", `
+    <form id="bayarForm">
+      ${!preselectedSantriId ? `
+        <div class="form-group">
+          <label>Santri</label>
+          <select id="bayarSantri" required>
+            <option value="">Pilih santri</option>
+            ${santriList.map(s=>`<option value="${s.id}">${escapeHTML(s.nama)}</option>`).join("")}
+          </select>
+        </div>` : `<input type="hidden" id="bayarSantri" value="${preselectedSantriId}">`}
+      <div class="form-group">
+        <label>Tagihan</label>
+        <select id="bayarTagihan" required>
+          <option value="">Pilih tagihan</option>
+          ${tagihanList.map(t=>`<option value="${t.id}" data-nominal="${t.nominal||0}">${escapeHTML(t.nama)} (${formatRupiah(t.nominal||0)})</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group"><label>Jumlah Terbayar</label><input id="bayarNominal" type="number" min="0" required></div>
+      <div class="form-group">
+        <label>Metode Pembayaran</label>
+        <select id="bayarMetode">
+          <option value="Tunai">Tunai</option>
+          <option value="QRIS">QRIS</option>
+          <option value="Transfer">Transfer</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Keterangan</label><textarea id="bayarKeterangan" rows="3"></textarea></div>
+      <button class="btn btn-full" type="submit" id="bayarSaveBtn">Simpan Pembayaran</button>
+    </form>`);
+
+  $("bayarTagihan").addEventListener("change", e=>{
+    const opt = e.target.options[e.target.selectedIndex];
+    if(opt?.dataset.nominal) $("bayarNominal").value = opt.dataset.nominal;
+  });
+
+  $("bayarForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn = $("bayarSaveBtn");
+    const santriId = $("bayarSantri").value;
+    const tagihanSelect = $("bayarTagihan");
+    const tagihanId = tagihanSelect.value;
+    const tagihan = tagihanList.find(t=>t.id===tagihanId);
+    if(!santriId || !tagihan){ alert("Pilih santri dan tagihan terlebih dahulu."); return; }
+
+    const existing = keuangan.find(x=>x.santriId===santriId && x.tagihanId===tagihanId);
+    const payload = {
+      santriId, tagihanId, tagihanNama: tagihan.nama,
+      nominalTagihan: Number(tagihan.nominal || 0),
+      terbayar: Number($("bayarNominal").value),
+      metode: $("bayarMetode").value,
+      keterangan: $("bayarKeterangan").value.trim(),
+      dicatatOleh: currentProfile.uid,
+      dicatatOlehNama: currentProfile.nama || "",
+      tanggal: serverTimestamp()
+    };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        if(existing) await updateCollectionData("keuangan", existing.id, payload);
+        else await addCollectionData("keuangan", payload);
+        closeModal();
+        showToast("Pembayaran berhasil disimpan.");
+        if(currentPage === "keuangan") renderKeuanganAdmin();
+        else if(preselectedSantriId) renderKeuanganSantriUstadzah(preselectedSantriId);
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
+
+/* =========================================================
+   ADMIN: PENGATURAN + QRIS
+========================================================= */
+async function renderSettingsAdmin(){
+  if(!requireRole("admin")) return;
+  const settings = await getCollectionData("settings");
+  const appSettings = settings.find(x=>x.id==="app") || {};
+
+  $("page").innerHTML = `
+    <div class="toolbar"><div><h2 class="section-title">Pengaturan TPQ</h2><p class="muted">Informasi umum aplikasi.</p></div></div>
+    <div class="card">
+      <form id="settingsForm">
+        <div class="form-group"><label>Nama TPQ</label><input id="settingNama" value="${escapeHTML(appSettings.nama || "TPQ Wardatul Wathon")}" required></div>
+        <div class="form-group"><label>Alamat</label><textarea id="settingAlamat" rows="3">${escapeHTML(appSettings.alamat || "")}</textarea></div>
         <div class="row">
-
-          <div class="form-group">
-
-            <label>
-              Nama
-            </label>
-
-            <input
-              value="${escapeHTML(
-                currentProfile.nama || ""
-              )}"
-              disabled
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Email
-            </label>
-
-            <input
-              value="${escapeHTML(
-                currentProfile.email
-                || currentUser.email
-                || ""
-              )}"
-              disabled
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Role
-            </label>
-
-            <input
-              value="${escapeHTML(
-                currentProfile.role
-              )}"
-              disabled
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Status
-            </label>
-
-            <input
-              value="${
-                currentProfile.aktif === false
-                  ? "Nonaktif"
-                  : "Aktif"
-              }"
-              disabled
-            >
-
-          </div>
-
+          <div class="form-group"><label>Nomor WhatsApp</label><input id="settingWhatsapp" type="tel" value="${escapeHTML(appSettings.whatsapp || "")}" placeholder="08xxxxxxxxxx"></div>
+          <div class="form-group"><label>Tahun / Periode</label><input id="settingPeriode" value="${escapeHTML(appSettings.periode || "2026/2027")}"></div>
         </div>
+        <div class="form-group"><label>Pesan Dashboard</label><textarea id="settingPesan" rows="4">${escapeHTML(appSettings.pesan || "Selamat datang di Portal TPQ Wardatul Wathon.")}</textarea></div>
+        <button class="btn" type="submit" id="settingsSaveBtn">Simpan Pengaturan</button>
+      </form>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>QRIS Pembayaran</h3>
+      <p class="muted">Upload gambar QRIS yang akan ditampilkan kepada wali ketika melakukan pembayaran.</p>
+      ${appSettings.qrisUrl ? `<img src="${escapeHTML(appSettings.qrisUrl)}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diupload.</div>`}
+      <input id="qrisFile" type="file" accept="image/png,image/jpeg,image/webp">
+      <button class="btn" id="uploadQris" style="margin-top:12px">Upload QRIS</button>
+    </div>`;
 
+  $("settingsForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn = $("settingsSaveBtn");
+    const payload = {
+      nama: $("settingNama").value.trim(),
+      alamat: $("settingAlamat").value.trim(),
+      whatsapp: $("settingWhatsapp").value.trim(),
+      periode: $("settingPeriode").value.trim(),
+      pesan: $("settingPesan").value.trim()
+    };
+    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+      try{
+        await setDoc(doc(db,"settings","app"), { ...payload, updatedAt: serverTimestamp() }, { merge:true });
+        showToast("Pengaturan berhasil disimpan.");
+      }catch(error){ alert(error.message); }
+    })();
+  });
+
+  $("uploadQris").addEventListener("click", withButtonLoading($("uploadQris"), "Mengupload...", async ()=>{
+    const file = $("qrisFile").files[0];
+    if(!file){ alert("Pilih gambar QRIS terlebih dahulu."); return; }
+    if(!["image/png","image/jpeg","image/webp"].includes(file.type)){ alert("Format QRIS harus PNG, JPG atau WEBP."); return; }
+    if(file.size > 5 * 1024 * 1024){ alert("Ukuran QRIS maksimal 5 MB."); return; }
+    try{
+      const url = await uploadFile("settings/qris/qris", file);
+      await setDoc(doc(db,"settings","app"), { qrisUrl:url, updatedAt: serverTimestamp() }, { merge:true });
+      showToast("QRIS berhasil diupload.");
+      renderSettingsAdmin();
+    }catch(error){ alert("Upload gagal: " + error.message); }
+  }));
+}
+
+/* =========================================================
+   USTADZAH: DAFTAR SANTRI KELAS
+========================================================= */
+async function getSantriUstadzah(){
+  if(!currentProfile?.jilidId) return [];
+  const semua = await getCollectionData("santri");
+  return semua.filter(x => x.jilidId === currentProfile.jilidId);
+}
+
+async function renderDaftarSantriUstadzah(){
+  if(!requireRole("ustadzah")) return;
+  const santri = await getSantriUstadzah();
+
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div><h2 class="section-title">Daftar Santri</h2><p class="muted">Santri di kelas ${escapeHTML(currentProfile.jilidNama || "Anda")}.</p></div>
+      <input id="searchSantriUstadzah" class="search-box" placeholder="Cari nama santri...">
+    </div>
+    <div class="table-container">
+      <table id="tableSantriUstadzah">
+        <thead><tr><th>No.</th><th>Nama Santri</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${santri.length ? santri.map((item,index)=>`
+            <tr data-row>
+              <td>${index+1}</td><td><b>${escapeHTML(item.nama || "-")}</b></td>
+              <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+              <td><div class="actions" style="flex-wrap:wrap">
+                <button class="btn btn-sm" data-view="${item.id}">📖 Baca &amp; Hafalan</button>
+                <button class="btn btn-sm btn-info" data-keuangan="${item.id}">💰 Keuangan</button>
+              </div></td>
+            </tr>`).join("") : `<tr><td colspan="4" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+
+  attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
+  $("page").querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
+  $("page").querySelectorAll("[data-keuangan]").forEach(btn=>btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
+}
+
+async function renderKeuanganSantriUstadzah(santriId){
+  const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
+  if(!santri){ alert("Santri tidak ditemukan."); return; }
+  const [tagihan, keuangan] = await Promise.all([getCollectionData("tagihan"), getCollectionData("keuangan")]);
+  const aktif = tagihan.filter(x=>x.aktif!==false);
+
+  $("page").innerHTML = `
+    <div class="toolbar"><button class="btn btn-sm" id="btnKembaliDaftar">← Kembali</button></div>
+    <div class="card">
+      <h2 style="margin-top:0">💰 Keuangan Santri</h2>
+      <p class="muted">${escapeHTML(santri.nama)}</p>
+      <div class="table-container" style="margin-top:15px">
+        <table>
+          <thead><tr><th>No.</th><th>Tagihan</th><th>Jenis</th><th>Nilai</th><th>Terbayar</th><th>Metode</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${aktif.length ? aktif.map((item,index)=>{
+              const pembayaran = keuangan.find(x=>x.santriId===santriId && x.tagihanId===item.id);
+              return `<tr>
+                <td>${index+1}</td><td>${escapeHTML(item.nama)}</td><td>${escapeHTML(item.jenis)}</td>
+                <td>${formatRupiah(item.nominal)}</td><td>${formatRupiah(pembayaran?.terbayar||0)}</td>
+                <td>${escapeHTML(pembayaran?.metode || "-")}</td>
+                <td><button class="btn btn-sm" data-catat="${item.id}">Catat</button></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan aktif.</td></tr>`}
+          </tbody>
+        </table>
       </div>
+    </div>`;
 
-    `;
+  $("btnKembaliDaftar").addEventListener("click", renderDaftarSantriUstadzah);
+  $("page").querySelectorAll("[data-catat]").forEach(btn=>btn.addEventListener("click", ()=>{
+    openCatatPembayaranModal(santriId, [santri], aktif);
+  }));
+}
 
-  }
+/* =========================================================
+   PEMBELAJARAN: shared viewer for Wali (read-only) and
+   Ustadzah (editable) -- resolved from currentProfile.role
+========================================================= */
+async function getJilidBySantri(santri){
+  if(!santri?.jilidId) return null;
+  const data = await getCollectionData("jilid");
+  return data.find(x=>x.id===santri.jilidId) || null;
+}
+async function getProgressSantri(santriId, tipe){
+  const data = await getCollectionData("progress");
+  return data.find(x=>x.santriId===santriId && x.tipe===tipe) || null;
+}
+async function getUstadzahPendamping(santri){
+  if(!santri?.jilidId) return null;
+  const ustadzah = await getCollectionData("ustadzah");
+  return ustadzah.find(x=>x.jilidId===santri.jilidId) || null;
+}
+async function getSantriWali(){
+  if(!currentProfile) return [];
+  const santri = await getCollectionData("santri");
+  return santri.filter(x => x.waliUid === currentProfile.uid && x.aktif !== false);
+}
 
+async function renderPembelajaranWaliOrUstadzah(santriId){
+  const santriData = await getCollectionData("santri");
+  const santri = santriData.find(x=>x.id===santriId);
+  if(!santri){ alert("Data santri tidak ditemukan."); return; }
 
-  function placeholder(
-    title,
-    description
-  ){
+  const isUstadzah = currentProfile.role === "ustadzah";
+  const isWali = currentProfile.role === "wali";
+  if(isWali && santri.waliUid !== currentProfile.uid){ alert("Anda tidak memiliki akses ke santri ini."); return; }
+  if(isUstadzah && santri.jilidId !== currentProfile.jilidId){ alert("Santri ini bukan bagian dari kelas Anda."); return; }
 
-    $("page").innerHTML = `
+  if(isUstadzah) return renderPdfEditorUstadzah(santri);
+  return renderPembelajaranWaliView(santri);
+}
 
-      <div class="card">
+/* ----- Wali: read-only view of baca/hafalan + riwayat + keuangan ----- */
+async function renderPembelajaranWaliView(santri){
+  const jilid = await getJilidBySantri(santri);
+  const ustadzah = await getUstadzahPendamping(santri);
+  const progress = await getCollectionData("progress");
+  const baca = progress.find(x=>x.santriId===santri.id && x.tipe==="baca");
+  const hafalan = progress.find(x=>x.santriId===santri.id && x.tipe==="hafalan");
 
-        <h2>
-          ${escapeHTML(title)}
-        </h2>
+  $("page").innerHTML = `
+    <div class="toolbar"><button class="btn btn-sm" id="btnKembaliWali">← Kembali</button></div>
+    <div class="card">
+      <h2 style="margin-top:0">${escapeHTML(santri.nama || "-")}</h2>
+      <p class="muted">Kelas/Jilid: <b>${escapeHTML(jilid?.nama || santri.jilidNama || "-")}</b></p>
+      <p class="muted">Ustadzah Pendamping: <b>${escapeHTML(ustadzah?.nama || "Belum ditentukan")}</b></p>
+    </div>
+    <div class="grid" style="margin-top:18px">
+      ${renderBelajarCardWali("📖 Baca", baca, jilid?.pdfBacaUrl, santri.id, "baca")}
+      ${renderBelajarCardWali("🧠 Hafalan", hafalan, jilid?.pdfHafalanUrl, santri.id, "hafalan")}
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>📚 Riwayat Pembelajaran</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table><thead><tr><th>No.</th><th>Materi</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Tanggal</th></tr></thead>
+          <tbody>${await renderRiwayatWaliRows(santri.id)}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>💰 Riwayat Keuangan</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table><thead><tr><th>No.</th><th>Tagihan</th><th>Nilai</th><th>Terbayar</th><th>Metode</th><th>Status</th></tr></thead>
+          <tbody>${await renderRiwayatKeuanganWaliRows(santri.id)}</tbody>
+        </table>
+      </div>
+      <button class="btn btn-sm" id="btnLihatQris" style="margin-top:12px">📱 Lihat QRIS Pembayaran</button>
+    </div>`;
 
-        <p class="muted">
-          ${escapeHTML(description)}
-        </p>
+  $("btnKembaliWali").addEventListener("click", renderDashboardWali);
+  $("btnLihatQris").addEventListener("click", waliTampilkanQRIS);
+  $("page").querySelectorAll("[data-open-pdf]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const url = btn.dataset.url;
+      if(!url){ alert("Buku PDF belum tersedia."); return; }
+      openPdfPreviewModal(url, Number(btn.dataset.page||1), btn.dataset.label);
+    });
+  });
+}
 
-        <div
-          class="notice"
-          style="margin-top:18px"
-        >
+function renderBelajarCardWali(title, progress, pdfUrl, santriId, tipe){
+  return `
+    <div class="card">
+      <h3>${title}</h3>
+      <div>Halaman terakhir: <b>${progress?.halaman || 1}</b></div>
+      <div style="margin-top:10px">${progress?.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</div>
+      ${progress?.pesan ? `<div class="notice" style="margin-top:12px"><b>Pesan Ustadzah</b><p style="margin-bottom:0;white-space:pre-wrap">${escapeHTML(progress.pesan)}</p></div>` : ""}
+      ${progress?.audioUrl ? `<div style="margin-top:12px"><audio controls src="${escapeHTML(progress.audioUrl)}" style="width:100%"></audio></div>` : ""}
+      <button class="btn btn-sm" style="margin-top:12px" data-open-pdf data-url="${escapeAttr(pdfUrl||"")}" data-page="${progress?.halaman||1}" data-label="${title}">${title.includes("Baca")?"📖":"🧠"} Buka Buku</button>
+    </div>`;
+}
 
-          <b>Tahap berikutnya</b>
+async function renderRiwayatWaliRows(santriId){
+  const data = await getCollectionData("riwayat");
+  const rows = data.filter(x=>x.santriId===santriId).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  if(!rows.length) return `<tr><td colspan="6" class="empty">Belum ada riwayat pembelajaran.</td></tr>`;
+  const jilidBySantri = await getJilidBySantri((await getCollectionData("santri")).find(x=>x.id===santriId));
+  return rows.map((item,index)=>`
+    <tr>
+      <td>${index+1}</td>
+      <td>${item.tipe==="hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
+      <td><b>Halaman ${Number(item.halaman||1)}</b><br>
+        <button class="btn btn-sm" style="margin-top:5px" data-open-pdf data-url="${escapeAttr(item.tipe==="hafalan" ? jilidBySantri?.pdfHafalanUrl : jilidBySantri?.pdfBacaUrl)}" data-page="${Number(item.halaman||1)}" data-label="${item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca"}">👁 Lihat</button>
+      </td>
+      <td>${item.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</td>
+      <td>${item.pesan ? escapeHTML(item.pesan) : "-"}${item.audioUrl ? `<br><audio controls src="${escapeHTML(item.audioUrl)}" style="width:180px;max-width:100%;margin-top:5px"></audio>` : ""}</td>
+      <td>${formatTanggal(item.createdAt)}</td>
+    </tr>`).join("");
+}
 
-          <div style="margin-top:5px">
-            Modul akan dihubungkan langsung
-            dengan Firestore Firebase.
-          </div>
+async function renderRiwayatKeuanganWaliRows(santriId){
+  const data = await getCollectionData("keuangan");
+  const rows = data.filter(x=>x.santriId===santriId).sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  if(!rows.length) return `<tr><td colspan="6" class="empty">Belum ada riwayat keuangan.</td></tr>`;
+  return rows.map((item,index)=>{
+    const nominal = Number(item.nominalTagihan||0), terbayar = Number(item.terbayar||0), lunas = terbayar>=nominal;
+    return `<tr>
+      <td>${index+1}</td><td>${escapeHTML(item.tagihanNama||"-")}</td><td>${formatRupiah(nominal)}</td><td>${formatRupiah(terbayar)}</td>
+      <td>${item.metode==="QRIS" ? "📱 QRIS" : escapeHTML(item.metode||"-")}</td>
+      <td>${lunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-yellow">Belum Lunas</span>`}</td>
+    </tr>`;
+  }).join("");
+}
 
+async function waliTampilkanQRIS(){
+  const settings = (await getCollectionData("settings")).find(x=>x.id==="app");
+  if(!settings?.qrisUrl){ alert("QRIS belum tersedia. Silakan hubungi admin."); return; }
+  openModal("QRIS Pembayaran", `
+    <div style="text-align:center">
+      <p class="muted">Silakan scan QRIS berikut untuk melakukan pembayaran.</p>
+      <img src="${escapeHTML(settings.qrisUrl)}" alt="QRIS Pembayaran" style="width:350px;max-width:100%;border-radius:12px;border:1px solid var(--border)">
+      <p class="muted" style="margin-top:12px">Setelah pembayaran, silakan konfirmasi kepada ustadzah/admin sesuai prosedur TPQ.</p>
+    </div>`);
+}
+
+function openPdfPreviewModal(url, page, label){
+  const safePage = Math.max(1, Number(page || 1));
+  openModal(label, `
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span class="badge badge-blue">Halaman ${safePage}</span>
+    </div>
+    <iframe src="${escapeHTML(url)}#page=${safePage}" style="width:100%;height:75vh;min-height:500px;border:0;border-radius:10px;background:#525659" title="${escapeHTML(label)}"></iframe>`);
+}
+
+/* ----- Ustadzah: editable PDF viewer with progress + recorder ----- */
+async function renderPdfEditorUstadzah(santri){
+  const jilid = await getJilidBySantri(santri);
+  if(!jilid){ alert("Jilid/kelas santri belum diatur admin."); return; }
+
+  openModal("Pilih Modul", `
+    <div style="display:grid;gap:10px">
+      <button class="btn" data-tipe="baca">📖 Buka Modul Baca</button>
+      <button class="btn btn-info" data-tipe="hafalan">🧠 Buka Modul Hafalan</button>
+    </div>`);
+  $("modalContent").querySelectorAll("[data-tipe]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      closeModal();
+      await openPembelajaranEditor(santri, jilid, btn.dataset.tipe);
+    });
+  });
+}
+
+async function openPembelajaranEditor(santri, jilid, tipe){
+  const pdfUrl = tipe === "hafalan" ? jilid.pdfHafalanUrl : jilid.pdfBacaUrl;
+  if(!pdfUrl){ alert(tipe==="hafalan" ? "Buku PDF hafalan belum diatur admin." : "Buku PDF baca belum diatur admin."); return; }
+  const progress = await getProgressSantri(santri.id, tipe);
+  const halaman = Math.max(1, Number(progress?.halaman || 1));
+
+  $("page").innerHTML = `
+    <div class="toolbar"><button class="btn btn-sm" id="btnKembaliUstadzah">← Kembali</button></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0">${tipe==="hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"}</h2>
+          <div class="muted" style="margin-top:5px">Santri: <b>${escapeHTML(santri.nama)}</b> · ${escapeHTML(jilid.nama)}</div>
         </div>
-
+        <span class="badge badge-blue" id="currentPageBadge">Halaman ${halaman}</span>
       </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px">
+        <button class="btn btn-sm" id="btnPrevPage">◀</button>
+        <input id="pdfPageInput" type="number" min="1" value="${halaman}" style="width:90px;text-align:center">
+        <button class="btn btn-sm" id="btnNextPage">▶</button>
+        <button class="btn btn-sm btn-success" id="btnSavePage">📌 Tandai Halaman Terakhir</button>
+      </div>
+      <div style="margin-top:15px;background:#525659;border-radius:12px;overflow:hidden;min-height:650px">
+        <iframe id="pdfFrame" src="${escapeHTML(pdfUrl)}#page=${halaman}" style="width:100%;height:750px;border:0;display:block" title="Buku PDF"></iframe>
+      </div>
+      <div class="card" style="margin-top:15px;background:#f8fafc">
+        <h3>Hasil Pembelajaran</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn btn-success" id="btnNaik">↑ Naik</button>
+          <button class="btn btn-warning" id="btnMengulang">↻ Mengulang</button>
+        </div>
+        <div class="form-group" style="margin-top:15px">
+          <label>Pesan Ustadzah</label>
+          <textarea id="pesanPembelajaran" rows="4" placeholder="Tuliskan catatan untuk wali...">${escapeHTML(progress?.pesan || "")}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-info" id="btnSimpanPesan">💾 Simpan Pesan</button>
+          <button class="btn" id="btnRecord">🎙 Mulai Rekam</button>
+        </div>
+        <div id="recordStatus" class="muted" style="margin-top:10px"></div>
+        ${progress?.audioUrl ? `<div style="margin-top:15px"><label>Rekaman Sebelumnya</label><audio controls src="${escapeHTML(progress.audioUrl)}" style="width:100%;margin-top:7px"></audio></div>` : ""}
+      </div>
+    </div>`;
 
-    `;
+  $("btnKembaliUstadzah").addEventListener("click", renderDaftarSantriUstadzah);
 
+  let currentPageNum = halaman;
+  const frame = $("pdfFrame");
+  function updateViewerPage(){
+    currentPageNum = Math.max(1, Number($("pdfPageInput").value || 1));
+    $("currentPageBadge").textContent = `Halaman ${currentPageNum}`;
+    frame.src = `${pdfUrl}#page=${currentPageNum}`;
   }
+  $("btnPrevPage").addEventListener("click", ()=>{ currentPageNum = Math.max(1, currentPageNum-1); $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
+  $("btnNextPage").addEventListener("click", ()=>{ currentPageNum++; $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
+  $("pdfPageInput").addEventListener("change", updateViewerPage);
 
+  const saveWith = (status)=>saveProgress({
+    santriId: santri.id, tipe, halaman: currentPageNum, status,
+    pesan: $("pesanPembelajaran").value.trim(), audioUrl: progress?.audioUrl || null
+  });
+  $("btnSavePage").addEventListener("click", ()=>saveWith(progress?.status || "mengulang"));
+  $("btnNaik").addEventListener("click", ()=>saveWith("naik"));
+  $("btnMengulang").addEventListener("click", ()=>saveWith("mengulang"));
+  $("btnSimpanPesan").addEventListener("click", ()=>saveWith(progress?.status || "mengulang"));
 
-  /* =====================================================
-     PWA SERVICE WORKER
-  ===================================================== */
+  setupAudioRecorder({ santriId: santri.id, tipe, halamanGetter: ()=>currentPageNum, progress });
+}
 
-  if(
-    "serviceWorker" in navigator
-  ){
+async function saveProgress({ santriId, tipe, halaman, status, pesan, audioUrl }){
+  try{
+    const data = await getCollectionData("progress");
+    const existing = data.find(x=>x.santriId===santriId && x.tipe===tipe);
+    const payload = {
+      santriId, tipe, halaman: Math.max(1, Number(halaman||1)), status: status || "mengulang",
+      pesan: pesan || "", audioUrl: audioUrl || null,
+      ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || "",
+      updatedAt: serverTimestamp()
+    };
+    if(existing) await updateCollectionData("progress", existing.id, payload);
+    else await addCollectionData("progress", payload);
+    await addCollectionData("riwayat", {
+      santriId, tipe, halaman: payload.halaman, status: payload.status, pesan: payload.pesan,
+      audioUrl: payload.audioUrl, ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
+    });
+    showToast("Hasil pembelajaran berhasil disimpan.");
+  }catch(error){
+    console.error(error);
+    alert("Gagal menyimpan pembelajaran: " + error.message);
+  }
+}
 
-    window.addEventListener(
-      "load",
-      ()=>{
-
-        navigator.serviceWorker
-          .register("./sw.js")
-          .catch(error=>{
-
-            console.warn(
-              "Service Worker:",
-              error
-            );
-
-          });
-
+function setupAudioRecorder({ santriId, tipe, halamanGetter, progress }){
+  const button = $("btnRecord");
+  const status = $("recordStatus");
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    button.disabled = true;
+    status.textContent = "Browser tidak mendukung rekaman suara.";
+    return;
+  }
+  button.addEventListener("click", async ()=>{
+    if(!activeRecorder || activeRecorder.state === "inactive"){
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        activeAudioChunks = [];
+        activeRecorder = new MediaRecorder(stream);
+        activeRecorder.ondataavailable = event => { if(event.data.size > 0) activeAudioChunks.push(event.data); };
+        activeRecorder.onstop = async ()=>{
+          stream.getTracks().forEach(track=>track.stop());
+          const blob = new Blob(activeAudioChunks, { type: activeRecorder.mimeType || "audio/webm" });
+          status.textContent = "Mengupload rekaman...";
+          try{
+            const extension = blob.type.includes("mp4") ? "mp4" : "webm";
+            const audioUrl = await uploadFile(`audio/${santriId}/${tipe}-${Date.now()}.${extension}`, blob);
+            const data = await getCollectionData("progress");
+            const existing = data.find(x=>x.santriId===santriId && x.tipe===tipe);
+            const payload = {
+              santriId, tipe, halaman: Number(halamanGetter()), status: existing?.status || "mengulang",
+              pesan: existing?.pesan || "", audioUrl, ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
+            };
+            if(existing) await updateCollectionData("progress", existing.id, payload);
+            else await addCollectionData("progress", payload);
+            status.textContent = "Rekaman berhasil disimpan.";
+            showToast("Pesan suara berhasil disimpan.");
+          }catch(error){
+            console.error(error);
+            status.textContent = "Upload rekaman gagal.";
+            alert("Gagal menyimpan rekaman: " + error.message);
+          }
+        };
+        activeRecorder.start();
+        button.textContent = "⏹ Berhenti Rekam";
+        button.classList.add("btn-danger");
+        status.textContent = "Sedang merekam...";
+      }catch(error){
+        console.error(error);
+        alert("Tidak dapat menggunakan mikrofon. Pastikan izin mikrofon diberikan.");
       }
-    );
+      return;
+    }
+    if(activeRecorder.state === "recording"){
+      activeRecorder.stop();
+      button.textContent = "🎙 Mulai Rekam";
+      button.classList.remove("btn-danger");
+    }
+  });
+}
 
-  }
+/* =========================================================
+   SHARED: PROFIL
+========================================================= */
+async function renderProfil(){
+  $("page").innerHTML = `
+    <div class="toolbar"><div><h2 class="section-title">Profil</h2><p class="muted">Informasi akun yang sedang digunakan.</p></div></div>
+    <div class="card">
+      <div class="row">
+        <div class="form-group"><label>Nama</label><input value="${escapeHTML(currentProfile.nama || "")}" disabled></div>
+        <div class="form-group"><label>Email</label><input value="${escapeHTML(currentProfile.email || currentUser.email || "")}" disabled></div>
+        <div class="form-group"><label>Role</label><input value="${escapeHTML(roleLabel(currentProfile.role))}" disabled></div>
+        <div class="form-group"><label>Status</label><input value="${currentProfile.aktif===false ? "Nonaktif" : "Aktif"}" disabled></div>
+      </div>
+      <button class="btn" id="btnResetPassword">Kirim Email Reset Password</button>
+    </div>`;
 
+  $("btnResetPassword").addEventListener("click", withButtonLoading($("btnResetPassword"), "Mengirim...", async ()=>{
+    try{
+      await sendPasswordResetEmail(auth, currentUser.email);
+      showToast("Email reset password telah dikirim ke " + currentUser.email);
+    }catch(error){ alert(firebaseError(error)); }
+  }));
+}
+
+/* =========================================================
+   PWA SERVICE WORKER (optional; safe no-op if sw.js is absent)
+========================================================= */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./sw.js").catch(error=>{
+      console.warn("Service Worker tidak terdaftar (opsional):", error.message);
+    });
+  });
+}
 </script>
-
 </body>
 </html>
