@@ -1254,12 +1254,17 @@ async function uploadPdfToGoogleDrive(file, jenis, jilidId){
     throw new Error("URL Google Apps Script belum diatur.");
   }
 
+  console.log("[Upload] Mulai upload:", file.name, "(" + formatFileSize(file.size) + ")");
+
+  // Baca file sebagai base64
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = () => reject(new Error("Gagal membaca file PDF."));
     reader.readAsDataURL(file);
   });
+
+  console.log("[Upload] File dibaca. Base64 length:", base64.length);
 
   const payload = {
     action: "uploadPdf",
@@ -1273,42 +1278,68 @@ async function uploadPdfToGoogleDrive(file, jenis, jilidId){
     uploadedByName: currentProfile?.nama || ""
   };
 
-  return await new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", APP_CONFIG.driveUploadUrl, true);
-    xhr.timeout = 120000;
+  const bodyString = JSON.stringify(payload);
+  console.log("[Upload] Payload size:", bodyString.length, "bytes");
+  console.log("[Upload] POST ke:", APP_CONFIG.driveUploadUrl);
 
-    xhr.upload.addEventListener("progress", event => {
-      if(!event.lengthComputable) return;
-      const percent = Math.round((event.loaded / event.total) * 100);
-      const bar = $(`pdfUploadProgressBar_${jenis}`);
-      const text = $(`pdfUploadProgressText_${jenis}`);
-      if(bar) bar.style.width = percent + "%";
-      if(text) text.textContent = `Mengupload PDF... ${percent}%`;
+  // Simulasi progress manual (fetch tidak support upload progress)
+  const progress = document.getElementById(`pdfUploadProgress_${jenis}`);
+  const bar = document.getElementById(`pdfUploadProgressBar_${jenis}`);
+  const progressText = document.getElementById(`pdfUploadProgressText_${jenis}`);
+  if(progress) progress.classList.add("active");
+  if(bar) bar.style.width = "30%";
+  if(progressText) progressText.textContent = "Mengirim ke Google Drive...";
+
+  try{
+    // ⚠️ FETCH TANPA HEADERS SAMA SEKALI
+    // Ini mencegah CORS preflight sepenuhnya
+    const response = await fetch(APP_CONFIG.driveUploadUrl, {
+      method: "POST",
+      body: bodyString
+      // TIDAK ADA headers — JANGAN TAMBAHKAN APAPUN
     });
 
-    xhr.onload = () => {
-      if(xhr.status < 200 || xhr.status >= 300){
-        reject(new Error(`Upload gagal. HTTP ${xhr.status}`));
-        return;
-      }
-      try{
-        const response = JSON.parse(xhr.responseText);
-        if(!response.success){
-          reject(new Error(response.message || "Google Drive menolak upload."));
-          return;
-        }
-        resolve(response);
-      }catch{
-        reject(new Error("Respons Google Drive tidak valid."));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Tidak dapat terhubung ke server Google Drive."));
-    xhr.ontimeout = () => reject(new Error("Upload timeout. Periksa koneksi Anda."));
-    xhr.send(JSON.stringify(payload));
-  });
-}
+    console.log("[Upload] Response status:", response.status);
+    if(bar) bar.style.width = "80%";
+    if(progressText) progressText.textContent = "Memproses respons...";
 
+    const responseText = await response.text();
+    console.log("[Upload] Response text:", responseText.slice(0, 300));
+
+    if(!response.ok){
+      throw new Error(`Upload gagal. HTTP ${response.status}`);
+    }
+
+    let data;
+    try{
+      data = JSON.parse(responseText);
+    }catch{
+      throw new Error("Respons Google Drive tidak valid: " + responseText.slice(0, 200));
+    }
+
+    if(!data.success){
+      throw new Error(data.message || "Google Drive menolak upload.");
+    }
+
+    if(bar) bar.style.width = "100%";
+    if(progressText) progressText.textContent = "Upload selesai 100%.";
+    console.log("[Upload] ✅ Sukses. URL:", data.url);
+
+    return data;
+
+  }catch(err){
+    console.error("[Upload] ❌ Error:", err);
+    if(progressText) progressText.textContent = err.message;
+    throw new Error(
+      "Tidak dapat terhubung ke server Google Drive.\n\n" +
+      "Detail: " + err.message + "\n\n" +
+      "Kemungkinan penyebab:\n" +
+      "1. Apps Script belum di-deploy 'Anyone'\n" +
+      "2. Kode Apps Script belum di-redeploy (New version)\n" +
+      "3. Koneksi internet bermasalah"
+    );
+  }
+}
 function attachPdfUploader(type, jilidId){
   const fileInput    = $(`pdfFile_${type}`);
   const uploadButton = $(`uploadPdfBtn_${type}`);
