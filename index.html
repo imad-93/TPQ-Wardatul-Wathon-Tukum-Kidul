@@ -6,57 +6,71 @@
 <meta name="theme-color" content="#166534">
 <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
 <title>TPQ Wardatul Wathon</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <style>
 :root{
   --primary:#166534; --primary-dark:#14532d; --primary-light:#22c55e;
   --bg:#f4f7f5; --card:#ffffff; --text:#172033; --muted:#64748b; --border:#e2e8f0;
-  --danger:#dc2626; --warning:#d97706; --info:#2563eb; --success:#16a34a; --sidebar:250px;
+  --danger:#dc2626; --warning:#d97706; --info:#2563eb; --success:#16a34a;
+  --sidebar:250px; --radius:15px;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
+
+/* ============ LOGIN ============ */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top left,#22c55e 0,#166534 35%,#052e16 100%)}
 .login-card{width:100%;max-width:430px;background:#fff;border-radius:24px;padding:30px;box-shadow:0 25px 80px rgba(0,0,0,.25)}
 .login-logo{width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px}
 .login-title,.login-subtitle{text-align:center;margin:0}
 .login-subtitle{color:var(--muted);margin-top:7px}
+.login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:12px}
+.setup-link{border:0;background:none;color:var(--primary);font-weight:700;margin-top:15px}
+
+/* ============ FORMS ============ */
 .form-group{margin-bottom:15px}
 .form-group label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
-input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none;transition:border-color .15s, box-shadow .15s}
 input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.1)}
-input:disabled{background:#f1f5f9;color:var(--muted)}
-.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--primary);color:#fff;font-weight:700;transition:.15s}
-.btn:hover{background:var(--primary-dark)}
-.btn:disabled{opacity:.6;cursor:not-allowed}
+input:disabled,select:disabled,textarea:disabled{background:#f1f5f9;color:var(--muted);cursor:not-allowed}
+
+/* ============ BUTTONS ============ */
+.btn{border:0;border-radius:10px;padding:10px 15px;background:var(--primary);color:#fff;font-weight:700;transition:.15s;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .btn-full{width:100%}
-.btn-danger{background:var(--danger)}
-.btn-warning{background:var(--warning)}
-.btn-info{background:var(--info)}
-.btn-success{background:var(--success)}
-.btn-light{background:#e2e8f0;color:var(--text)}
+.btn-danger{background:var(--danger)} .btn-danger:hover{background:#b91c1c}
+.btn-warning{background:var(--warning)} .btn-warning:hover{background:#b45309}
+.btn-info{background:var(--info)} .btn-info:hover{background:#1d4ed8}
+.btn-success{background:var(--success)} .btn-success:hover{background:#15803d}
+.btn-light{background:#e2e8f0;color:var(--text)} .btn-light:hover{background:#cbd5e1}
 .btn-sm{padding:7px 10px;font-size:12px}
-.setup-link{border:0;background:none;color:var(--primary);font-weight:700;margin-top:15px}
-.login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:12px}
+
+/* ============ LAYOUT ============ */
 .app{min-height:100vh}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:16px 13px;overflow-y:auto;transition:.2s}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:16px 13px;overflow-y:auto;transition:transform .2s}
 .brand{display:flex;align-items:center;gap:10px;padding:7px 6px 20px}
 .brand-icon{width:42px;height:42px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .brand-name{font-size:13px;font-weight:800}
 .brand-role{display:block;margin-top:3px;color:#bbf7d0;font-size:11px}
 .nav{display:grid;gap:5px}
-.nav button{border:0;background:transparent;color:#dcfce7;width:100%;text-align:left;border-radius:9px;padding:11px 12px;display:flex;align-items:center;gap:8px}
+.nav button{border:0;background:transparent;color:#dcfce7;width:100%;text-align:left;border-radius:9px;padding:11px 12px;display:flex;align-items:center;gap:8px;transition:.15s}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.13);color:#fff}
-.main{margin-left:var(--sidebar);min-height:100vh}
+.main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
 .topbar{height:68px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
 .top-left{display:flex;align-items:center;gap:10px}
 .page-title{font-weight:800}
 .user-area{display:flex;align-items:center;gap:10px;font-size:13px}
-.page{padding:24px;max-width:1500px;margin:auto}
+.page{padding:24px;max-width:1500px;margin:auto;width:100%;flex:1}
 .mobile-menu{display:none}
+
+/* ============ CARDS ============ */
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
 .stat-card{position:relative;overflow:hidden}
 .stat-icon{font-size:25px}
 .stat-label{color:var(--muted);font-size:13px;margin-top:8px}
@@ -66,51 +80,95 @@ input:disabled{background:#f1f5f9;color:var(--muted)}
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 .search-box{max-width:260px}
-.table-container{background:#fff;border:1px solid var(--border);border-radius:15px;overflow:auto}
+
+/* ============ TABLES ============ */
+.table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
 table{width:100%;border-collapse:collapse;min-width:700px}
 th,td{padding:12px;border-bottom:1px solid var(--border);font-size:14px;text-align:left}
-th{background:#f8fafc;font-size:12px;color:#475569}
+th{background:#f8fafc;font-size:12px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#f8fafc}
 .empty{text-align:center;padding:35px;color:var(--muted)}
+
+/* ============ BADGES ============ */
 .badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800}
 .badge-green{background:#dcfce7;color:#166534}
 .badge-yellow{background:#fef3c7;color:#92400e}
 .badge-red{background:#fee2e2;color:#991b1b}
 .badge-blue{background:#dbeafe;color:#1e40af}
 .badge-gray{background:#e2e8f0;color:#334155}
-.modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:15px}
-.modal-box{width:100%;max-width:720px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}
+
+/* ============ MODAL ============ */
+.modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:15px;animation:fadeIn .15s}
+.modal-box{width:100%;max-width:720px;max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;animation:slideUp .2s}
 .modal-header{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}
 .modal-header h3{margin:0}
-.modal-close{width:34px;height:34px;border:0;border-radius:50%;background:#e2e8f0;font-size:20px}
+.modal-close{width:34px;height:34px;border:0;border-radius:50%;background:#e2e8f0;font-size:20px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#cbd5e1}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ============ MISC ============ */
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .notice{border-left:4px solid var(--primary);background:#f0fdf4;padding:14px;border-radius:8px;margin-bottom:10px}
 .notice-warn{border-left-color:var(--warning);background:#fffbeb}
-.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 16px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:320px}
+.toast{position:fixed;right:18px;bottom:18px;background:#172033;color:#fff;padding:12px 16px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:320px;animation:slideUp .2s}
 .toast.error{background:var(--danger)}
 .spinner{width:22px;height:22px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:30px;justify-content:center}
 .summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+
+/* ============ PDF UPLOAD ============ */
+.pdf-upload-box{border:2px dashed #cbd5e1;border-radius:14px;padding:18px;background:#f8fafc;transition:.2s}
+.pdf-upload-box:hover{border-color:var(--primary);background:#f0fdf4}
+.pdf-upload-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.pdf-file-info{margin-top:10px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:13px}
+.pdf-file-info strong{display:block;color:var(--text)}
+.pdf-progress{display:none;margin-top:12px}
+.pdf-progress.active{display:block}
+.pdf-progress-track{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.pdf-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#166534,#22c55e);border-radius:999px;transition:width .2s}
+.pdf-progress-text{font-size:12px;color:var(--muted);margin-top:6px}
+.pdf-current{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f0fdf4;color:#166534;font-size:13px}
+
+/* ============ PDF VIEWER ============ */
+.pdf-viewer{position:relative;background:#202124;border-radius:16px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,.18)}
+.pdf-toolbar{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#111827;color:#fff;flex-wrap:wrap}
+.pdf-toolbar-group{display:flex;align-items:center;gap:6px}
+.pdf-toolbar button{border:0;min-width:36px;height:36px;border-radius:8px;background:#374151;color:#fff;font-weight:700;transition:.15s}
+.pdf-toolbar button:hover{background:#4b5563}
+.pdf-page-indicator{min-width:90px;text-align:center;font-size:13px;font-weight:700}
+.pdf-frame-wrap{position:relative;background:#525659;min-height:600px}
+.pdf-frame{width:100%;height:78vh;min-height:500px;border:0;display:block;background:#525659}
+.pdf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,33,36,.92);color:#fff;z-index:2}
+.pdf-loading.hidden{display:none}
+.pdf-info-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:#111827;color:#cbd5e1;font-size:12px;flex-wrap:wrap}
+
+/* ============ RESPONSIVE ============ */
 @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.summary-strip{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:800px){
   .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
   .main{margin-left:0} .mobile-menu{display:inline-flex} .topbar{padding:0 15px} .user-name{display:none}
+  .modal-box{max-height:95vh;padding:18px}
 }
 @media(max-width:600px){
   .page{padding:15px} .grid{grid-template-columns:1fr} .row{grid-template-columns:1fr}
   .login-card{padding:24px} .summary-strip{grid-template-columns:1fr}
+  .pdf-upload-row{grid-template-columns:1fr}
+  .pdf-frame{height:65vh;min-height:400px}
 }
 </style>
 </head>
 <body>
 
+<!-- ============================= LOGIN ============================= -->
 <section id="loginScreen">
   <div class="login-card">
     <div class="login-logo">📖</div>
     <h1 class="login-title">TPQ Wardatul Wathon</h1>
     <div class="login-subtitle">Tukum Kidul • Lumajang</div>
-    <form id="loginForm" style="margin-top:25px">
+    <form id="loginForm" style="margin-top:25px" autocomplete="on">
       <div class="form-group">
         <label for="loginEmail">Email</label>
         <input id="loginEmail" type="email" autocomplete="username" placeholder="email@contoh.com" required>
@@ -128,6 +186,7 @@ tr:last-child td{border-bottom:0}
   </div>
 </section>
 
+<!-- ============================= APP ============================= -->
 <section id="app" class="app hidden">
   <aside id="sidebar" class="sidebar">
     <div class="brand">
@@ -142,7 +201,7 @@ tr:last-child td{border-bottom:0}
   <main class="main">
     <header class="topbar">
       <div class="top-left">
-        <button type="button" class="btn btn-light mobile-menu" id="mobileMenuButton">☰</button>
+        <button type="button" class="btn btn-light mobile-menu" id="mobileMenuButton" aria-label="Menu">☰</button>
         <span id="pageTitle" class="page-title">Dashboard</span>
       </div>
       <div class="user-area">
@@ -154,39 +213,40 @@ tr:last-child td{border-bottom:0}
   </main>
 </section>
 
-<div id="modal" class="modal hidden">
+<!-- ============================= MODAL & TOAST ============================= -->
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="modalTitle">Modal</h3>
-      <button type="button" class="modal-close" id="modalClose">×</button>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Tutup">×</button>
     </div>
     <div id="modalContent"></div>
   </div>
 </div>
 
-<div id="toast" class="toast hidden"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+<!-- ============================= SCRIPT ============================= -->
 <script type="module">
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+/* ============================================================
+   TPQ WARDATUL WATHON — Enterprise Application
+   Single-file production-ready build
+============================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc,
-  addDoc, collection, getDocs, serverTimestamp
+  getFirestore, doc, getDoc, getDocs, setDoc, addDoc,
+  updateDoc, deleteDoc, collection, query, where, orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-/* =========================================================
-   FIREBASE CONFIG & INIT
-   NOTE: a client-side apiKey is not a secret in Firebase's
-   model -- real security comes from the Firestore/Storage
-   security rules shipped alongside this file (see
-   firestore.rules and storage.rules). Deploy those before
-   putting this app in front of real users.
-========================================================= */
+/* ============================================================
+   1. CONFIG
+============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
   authDomain: "tpqwardah.firebaseapp.com",
@@ -196,29 +256,32 @@ const firebaseConfig = {
   measurementId: "G-ZVC3M0L8XJ"
 };
 
-const primaryApp = initializeApp(firebaseConfig);
-// Secondary app instance: lets an admin create Wali/Ustadzah/Admin
-// accounts without Firebase silently switching the active session
-// over to the newly created user (a well-known footgun of
-// createUserWithEmailAndPassword on the primary auth instance).
+const APP_CONFIG = {
+  maxPdfSize: 25 * 1024 * 1024,
+  driveUploadUrl: "https://script.google.com/macros/s/AKfycbyBsZtsyXWHT25pzjWjIpjLmM7-NTi65gKSxsXLPBrkfeL--wm7kH9E2WvXusgZwAhx/exec",
+  driveFolderId: "1SP6RQ9zTGXN8N9fNFV8E03Et_eJ9eSdm",
+  sessionTimeoutMs: 30 * 60 * 1000,
+  cacheTtlMs: 30_000
+};
+
+/* ============================================================
+   2. FIREBASE INIT
+============================================================ */
+const primaryApp   = initializeApp(firebaseConfig);
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-
-const auth = getAuth(primaryApp);
+const auth          = getAuth(primaryApp);
 const secondaryAuth = getAuth(secondaryApp);
-const db = getFirestore(primaryApp);
+const db            = getFirestore(primaryApp);
 
-/* =========================================================
-   GLOBAL STATE
-========================================================= */
-let currentUser = null;
+/* ============================================================
+   3. GLOBAL STATE
+============================================================ */
+let currentUser    = null;
 let currentProfile = null;
-let currentPage = "dashboard";
-let activeRecorder = null;
-let activeAudioChunks = [];
 
-/* =========================================================
-   DOM / FORMAT HELPERS
-========================================================= */
+/* ============================================================
+   4. UTILS
+============================================================ */
 const $ = id => document.getElementById(id);
 
 function escapeHTML(value){
@@ -226,12 +289,22 @@ function escapeHTML(value){
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
-// Safe to interpolate inside a single-quoted JS string literal
-// that itself sits inside a double-quoted HTML attribute.
 function escapeAttr(value){
   return String(value ?? "")
     .replace(/\\/g,"\\\\").replace(/'/g,"\\'")
     .replace(/"/g,"&quot;").replace(/[\r\n]/g," ");
+}
+function sanitizeUrl(value){
+  const url = String(value || "").trim();
+  if(!url) return "";
+  if(/^(javascript|data|vbscript|file):/i.test(url)) return "";
+  if(!/^(https?:|\.\/|\/|blob:|#)/i.test(url)) return "";
+  return url;
+}
+function assetUrl(value){
+  const clean = sanitizeUrl(value);
+  if(/firebasestorage\.googleapis\.com|firebasestorage\.app/i.test(clean)) return "";
+  return clean;
 }
 function formatRupiah(value){
   return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(value||0));
@@ -243,38 +316,46 @@ function formatTanggal(timestamp){
     return new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(date);
   }catch{ return "-"; }
 }
-function assetUrl(value){
-  const url = String(value || "").trim();
-  if(!url) return "";
-  if(/firebasestorage\.googleapis\.com|firebasestorage\.app/i.test(url)) return "";
-  return url;
+function formatFileSize(bytes){
+  if(bytes < 1024) return bytes + " B";
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + " KB";
+  if(bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1) + " MB";
+  return (bytes/1024/1024/1024).toFixed(1) + " GB";
 }
-
-function showToast(message, isError=false){
-  const toast = $("toast");
-  toast.textContent = message;
-  toast.classList.toggle("error", isError);
-  toast.classList.remove("hidden");
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(()=>toast.classList.add("hidden"), 3200);
+function debounce(fn, wait=200){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
 }
-function openModal(title, content){
-  $("modalTitle").textContent = title;
-  $("modalContent").innerHTML = content;
-  $("modal").classList.remove("hidden");
-}
-function closeModal(){ $("modal").classList.add("hidden"); }
-function pageLoading(){
-  $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat data...</div>`;
+function validatePdfFile(file){
+  if(!file) throw new Error("File PDF belum dipilih.");
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  if(!isPdf) throw new Error("File harus berformat PDF.");
+  if(file.size > APP_CONFIG.maxPdfSize){
+    throw new Error(`Ukuran PDF maksimal ${formatFileSize(APP_CONFIG.maxPdfSize)}.`);
+  }
+  return true;
 }
 function withButtonLoading(button, busyText, fn){
-  return async (...args)=>{
-    const original = button.textContent;
+  return async (...args) => {
+    if(!button) return fn(...args);
+    const originalText     = button.textContent;
+    const originalDisabled = button.disabled;
     button.disabled = true;
     button.textContent = busyText;
-    try{ await fn(...args); }
-    finally{ button.disabled = false; button.textContent = original; }
+    try{ return await fn(...args); }
+    finally{ button.disabled = originalDisabled; button.textContent = originalText; }
   };
+}
+function attachTableSearch(inputId, tableId){
+  const input = $(inputId);
+  const table = $(tableId);
+  if(!input || !table) return;
+  input.addEventListener("input", debounce(() => {
+    const term = input.value.trim().toLowerCase();
+    table.querySelectorAll("tbody tr[data-row]").forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+    });
+  }, 150));
 }
 function statCard(icon,label,value){
   return `
@@ -284,57 +365,218 @@ function statCard(icon,label,value){
       <div class="stat-value">${escapeHTML(value)}</div>
     </div>`;
 }
-function attachTableSearch(inputId, tableId){
-  const input = $(inputId);
-  const table = $(tableId);
-  if(!input || !table) return;
-  input.addEventListener("input", ()=>{
-    const term = input.value.trim().toLowerCase();
-    table.querySelectorAll("tbody tr[data-row]").forEach(row=>{
-      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
-    });
-  });
-}
 function firebaseError(error){
   const messages = {
-    "auth/invalid-credential": "Email atau password salah.",
-    "auth/invalid-email": "Format email tidak valid.",
-    "auth/email-already-in-use": "Email tersebut sudah digunakan.",
-    "auth/weak-password": "Password minimal 6 karakter.",
-    "auth/operation-not-allowed": "Login Email/Password belum diaktifkan di Firebase.",
+    "auth/invalid-credential":     "Email atau password salah.",
+    "auth/invalid-email":          "Format email tidak valid.",
+    "auth/email-already-in-use":   "Email tersebut sudah digunakan.",
+    "auth/weak-password":          "Password minimal 6 karakter.",
+    "auth/operation-not-allowed":  "Login Email/Password belum diaktifkan di Firebase.",
     "auth/network-request-failed": "Koneksi internet bermasalah.",
-    "auth/too-many-requests": "Terlalu banyak percobaan. Coba lagi nanti."
+    "auth/too-many-requests":      "Terlalu banyak percobaan. Coba lagi nanti.",
+    "auth/user-disabled":          "Akun ini dinonaktifkan.",
+    "auth/user-not-found":         "Akun tidak ditemukan.",
+    "permission-denied":           "Anda tidak memiliki izin untuk operasi ini.",
+    "unavailable":                 "Layanan sedang tidak tersedia. Coba lagi."
   };
-  return messages[error.code] || error.message || "Terjadi kesalahan.";
+  return messages[error?.code] || error?.message || "Terjadi kesalahan.";
 }
 
-/* =========================================================
-   GENERIC FIRESTORE HELPERS
-========================================================= */
-async function getCollectionData(collectionName){
-  const snapshot = await getDocs(collection(db, collectionName));
-  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+/* ============================================================
+   5. GLOBAL ERROR HANDLER
+============================================================ */
+window.addEventListener("error", e => {
+  console.error("[Global Error]", e.error || e.message);
+  if(e.error?.code) showToast(firebaseError(e.error), true);
+});
+window.addEventListener("unhandledrejection", e => {
+  console.error("[Unhandled Promise]", e.reason);
+  const msg = e.reason?.code ? firebaseError(e.reason) : (e.reason?.message || "Terjadi kesalahan tak terduga.");
+  showToast(msg, true);
+});
+
+/* ============================================================
+   6. TOAST / MODAL
+============================================================ */
+let toastTimeout = null;
+function showToast(message, isError=false){
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.remove("hidden");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=>toast.classList.add("hidden"), 3500);
 }
-async function addCollectionData(collectionName, data){
-  return await addDoc(collection(db, collectionName), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+function openModal(title, content){
+  $("modalTitle").textContent = title;
+  $("modalContent").innerHTML = content;
+  $("modal").classList.remove("hidden");
+  setTimeout(()=>{
+    const f = $("modalContent").querySelector("input, select, textarea, button");
+    f?.focus();
+  }, 50);
 }
-async function updateCollectionData(collectionName, id, data){
-  await updateDoc(doc(db, collectionName, id), { ...data, updatedAt: serverTimestamp() });
+function closeModal(){
+  $("modal").classList.add("hidden");
+  $("modalContent").innerHTML = "";
 }
-async function deleteCollectionData(collectionName, id){
-  await deleteDoc(doc(db, collectionName, id));
+$("modalClose").addEventListener("click", closeModal);
+$("modal").addEventListener("click", e => { if(e.target === $("modal")) closeModal(); });
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape" && !$("modal").classList.contains("hidden")) closeModal();
+});
+
+/* ============================================================
+   7. FIRESTORE SERVICES (dengan cache)
+============================================================ */
+const cache = new Map();
+
+async function getCollectionData(name, { forceRefresh=false } = {}){
+  const cached = cache.get(name);
+  if(!forceRefresh && cached && Date.now() - cached.time < APP_CONFIG.cacheTtlMs){
+    return cached.data;
+  }
+  const snap = await getDocs(collection(db, name));
+  const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  cache.set(name, { data, time: Date.now() });
+  return data;
+}
+function invalidateCache(name){ cache.delete(name); }
+async function getDocument(name, id){
+  const snap = await getDoc(doc(db, name, id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+async function addCollectionData(name, data){
+  const result = await addDoc(collection(db, name), {
+    ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  });
+  invalidateCache(name);
+  return result;
+}
+async function updateCollectionData(name, id, data){
+  await updateDoc(doc(db, name, id), { ...data, updatedAt: serverTimestamp() });
+  invalidateCache(name);
+}
+async function deleteCollectionData(name, id){
+  await deleteDoc(doc(db, name, id));
+  invalidateCache(name);
 }
 
-/* =========================================================
-   ACCOUNT PROVISIONING (Wali / Ustadzah / Admin)
-========================================================= */
+/* ============================================================
+   8. AUDIT LOG
+============================================================ */
+async function logAudit(action, entity, entityId, metadata={}){
+  try{
+    await addCollectionData("audit", {
+      action, entity, entityId, metadata,
+      userUid:  currentProfile?.uid  || null,
+      userNama: currentProfile?.nama || null,
+      userRole: currentProfile?.role || null,
+      timestamp: new Date().toISOString()
+    });
+  }catch(err){ console.warn("Audit log gagal:", err); }
+}
+
+/* ============================================================
+   9. ROLE LABEL & MENUS
+============================================================ */
+function roleLabel(role){
+  return { admin:"Admin", ustadzah:"Ustadzah", wali:"Wali Santri" }[role] || role;
+}
+
+const MENUS = {
+  admin: [
+    { page:"dashboard",   icon:"🏠", label:"Dashboard" },
+    { page:"santri",      icon:"👨‍🎓", label:"Data Santri" },
+    { page:"wali",        icon:"👨‍👩‍👧", label:"Data Wali" },
+    { page:"ustadzah",    icon:"👩‍🏫", label:"Data Ustadzah" },
+    { page:"jilid",       icon:"📚", label:"Jilid / Kelas" },
+    { page:"pengumuman",  icon:"📢", label:"Pengumuman" },
+    { page:"tagihan",     icon:"🧾", label:"Master Tagihan" },
+    { page:"keuangan",    icon:"💰", label:"Keuangan" },
+    { page:"settings",    icon:"⚙️", label:"Pengaturan" },
+    { page:"profil",      icon:"👤", label:"Profil" }
+  ],
+  ustadzah: [
+    { page:"dashboard",     icon:"🏠", label:"Dashboard" },
+    { page:"daftarSantri",  icon:"👨‍🎓", label:"Santri Kelas" },
+    { page:"pengumuman",    icon:"📢", label:"Pengumuman" },
+    { page:"profil",        icon:"👤", label:"Profil" }
+  ],
+  wali: [
+    { page:"dashboard",   icon:"🏠", label:"Dashboard" },
+    { page:"pengumuman",  icon:"📢", label:"Pengumuman" },
+    { page:"profil",      icon:"👤", label:"Profil" }
+  ]
+};
+
+const PAGE_TITLES = {
+  dashboard:"Dashboard", santri:"Data Santri", wali:"Data Wali", ustadzah:"Data Ustadzah",
+  jilid:"Jilid / Kelas", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
+  settings:"Pengaturan", profil:"Profil", daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
+};
+
+const HANDLERS = {
+  dashboard:     renderDashboard,
+  santri:        renderSantriAdmin,
+  wali:          renderWaliAdmin,
+  ustadzah:      renderUstadzahAdmin,
+  jilid:         renderJilidAdmin,
+  pengumuman:    renderPengumuman,
+  tagihan:       renderTagihanAdmin,
+  keuangan:      renderKeuanganAdmin,
+  settings:      renderSettingsAdmin,
+  profil:        renderProfil,
+  daftarSantri:  renderDaftarSantriUstadzah,
+  pembelajaran:  renderPembelajaranWaliOrUstadzah
+};
+
+function buildNavigation(){
+  const items = MENUS[currentProfile.role] || [];
+  $("navigation").innerHTML = items.map(item => `
+    <button type="button" data-page="${item.page}">${item.icon} ${escapeHTML(item.label)}</button>
+  `).join("");
+  $("navigation").querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", ()=>navigate(btn.dataset.page));
+  });
+}
+
+async function navigate(page){
+  $("pageTitle").textContent = PAGE_TITLES[page] || "Dashboard";
+  $("navigation").querySelectorAll("button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+  $("sidebar").classList.remove("open");
+
+  $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat data...</div>`;
+
+  const handler = HANDLERS[page];
+  if(!handler){
+    $("page").innerHTML = `<div class="card empty">Halaman "${escapeHTML(page)}" belum tersedia.</div>`;
+    return;
+  }
+  try{
+    await handler();
+  }catch(error){
+    console.error(error);
+    $("page").innerHTML = `<div class="card empty">Gagal memuat halaman: ${escapeHTML(error.message)}</div>`;
+  }
+}
+
+/* ============================================================
+   10. ACCOUNT PROVISIONING
+============================================================ */
 async function createManagedAccount({ email, password, role, profile }){
   const credential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
   const uid = credential.user.uid;
-  const base = { uid, email, role, aktif: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...profile };
+  const base = {
+    uid, email, role, aktif: true,
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    ...profile
+  };
   await setDoc(doc(db, "users", uid), base);
-  await setDoc(doc(db, role, uid), base); // role-specific collection, same doc id = uid
-  await signOut(secondaryAuth); // never leave the secondary session signed in
+  await setDoc(doc(db, role, uid), base);
+  await signOut(secondaryAuth);
   return uid;
 }
 async function updateManagedAccount(uid, role, data){
@@ -342,10 +584,6 @@ async function updateManagedAccount(uid, role, data){
   await updateCollectionData(role, uid, data);
 }
 async function deleteManagedAccountRecord(uid, role){
-  // Client SDKs cannot delete Firebase Auth accounts belonging to
-  // other users -- that requires the Admin SDK / a Cloud Function.
-  // We remove the Firestore profile (revoking app access) and make
-  // that limitation explicit to the admin in the UI.
   await deleteCollectionData("users", uid).catch(()=>{});
   await deleteCollectionData(role, uid).catch(()=>{});
 }
@@ -358,9 +596,9 @@ function requireRole(role){
   return true;
 }
 
-/* =========================================================
-   AUTH: SETUP FIRST ADMIN
-========================================================= */
+/* ============================================================
+   11. AUTH: SETUP ADMIN PERTAMA
+============================================================ */
 $("setupAdminButton").addEventListener("click", openAdminSetup);
 
 function openAdminSetup(){
@@ -369,21 +607,24 @@ function openAdminSetup(){
       <div class="form-group"><label>Nama Admin</label><input id="adminName" value="Administrator" required></div>
       <div class="form-group"><label>Email Admin</label><input id="adminEmail" type="email" placeholder="admin@tpqwardah.com" required></div>
       <div class="form-group"><label>Password</label><input id="adminPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required></div>
-      <div class="notice notice-warn">Gunakan tombol ini hanya sekali untuk membuat akun admin pertama. Setelah itu, buat akun tambahan lewat menu "Data Wali" / "Data Ustadzah" di dalam aplikasi.</div>
+      <div class="notice notice-warn">Gunakan tombol ini hanya sekali untuk membuat akun admin pertama. Setelah itu, buat akun tambahan lewat menu "Data Wali" / "Data Ustadzah".</div>
       <button type="submit" class="btn btn-full" id="adminSetupBtn">Buat Akun Admin</button>
     </form>
   `);
-  $("adminSetupForm").addEventListener("submit", async event=>{
+  $("adminSetupForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("adminSetupBtn");
     const nama = $("adminName").value.trim();
     const email = $("adminEmail").value.trim();
     const password = $("adminPassword").value;
-    await withButtonLoading(btn, "Membuat akun...", async ()=>{
+    await withButtonLoading(btn, "Membuat akun...", async () => {
       try{
         const credential = await createUserWithEmailAndPassword(auth, email, password);
         const uid = credential.user.uid;
-        const profile = { uid, nama, email, role: "admin", aktif: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+        const profile = {
+          uid, nama, email, role:"admin", aktif:true,
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        };
         await setDoc(doc(db, "users", uid), profile);
         await setDoc(doc(db, "admin", uid), profile);
         closeModal();
@@ -395,10 +636,10 @@ function openAdminSetup(){
   });
 }
 
-/* =========================================================
-   AUTH: LOGIN / LOGOUT
-========================================================= */
-$("loginForm").addEventListener("submit", async event=>{
+/* ============================================================
+   12. AUTH: LOGIN / LOGOUT
+============================================================ */
+$("loginForm").addEventListener("submit", async event => {
   event.preventDefault();
   $("loginError").textContent = "";
   const btn = $("loginSubmitBtn");
@@ -414,13 +655,16 @@ $("loginForm").addEventListener("submit", async event=>{
   }
 });
 
-$("logoutButton").addEventListener("click", async ()=>{ await signOut(auth); });
+$("logoutButton").addEventListener("click", async () => {
+  if(!confirm("Yakin ingin keluar dari aplikasi?")) return;
+  logAudit("LOGOUT", "users", currentUser?.uid || "");
+  await signOut(auth);
+});
+$("mobileMenuButton").addEventListener("click", () => {
+  $("sidebar").classList.toggle("open");
+});
 
-$("mobileMenuButton").addEventListener("click", ()=>{ $("sidebar").classList.toggle("open"); });
-$("modalClose").addEventListener("click", closeModal);
-$("modal").addEventListener("click", event=>{ if(event.target === $("modal")) closeModal(); });
-
-onAuthStateChanged(auth, async user=>{
+onAuthStateChanged(auth, async user => {
   if(!user){
     currentUser = null; currentProfile = null;
     $("loginScreen").classList.remove("hidden");
@@ -428,13 +672,12 @@ onAuthStateChanged(auth, async user=>{
     return;
   }
   try{
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if(!snap.exists()){
+    const profile = await getDocument("users", user.uid);
+    if(!profile){
       alert("Akun berhasil login tetapi profil aplikasi belum dibuat. Hubungi admin.");
       await signOut(auth);
       return;
     }
-    const profile = snap.data();
     if(!["admin","ustadzah","wali"].includes(profile.role)){
       alert("Role akun tidak valid.");
       await signOut(auth);
@@ -453,6 +696,8 @@ onAuthStateChanged(auth, async user=>{
     $("brandRole").textContent = "Portal " + roleLabel(profile.role);
     buildNavigation();
     navigate("dashboard");
+    resetIdleTimer();
+    logAudit("LOGIN", "users", user.uid, { email: user.email });
   }catch(error){
     console.error(error);
     alert("Gagal membaca profil pengguna: " + error.message);
@@ -460,100 +705,37 @@ onAuthStateChanged(auth, async user=>{
   }
 });
 
-function roleLabel(role){
-  return { admin:"Admin", ustadzah:"Ustadzah", wali:"Wali Santri" }[role] || role;
+/* ============================================================
+   13. SESSION IDLE TIMEOUT
+============================================================ */
+let idleTimer = null;
+function resetIdleTimer(){
+  clearTimeout(idleTimer);
+  if(!currentUser) return;
+  idleTimer = setTimeout(async () => {
+    showToast("Sesi berakhir karena tidak aktif. Silakan login kembali.", true);
+    await signOut(auth);
+  }, APP_CONFIG.sessionTimeoutMs);
 }
+["click","keydown","mousemove","touchstart"].forEach(evt =>
+  document.addEventListener(evt, resetIdleTimer, { passive:true })
+);
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
-const MENUS = {
-  admin: [
-    { page:"dashboard", icon:"🏠", label:"Dashboard" },
-    { page:"santri", icon:"👨‍🎓", label:"Data Santri" },
-    { page:"wali", icon:"👨‍👩‍👧", label:"Data Wali" },
-    { page:"ustadzah", icon:"👩‍🏫", label:"Data Ustadzah" },
-    { page:"jilid", icon:"📚", label:"Jilid / Kelas" },
-    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
-    { page:"tagihan", icon:"🧾", label:"Master Tagihan" },
-    { page:"keuangan", icon:"💰", label:"Keuangan" },
-    { page:"settings", icon:"⚙️", label:"Pengaturan" },
-    { page:"profil", icon:"👤", label:"Profil" }
-  ],
-  ustadzah: [
-    { page:"dashboard", icon:"🏠", label:"Dashboard" },
-    { page:"daftarSantri", icon:"👨‍🎓", label:"Santri Kelas" },
-    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
-    { page:"profil", icon:"👤", label:"Profil" }
-  ],
-  wali: [
-    { page:"dashboard", icon:"🏠", label:"Dashboard" },
-    { page:"pengumuman", icon:"📢", label:"Pengumuman" },
-    { page:"profil", icon:"👤", label:"Profil" }
-  ]
-};
-
-const PAGE_TITLES = {
-  dashboard:"Dashboard", santri:"Data Santri", wali:"Data Wali", ustadzah:"Data Ustadzah",
-  jilid:"Jilid / Kelas", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
-  settings:"Pengaturan", profil:"Profil", daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
-};
-
-const HANDLERS = {
-  dashboard: renderDashboard,
-  santri: renderSantriAdmin,
-  wali: renderWaliAdmin,
-  ustadzah: renderUstadzahAdmin,
-  jilid: renderJilidAdmin,
-  pengumuman: renderPengumuman,
-  tagihan: renderTagihanAdmin,
-  keuangan: renderKeuanganAdmin,
-  settings: renderSettingsAdmin,
-  profil: renderProfil,
-  daftarSantri: renderDaftarSantriUstadzah,
-  pembelajaran: renderPembelajaranWaliOrUstadzah
-};
-
-function buildNavigation(){
-  const items = MENUS[currentProfile.role] || [];
-  $("navigation").innerHTML = items.map(item=>`
-    <button type="button" data-page="${item.page}">${item.icon} ${escapeHTML(item.label)}</button>
-  `).join("");
-  $("navigation").querySelectorAll("button").forEach(button=>{
-    button.addEventListener("click", ()=>navigate(button.dataset.page));
-  });
-}
-
-async function navigate(page){
-  currentPage = page;
-  $("pageTitle").textContent = PAGE_TITLES[page] || "Dashboard";
-  $("navigation").querySelectorAll("button").forEach(button=>{
-    button.classList.toggle("active", button.dataset.page === page);
-  });
-  $("sidebar").classList.remove("open");
-  const handler = HANDLERS[page] || renderDashboard;
-  pageLoading();
-  try{
-    await handler();
-  }catch(error){
-    console.error(error);
-    $("page").innerHTML = `<div class="card empty">Gagal memuat halaman: ${escapeHTML(error.message)}</div>`;
-  }
-}
-window.navigate = navigate;
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
+/* ============================================================
+   14. DASHBOARD
+============================================================ */
 async function renderDashboard(){
-  if(currentProfile.role === "admin") return renderDashboardAdmin();
+  if(currentProfile.role === "admin")    return renderDashboardAdmin();
   if(currentProfile.role === "ustadzah") return renderDashboardUstadzah();
   return renderDashboardWali();
 }
 
 async function renderDashboardAdmin(){
   const [santri, wali, ustadzah, jilid] = await Promise.all([
-    getCollectionData("santri"), getCollectionData("wali"), getCollectionData("ustadzah"), getCollectionData("jilid")
+    getCollectionData("santri"),
+    getCollectionData("wali"),
+    getCollectionData("ustadzah"),
+    getCollectionData("jilid")
   ]);
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Admin</h2>
@@ -592,6 +774,7 @@ async function renderDashboardWali(){
   const pengumuman = await getCollectionData("pengumuman");
   const pengumumanAktif = pengumuman.filter(x=>x.aktif!==false)
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+
   let pendamping = null;
   if(santri[0]) pendamping = await getUstadzahPendamping(santri[0]);
 
@@ -636,9 +819,9 @@ async function renderDashboardWali(){
   });
 }
 
-/* =========================================================
-   ADMIN: DATA SANTRI
-========================================================= */
+/* ============================================================
+   15. ADMIN: DATA SANTRI
+============================================================ */
 async function renderSantriAdmin(){
   if(!requireRole("admin")) return;
   const data = await getCollectionData("santri");
@@ -676,20 +859,27 @@ async function renderSantriAdmin(){
     </div>`;
 
   attachTableSearch("searchSantri","tableSantri");
+
   $("addSantri").addEventListener("click", ()=>openSantriForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("santri")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", async () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openSantriForm(item);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
     if(!confirm("Hapus data santri ini?")) return;
-    try{ await deleteCollectionData("santri", btn.dataset.remove); showToast("Data santri dihapus."); renderSantriAdmin(); }
-    catch(error){ showToast(error.message, true); }
+    try{
+      await deleteCollectionData("santri", btn.dataset.remove);
+      logAudit("DELETE","santri",btn.dataset.remove);
+      showToast("Data santri dihapus.");
+      renderSantriAdmin();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
 async function openSantriForm(item=null){
-  const [wali, jilid] = await Promise.all([getCollectionData("wali"), getCollectionData("jilid")]);
+  const [wali, jilid] = await Promise.all([
+    getCollectionData("wali"), getCollectionData("jilid")
+  ]);
   openModal(item ? "Edit Santri" : "Tambah Santri", `
     <form id="santriForm">
       <div class="form-group"><label>Nama Santri</label><input id="santriNama" value="${escapeHTML(item?.nama || "")}" required></div>
@@ -728,13 +918,13 @@ async function openSantriForm(item=null){
       <button class="btn btn-full" type="submit" id="santriSaveBtn">Simpan</button>
     </form>`);
 
-  $("santriForm").addEventListener("submit", async event=>{
+  $("santriForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("santriSaveBtn");
     const jilidSelect = $("santriJilid");
     const waliSelect = $("santriWali");
     const jilidOption = jilidSelect.options[jilidSelect.selectedIndex];
-    const waliOption = waliSelect.options[waliSelect.selectedIndex];
+    const waliOption  = waliSelect.options[waliSelect.selectedIndex];
     const payload = {
       nama: $("santriNama").value.trim(),
       jenisKelamin: $("santriGender").value,
@@ -744,10 +934,15 @@ async function openSantriForm(item=null){
       waliNama: waliSelect.value ? waliOption.textContent.trim() : null,
       aktif: $("santriAktif").value === "true"
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(item) await updateCollectionData("santri", item.id, payload);
-        else await addCollectionData("santri", payload);
+        if(item){
+          await updateCollectionData("santri", item.id, payload);
+          logAudit("UPDATE","santri",item.id,{ nama: payload.nama });
+        }else{
+          const created = await addCollectionData("santri", payload);
+          logAudit("CREATE","santri",created.id,{ nama: payload.nama });
+        }
         closeModal();
         showToast("Data santri berhasil disimpan.");
         renderSantriAdmin();
@@ -756,9 +951,9 @@ async function openSantriForm(item=null){
   });
 }
 
-/* =========================================================
-   ADMIN: DATA WALI (account management)
-========================================================= */
+/* ============================================================
+   16. ADMIN: DATA WALI
+============================================================ */
 async function renderWaliAdmin(){
   if(!requireRole("admin")) return;
   const data = await getCollectionData("wali");
@@ -790,14 +985,18 @@ async function renderWaliAdmin(){
 
   attachTableSearch("searchWali","tableWali");
   $("addWali").addEventListener("click", ()=>openWaliForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("wali")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openWaliForm(item);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    if(!confirm("Hapus profil wali ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console / Admin SDK.")) return;
-    try{ await deleteManagedAccountRecord(btn.dataset.remove, "wali"); showToast("Profil wali dihapus."); renderWaliAdmin(); }
-    catch(error){ showToast(error.message, true); }
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
+    if(!confirm("Hapus profil wali ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console.")) return;
+    try{
+      await deleteManagedAccountRecord(btn.dataset.remove, "wali");
+      logAudit("DELETE","wali",btn.dataset.remove);
+      showToast("Profil wali dihapus.");
+      renderWaliAdmin();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
@@ -819,7 +1018,7 @@ function openWaliForm(item=null){
       <button class="btn btn-full" type="submit" id="waliSaveBtn">Simpan</button>
     </form>`);
 
-  $("waliForm").addEventListener("submit", async event=>{
+  $("waliForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("waliSaveBtn");
     const profile = {
@@ -828,14 +1027,16 @@ function openWaliForm(item=null){
       alamat: $("waliAlamat").value.trim(),
       aktif: $("waliAktif").value === "true"
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
         if(item){
           await updateManagedAccount(item.id, "wali", profile);
+          logAudit("UPDATE","wali",item.id);
         }else{
           const email = $("waliEmail").value.trim();
           const password = $("waliPassword").value;
-          await createManagedAccount({ email, password, role:"wali", profile });
+          const uid = await createManagedAccount({ email, password, role:"wali", profile });
+          logAudit("CREATE","wali",uid,{ email });
         }
         closeModal();
         showToast("Data wali berhasil disimpan.");
@@ -845,12 +1046,14 @@ function openWaliForm(item=null){
   });
 }
 
-/* =========================================================
-   ADMIN: DATA USTADZAH (account management)
-========================================================= */
+/* ============================================================
+   17. ADMIN: DATA USTADZAH
+============================================================ */
 async function renderUstadzahAdmin(){
   if(!requireRole("admin")) return;
-  const [data, jilid] = await Promise.all([getCollectionData("ustadzah"), getCollectionData("jilid")]);
+  const [data, jilid] = await Promise.all([
+    getCollectionData("ustadzah"), getCollectionData("jilid")
+  ]);
   $("page").innerHTML = `
     <div class="toolbar">
       <div><h2 class="section-title">Data Ustadzah</h2><p class="muted">Kelola akun login ustadzah dan penugasan kelas.</p></div>
@@ -879,14 +1082,18 @@ async function renderUstadzahAdmin(){
 
   attachTableSearch("searchUstadzah","tableUstadzah");
   $("addUstadzah").addEventListener("click", ()=>openUstadzahForm(null, jilid));
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("ustadzah")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openUstadzahForm(item, jilid);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    if(!confirm("Hapus profil ustadzah ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console / Admin SDK.")) return;
-    try{ await deleteManagedAccountRecord(btn.dataset.remove, "ustadzah"); showToast("Profil ustadzah dihapus."); renderUstadzahAdmin(); }
-    catch(error){ showToast(error.message, true); }
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
+    if(!confirm("Hapus profil ustadzah ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console.")) return;
+    try{
+      await deleteManagedAccountRecord(btn.dataset.remove, "ustadzah");
+      logAudit("DELETE","ustadzah",btn.dataset.remove);
+      showToast("Profil ustadzah dihapus.");
+      renderUstadzahAdmin();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
@@ -914,7 +1121,7 @@ function openUstadzahForm(item, jilidList){
       <button class="btn btn-full" type="submit" id="ustadzahSaveBtn">Simpan</button>
     </form>`);
 
-  $("ustadzahForm").addEventListener("submit", async event=>{
+  $("ustadzahForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("ustadzahSaveBtn");
     const jilidSelect = $("ustadzahJilid");
@@ -926,14 +1133,16 @@ function openUstadzahForm(item, jilidList){
       jilidNama: jilidSelect.value ? jilidOption.textContent.trim() : null,
       aktif: $("ustadzahAktif").value === "true"
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
         if(item){
           await updateManagedAccount(item.id, "ustadzah", profile);
+          logAudit("UPDATE","ustadzah",item.id);
         }else{
           const email = $("ustadzahEmail").value.trim();
           const password = $("ustadzahPassword").value;
-          await createManagedAccount({ email, password, role:"ustadzah", profile });
+          const uid = await createManagedAccount({ email, password, role:"ustadzah", profile });
+          logAudit("CREATE","ustadzah",uid,{ email });
         }
         closeModal();
         showToast("Data ustadzah berhasil disimpan.");
@@ -943,9 +1152,170 @@ function openUstadzahForm(item, jilidList){
   });
 }
 
-/* =========================================================
-   ADMIN: JILID / KELAS + PDF
-========================================================= */
+/* ============================================================
+   18. PDF UPLOAD
+============================================================ */
+function pdfUploadComponent({ type, currentUrl="", label="PDF" }){
+  const current = assetUrl(currentUrl);
+  return `
+    <div class="pdf-upload-box">
+      <div class="form-group">
+        <label>${escapeHTML(label)}</label>
+        <div class="pdf-upload-row">
+          <div>
+            <input id="pdfFile_${type}" type="file" accept="application/pdf,.pdf">
+          </div>
+          <button type="button" class="btn btn-info" id="uploadPdfBtn_${type}">☁️ Upload PDF</button>
+        </div>
+        <div class="pdf-file-info" id="pdfFileInfo_${type}">Belum memilih file.</div>
+        <div class="pdf-progress" id="pdfUploadProgress_${type}">
+          <div class="pdf-progress-track">
+            <div class="pdf-progress-bar" id="pdfUploadProgressBar_${type}"></div>
+          </div>
+          <div class="pdf-progress-text" id="pdfUploadProgressText_${type}">Menunggu upload...</div>
+        </div>
+        ${current ? `
+          <div class="pdf-current">
+            ✅ PDF saat ini tersedia.
+            <br>
+            <button type="button" class="btn btn-sm" style="margin-top:7px" data-preview-current-pdf="${escapeAttr(current)}">👁 Preview PDF</button>
+          </div>
+        ` : `
+          <div class="muted" style="font-size:12px;margin-top:8px">Belum ada PDF yang diupload.</div>
+        `}
+        <input type="hidden" id="pdfUrl_${type}" value="${escapeHTML(current)}">
+      </div>
+    </div>`;
+}
+
+async function uploadPdfToGoogleDrive(file, jenis, jilidId){
+  validatePdfFile(file);
+
+  if(!APP_CONFIG.driveUploadUrl || APP_CONFIG.driveUploadUrl.includes("GANTI_DENGAN")){
+    throw new Error("URL Google Apps Script belum diatur.");
+  }
+
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = () => reject(new Error("Gagal membaca file PDF."));
+    reader.readAsDataURL(file);
+  });
+
+  const payload = {
+    action: "uploadPdf",
+    folderId: APP_CONFIG.driveFolderId,
+    fileName: file.name,
+    mimeType: "application/pdf",
+    base64,
+    jenis,
+    jilidId: jilidId || "",
+    uploadedBy: currentProfile?.uid || "",
+    uploadedByName: currentProfile?.nama || ""
+  };
+
+  return await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", APP_CONFIG.driveUploadUrl, true);
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+    xhr.timeout = 120000;
+
+    xhr.upload.addEventListener("progress", event => {
+      if(!event.lengthComputable) return;
+      const percent = Math.round((event.loaded / event.total) * 100);
+      const bar = $(`pdfUploadProgressBar_${jenis}`);
+      const text = $(`pdfUploadProgressText_${jenis}`);
+      if(bar) bar.style.width = percent + "%";
+      if(text) text.textContent = `Mengupload PDF... ${percent}%`;
+    });
+
+    xhr.onload = () => {
+      if(xhr.status < 200 || xhr.status >= 300){
+        reject(new Error(`Upload gagal. HTTP ${xhr.status}`));
+        return;
+      }
+      try{
+        const response = JSON.parse(xhr.responseText);
+        if(!response.success){
+          reject(new Error(response.message || "Google Drive menolak upload."));
+          return;
+        }
+        resolve(response);
+      }catch{
+        reject(new Error("Respons Google Drive tidak valid."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Tidak dapat terhubung ke server Google Drive."));
+    xhr.ontimeout = () => reject(new Error("Upload timeout. Periksa koneksi Anda."));
+    xhr.send(JSON.stringify(payload));
+  });
+}
+
+function attachPdfUploader(type, jilidId){
+  const fileInput    = $(`pdfFile_${type}`);
+  const uploadButton = $(`uploadPdfBtn_${type}`);
+  const info         = $(`pdfFileInfo_${type}`);
+  const progress     = $(`pdfUploadProgress_${type}`);
+  const bar          = $(`pdfUploadProgressBar_${type}`);
+  const progressText = $(`pdfUploadProgressText_${type}`);
+  const urlInput     = $(`pdfUrl_${type}`);
+
+  if(!fileInput || !uploadButton) return;
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if(!file){ info.textContent = "Belum memilih file."; return; }
+    try{
+      validatePdfFile(file);
+      info.innerHTML = `<strong>📄 ${escapeHTML(file.name)}</strong>${formatFileSize(file.size)}`;
+    }catch(error){
+      fileInput.value = "";
+      info.textContent = error.message;
+      showToast(error.message, true);
+    }
+  });
+
+  uploadButton.addEventListener("click", async () => {
+    const file = fileInput.files?.[0];
+    if(!file){ showToast("Pilih file PDF terlebih dahulu.", true); return; }
+
+    try{
+      validatePdfFile(file);
+      uploadButton.disabled = true;
+      uploadButton.textContent = "⏳ Mengupload...";
+      progress.classList.add("active");
+      bar.style.width = "0%";
+      progressText.textContent = "Menyiapkan upload...";
+
+      const result = await uploadPdfToGoogleDrive(file, type, jilidId);
+      if(!result.url) throw new Error("Upload berhasil tetapi URL PDF tidak diterima.");
+
+      urlInput.value = result.url;
+      progressText.textContent = "Upload selesai 100%.";
+      bar.style.width = "100%";
+      info.innerHTML = `<strong>✅ ${escapeHTML(file.name)}</strong>PDF berhasil diupload ke Google Drive.`;
+      showToast("PDF berhasil diupload ke Google Drive.");
+    }catch(error){
+      console.error(error);
+      progressText.textContent = error.message;
+      showToast(error.message, true);
+    }finally{
+      uploadButton.disabled = false;
+      uploadButton.textContent = "☁️ Upload PDF";
+    }
+  });
+
+  document.querySelectorAll("[data-preview-current-pdf]").forEach(button => {
+    button.addEventListener("click", () => {
+      const url = button.dataset.previewCurrentPdf;
+      openProfessionalPdfViewer(url, 1, type === "baca" ? "Buku Baca" : "Buku Hafalan");
+    });
+  });
+}
+
+/* ============================================================
+   19. ADMIN: JILID / KELAS
+============================================================ */
 async function renderJilidAdmin(){
   if(!requireRole("admin")) return;
   const data = await getCollectionData("jilid");
@@ -977,31 +1347,54 @@ async function renderJilidAdmin(){
     </div>`;
 
   $("addJilid").addEventListener("click", ()=>openJilidForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("jilid")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openJilidForm(item);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
     if(!confirm("Hapus kelas/jilid ini?")) return;
-    try{ await deleteCollectionData("jilid", btn.dataset.remove); showToast("Jilid / kelas dihapus."); renderJilidAdmin(); }
-    catch(error){ showToast(error.message, true); }
+    try{
+      await deleteCollectionData("jilid", btn.dataset.remove);
+      logAudit("DELETE","jilid",btn.dataset.remove);
+      showToast("Jilid / kelas dihapus.");
+      renderJilidAdmin();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
 function openJilidForm(item=null){
   openModal(item ? "Edit Jilid / Kelas" : "Tambah Jilid / Kelas", `
     <form id="jilidForm">
-      <div class="form-group"><label>Nama Jilid / Kelas</label><input id="jilidNama" value="${escapeHTML(item?.nama || "")}" placeholder="Contoh: Jilid 1" required></div>
-      <div class="form-group"><label>Keterangan</label><textarea id="jilidKeterangan" rows="3">${escapeHTML(item?.keterangan || "")}</textarea></div>
       <div class="form-group">
-        <label>URL PDF Buku Baca</label>
-        <input id="jilidPdfBacaUrl" type="url" value="${escapeHTML(assetUrl(item?.pdfBacaUrl))}" placeholder="./assets/buku/jilid-1-baca.pdf">
+        <label>Nama Jilid / Kelas</label>
+        <input id="jilidNama" value="${escapeHTML(item?.nama || "")}" placeholder="Contoh: Jilid 1" required>
       </div>
       <div class="form-group">
-        <label>URL PDF Buku Hafalan</label>
-        <input id="jilidPdfHafalanUrl" type="url" value="${escapeHTML(assetUrl(item?.pdfHafalanUrl))}" placeholder="./assets/buku/jilid-1-hafalan.pdf">
+        <label>Keterangan</label>
+        <textarea id="jilidKeterangan" rows="3">${escapeHTML(item?.keterangan || "")}</textarea>
       </div>
-      <div class="notice">PDF tidak diupload ke Firebase Storage. Simpan file PDF di folder <b>assets/buku</b> pada repository GitHub, lalu masukkan URL/path file di atas.</div>
+
+      ${pdfUploadComponent({
+        type:"baca",
+        currentUrl:item?.pdfBacaUrl || "",
+        label:"📖 Buku Baca PDF"
+      })}
+
+      <div style="height:12px"></div>
+
+      ${pdfUploadComponent({
+        type:"hafalan",
+        currentUrl:item?.pdfHafalanUrl || "",
+        label:"🧠 Buku Hafalan PDF"
+      })}
+
+      <div class="notice" style="margin-top:15px">
+        <b>Google Drive</b><br>
+        File PDF akan dikirim ke folder Google Drive TPQ Wardatul Wathon.
+        <br><br>
+        <span class="muted">Maksimal ukuran file: ${formatFileSize(APP_CONFIG.maxPdfSize)}</span>
+      </div>
+
       <div class="form-group">
         <label>Status</label>
         <select id="jilidAktif">
@@ -1009,37 +1402,49 @@ function openJilidForm(item=null){
           <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
         </select>
       </div>
-      <button type="submit" class="btn btn-full" id="jilidSaveBtn">Simpan</button>
-    </form>`);
 
-  $("jilidForm").addEventListener("submit", async event=>{
+      <button type="submit" class="btn btn-full" id="jilidSaveBtn">💾 Simpan Jilid / Kelas</button>
+    </form>
+  `);
+
+  attachPdfUploader("baca", item?.id || "");
+  attachPdfUploader("hafalan", item?.id || "");
+
+  $("jilidForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("jilidSaveBtn");
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
         const nama = $("jilidNama").value.trim();
         const keterangan = $("jilidKeterangan").value.trim();
-        const pdfBacaUrl = $("jilidPdfBacaUrl").value.trim();
-        const pdfHafalanUrl = $("jilidPdfHafalanUrl").value.trim();
+        const pdfBacaUrl = $("pdfUrl_baca").value.trim();
+        const pdfHafalanUrl = $("pdfUrl_hafalan").value.trim();
         const aktif = $("jilidAktif").value === "true";
-        let targetId = item?.id;
-        if(!targetId){
-          const created = await addCollectionData("jilid", { nama, keterangan, aktif, pdfBacaUrl:pdfBacaUrl || null, pdfHafalanUrl:pdfHafalanUrl || null });
-          targetId = created.id;
+        const payload = { nama, keterangan, aktif,
+          pdfBacaUrl: pdfBacaUrl || null,
+          pdfHafalanUrl: pdfHafalanUrl || null
+        };
+        if(item){
+          await updateCollectionData("jilid", item.id, payload);
+          logAudit("UPDATE","jilid",item.id,{ nama });
         }else{
-          await updateCollectionData("jilid", targetId, { nama, keterangan, aktif, pdfBacaUrl:pdfBacaUrl || null, pdfHafalanUrl:pdfHafalanUrl || null });
+          const created = await addCollectionData("jilid", payload);
+          logAudit("CREATE","jilid",created.id,{ nama });
         }
         closeModal();
         showToast("Jilid / kelas berhasil disimpan.");
         renderJilidAdmin();
-      }catch(error){ alert("Gagal menyimpan: " + error.message); }
+      }catch(error){
+        console.error(error);
+        alert("Gagal menyimpan: " + error.message);
+      }
     })();
   });
 }
 
-/* =========================================================
-   ADMIN + SHARED: PENGUMUMAN
-========================================================= */
+/* ============================================================
+   20. PENGUMUMAN
+============================================================ */
 async function renderPengumuman(){
   const isAdmin = currentProfile.role === "admin";
   const data = (await getCollectionData("pengumuman"))
@@ -1070,15 +1475,20 @@ async function renderPengumuman(){
     </div>`;
 
   if(!isAdmin) return;
+
   $("btnTambahPengumuman").addEventListener("click", ()=>openPengumumanForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("pengumuman")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openPengumumanForm(item);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
     if(!confirm("Hapus pengumuman ini?")) return;
-    try{ await deleteCollectionData("pengumuman", btn.dataset.remove); showToast("Pengumuman dihapus."); renderPengumuman(); }
-    catch(error){ showToast(error.message, true); }
+    try{
+      await deleteCollectionData("pengumuman", btn.dataset.remove);
+      logAudit("DELETE","pengumuman",btn.dataset.remove);
+      showToast("Pengumuman dihapus.");
+      renderPengumuman();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
@@ -1097,7 +1507,7 @@ function openPengumumanForm(item=null){
       <button class="btn btn-full" type="submit" id="pengumumanSaveBtn">Simpan Pengumuman</button>
     </form>`);
 
-  $("pengumumanForm").addEventListener("submit", async e=>{
+  $("pengumumanForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("pengumumanSaveBtn");
     const payload = {
@@ -1105,19 +1515,26 @@ function openPengumumanForm(item=null){
       isi: $("pengumumanIsi").value.trim(),
       aktif: $("pengumumanAktif").value === "true"
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(item) await updateCollectionData("pengumuman", item.id, payload);
-        else await addCollectionData("pengumuman", payload);
-        closeModal(); showToast("Pengumuman berhasil disimpan."); renderPengumuman();
+        if(item){
+          await updateCollectionData("pengumuman", item.id, payload);
+          logAudit("UPDATE","pengumuman",item.id);
+        }else{
+          const created = await addCollectionData("pengumuman", payload);
+          logAudit("CREATE","pengumuman",created.id,{ judul: payload.judul });
+        }
+        closeModal();
+        showToast("Pengumuman berhasil disimpan.");
+        renderPengumuman();
       }catch(error){ alert("Gagal menyimpan: " + error.message); }
     })();
   });
 }
 
-/* =========================================================
-   ADMIN: MASTER TAGIHAN
-========================================================= */
+/* ============================================================
+   21. ADMIN: MASTER TAGIHAN
+============================================================ */
 async function renderTagihanAdmin(){
   if(!requireRole("admin")) return;
   const data = await getCollectionData("tagihan");
@@ -1145,14 +1562,18 @@ async function renderTagihanAdmin(){
     </div>`;
 
   $("btnTambahTagihan").addEventListener("click", ()=>openTagihanForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", async ()=>{
-    const item = (await getCollectionData("tagihan")).find(x=>x.id===btn.dataset.edit);
+  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+    const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openTagihanForm(item);
   }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn=>btn.addEventListener("click", async ()=>{
+  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
     if(!confirm("Hapus master tagihan ini?")) return;
-    try{ await deleteCollectionData("tagihan", btn.dataset.remove); showToast("Tagihan dihapus."); renderTagihanAdmin(); }
-    catch(error){ showToast(error.message, true); }
+    try{
+      await deleteCollectionData("tagihan", btn.dataset.remove);
+      logAudit("DELETE","tagihan",btn.dataset.remove);
+      showToast("Tagihan dihapus.");
+      renderTagihanAdmin();
+    }catch(error){ showToast(error.message, true); }
   }));
 }
 
@@ -1182,7 +1603,7 @@ function openTagihanForm(item=null){
       <button class="btn btn-full" type="submit" id="tagihanSaveBtn">Simpan</button>
     </form>`);
 
-  $("tagihanForm").addEventListener("submit", async e=>{
+  $("tagihanForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("tagihanSaveBtn");
     const payload = {
@@ -1192,31 +1613,40 @@ function openTagihanForm(item=null){
       periode: $("tagihanPeriode").value.trim(),
       aktif: $("tagihanAktif").value === "true"
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(item) await updateCollectionData("tagihan", item.id, payload);
-        else await addCollectionData("tagihan", payload);
-        closeModal(); showToast("Tagihan berhasil disimpan."); renderTagihanAdmin();
+        if(item){
+          await updateCollectionData("tagihan", item.id, payload);
+          logAudit("UPDATE","tagihan",item.id);
+        }else{
+          const created = await addCollectionData("tagihan", payload);
+          logAudit("CREATE","tagihan",created.id,{ nama: payload.nama });
+        }
+        closeModal();
+        showToast("Tagihan berhasil disimpan.");
+        renderTagihanAdmin();
       }catch(error){ alert(error.message); }
     })();
   });
 }
 
-/* =========================================================
-   ADMIN: KEUANGAN (laporan global)
-========================================================= */
+/* ============================================================
+   22. ADMIN: KEUANGAN
+============================================================ */
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
   const [keuangan, santriList, tagihanList] = await Promise.all([
-    getCollectionData("keuangan"), getCollectionData("santri"), getCollectionData("tagihan")
+    getCollectionData("keuangan"),
+    getCollectionData("santri"),
+    getCollectionData("tagihan")
   ]);
 
   const santriMap = Object.fromEntries(santriList.map(s=>[s.id, s]));
   const rows = keuangan
-    .map(k=>({ ...k, santriNama: santriMap[k.santriId]?.nama || "(santri dihapus)" }))
+    .map(k => ({ ...k, santriNama: santriMap[k.santriId]?.nama || "(santri dihapus)" }))
     .sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
 
-  const totalTagihan = rows.reduce((sum,r)=>sum+Number(r.nominalTagihan||0),0);
+  const totalTagihan  = rows.reduce((sum,r)=>sum+Number(r.nominalTagihan||0),0);
   const totalTerbayar = rows.reduce((sum,r)=>sum+Number(r.terbayar||0),0);
   const totalTunggakan = Math.max(0, totalTagihan - totalTerbayar);
 
@@ -1257,20 +1687,29 @@ async function renderKeuanganAdmin(){
 }
 
 async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null, tagihanListArg=null){
-  const santriList = santriListArg || await getCollectionData("santri");
+  const santriList  = santriListArg || await getCollectionData("santri");
   const tagihanList = (tagihanListArg || await getCollectionData("tagihan")).filter(x=>x.aktif!==false);
-  const keuangan = await getCollectionData("keuangan");
+  const keuangan    = await getCollectionData("keuangan");
+
+  const preselected = preselectedSantriId
+    ? santriList.find(s => s.id === preselectedSantriId)
+    : null;
 
   openModal("Catat Pembayaran", `
     <form id="bayarForm">
-      ${!preselectedSantriId ? `
+      ${preselected ? `
+        <div class="form-group">
+          <label>Santri</label>
+          <input value="${escapeHTML(preselected.nama)}" disabled>
+          <input type="hidden" id="bayarSantri" value="${preselected.id}">
+        </div>` : `
         <div class="form-group">
           <label>Santri</label>
           <select id="bayarSantri" required>
             <option value="">Pilih santri</option>
             ${santriList.map(s=>`<option value="${s.id}">${escapeHTML(s.nama)}</option>`).join("")}
           </select>
-        </div>` : `<input type="hidden" id="bayarSantri" value="${preselectedSantriId}">`}
+        </div>`}
       <div class="form-group">
         <label>Tagihan</label>
         <select id="bayarTagihan" required>
@@ -1291,12 +1730,12 @@ async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null,
       <button class="btn btn-full" type="submit" id="bayarSaveBtn">Simpan Pembayaran</button>
     </form>`);
 
-  $("bayarTagihan").addEventListener("change", e=>{
+  $("bayarTagihan").addEventListener("change", e => {
     const opt = e.target.options[e.target.selectedIndex];
     if(opt?.dataset.nominal) $("bayarNominal").value = opt.dataset.nominal;
   });
 
-  $("bayarForm").addEventListener("submit", async e=>{
+  $("bayarForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("bayarSaveBtn");
     const santriId = $("bayarSantri").value;
@@ -1316,22 +1755,26 @@ async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null,
       dicatatOlehNama: currentProfile.nama || "",
       tanggal: serverTimestamp()
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(existing) await updateCollectionData("keuangan", existing.id, payload);
-        else await addCollectionData("keuangan", payload);
+        if(existing){
+          await updateCollectionData("keuangan", existing.id, payload);
+          logAudit("UPDATE","keuangan",existing.id);
+        }else{
+          const created = await addCollectionData("keuangan", payload);
+          logAudit("CREATE","keuangan",created.id);
+        }
         closeModal();
         showToast("Pembayaran berhasil disimpan.");
-        if(currentPage === "keuangan") renderKeuanganAdmin();
-        else if(preselectedSantriId) renderKeuanganSantriUstadzah(preselectedSantriId);
+        if(currentProfile.role === "admin") renderKeuanganAdmin();
       }catch(error){ alert(error.message); }
     })();
   });
 }
 
-/* =========================================================
-   ADMIN: PENGATURAN + QRIS
-========================================================= */
+/* ============================================================
+   23. ADMIN: PENGATURAN
+============================================================ */
 async function renderSettingsAdmin(){
   if(!requireRole("admin")) return;
   const settings = await getCollectionData("settings");
@@ -1353,7 +1796,7 @@ async function renderSettingsAdmin(){
     </div>
     <div class="card" style="margin-top:18px">
       <h3>QRIS Pembayaran</h3>
-      <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub, bukan Firebase Storage.</p>
+      <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub.</p>
       ${assetUrl(appSettings.qrisUrl) ? `<img src="${escapeHTML(assetUrl(appSettings.qrisUrl))}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
       <div class="form-group" style="margin-top:12px">
         <label>URL / Path QRIS</label>
@@ -1363,7 +1806,7 @@ async function renderSettingsAdmin(){
       <div class="notice" style="margin-top:12px">Simpan gambar QRIS di <b>assets/qris</b> pada repository GitHub, lalu masukkan path seperti <b>./assets/qris/qris.png</b>.</div>
     </div>`;
 
-  $("settingsForm").addEventListener("submit", async e=>{
+  $("settingsForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("settingsSaveBtn");
     const payload = {
@@ -1373,27 +1816,33 @@ async function renderSettingsAdmin(){
       periode: $("settingPeriode").value.trim(),
       pesan: $("settingPesan").value.trim()
     };
-    await withButtonLoading(btn, "Menyimpan...", async ()=>{
+    await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        await setDoc(doc(db,"settings","app"), { ...payload, updatedAt: serverTimestamp() }, { merge:true });
+        await setDoc(doc(db,"settings","app"),
+          { ...payload, updatedAt: serverTimestamp() }, { merge:true });
+        invalidateCache("settings");
+        logAudit("UPDATE","settings","app");
         showToast("Pengaturan berhasil disimpan.");
       }catch(error){ alert(error.message); }
     })();
   });
 
-  $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async ()=>{
+  $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async () => {
     const qrisUrl = $("qrisUrl").value.trim();
     try{
-      await setDoc(doc(db,"settings","app"), { qrisUrl:qrisUrl || null, updatedAt: serverTimestamp() }, { merge:true });
+      await setDoc(doc(db,"settings","app"),
+        { qrisUrl: qrisUrl || null, updatedAt: serverTimestamp() }, { merge:true });
+      invalidateCache("settings");
+      logAudit("UPDATE","settings","app",{ qris: true });
       showToast("URL QRIS berhasil disimpan.");
       renderSettingsAdmin();
     }catch(error){ alert("Gagal menyimpan URL QRIS: " + error.message); }
   }));
 }
 
-/* =========================================================
-   USTADZAH: DAFTAR SANTRI KELAS
-========================================================= */
+/* ============================================================
+   24. USTADZAH: DAFTAR SANTRI KELAS
+============================================================ */
 async function getSantriUstadzah(){
   if(!currentProfile?.jilidId) return [];
   const semua = await getCollectionData("santri");
@@ -1427,14 +1876,16 @@ async function renderDaftarSantriUstadzah(){
     </div>`;
 
   attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
-  $("page").querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
-  $("page").querySelectorAll("[data-keuangan]").forEach(btn=>btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
+  $("page").querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
+  $("page").querySelectorAll("[data-keuangan]").forEach(btn => btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
 }
 
 async function renderKeuanganSantriUstadzah(santriId){
   const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
   if(!santri){ alert("Santri tidak ditemukan."); return; }
-  const [tagihan, keuangan] = await Promise.all([getCollectionData("tagihan"), getCollectionData("keuangan")]);
+  const [tagihan, keuangan] = await Promise.all([
+    getCollectionData("tagihan"), getCollectionData("keuangan")
+  ]);
   const aktif = tagihan.filter(x=>x.aktif!==false);
 
   $("page").innerHTML = `
@@ -1461,23 +1912,18 @@ async function renderKeuanganSantriUstadzah(santriId){
     </div>`;
 
   $("btnKembaliDaftar").addEventListener("click", renderDaftarSantriUstadzah);
-  $("page").querySelectorAll("[data-catat]").forEach(btn=>btn.addEventListener("click", ()=>{
+  $("page").querySelectorAll("[data-catat]").forEach(btn => btn.addEventListener("click", () => {
     openCatatPembayaranModal(santriId, [santri], aktif);
   }));
 }
 
-/* =========================================================
-   PEMBELAJARAN: shared viewer for Wali (read-only) and
-   Ustadzah (editable) -- resolved from currentProfile.role
-========================================================= */
+/* ============================================================
+   25. PEMBELAJARAN (Wali read-only / Ustadzah editable)
+============================================================ */
 async function getJilidBySantri(santri){
   if(!santri?.jilidId) return null;
   const data = await getCollectionData("jilid");
   return data.find(x=>x.id===santri.jilidId) || null;
-}
-async function getProgressSantri(santriId, tipe){
-  const data = await getCollectionData("progress");
-  return data.find(x=>x.santriId===santriId && x.tipe===tipe) || null;
 }
 async function getUstadzahPendamping(santri){
   if(!santri?.jilidId) return null;
@@ -1496,15 +1942,19 @@ async function renderPembelajaranWaliOrUstadzah(santriId){
   if(!santri){ alert("Data santri tidak ditemukan."); return; }
 
   const isUstadzah = currentProfile.role === "ustadzah";
-  const isWali = currentProfile.role === "wali";
-  if(isWali && santri.waliUid !== currentProfile.uid){ alert("Anda tidak memiliki akses ke santri ini."); return; }
-  if(isUstadzah && santri.jilidId !== currentProfile.jilidId){ alert("Santri ini bukan bagian dari kelas Anda."); return; }
+  const isWali     = currentProfile.role === "wali";
+  if(isWali && santri.waliUid !== currentProfile.uid){
+    alert("Anda tidak memiliki akses ke santri ini."); return;
+  }
+  if(isUstadzah && santri.jilidId !== currentProfile.jilidId){
+    alert("Santri ini bukan bagian dari kelas Anda."); return;
+  }
 
   if(isUstadzah) return renderPdfEditorUstadzah(santri);
   return renderPembelajaranWaliView(santri);
 }
 
-/* ----- Wali: read-only view of baca/hafalan + riwayat + keuangan ----- */
+/* ----- WALI: read-only ----- */
 async function renderPembelajaranWaliView(santri){
   const jilid = await getJilidBySantri(santri);
   const ustadzah = await getUstadzahPendamping(santri);
@@ -1520,14 +1970,14 @@ async function renderPembelajaranWaliView(santri){
       <p class="muted">Ustadzah Pendamping: <b>${escapeHTML(ustadzah?.nama || "Belum ditentukan")}</b></p>
     </div>
     <div class="grid" style="margin-top:18px">
-      ${renderBelajarCardWali("📖 Baca", baca, assetUrl(jilid?.pdfBacaUrl), santri.id, "baca")}
-      ${renderBelajarCardWali("🧠 Hafalan", hafalan, assetUrl(jilid?.pdfHafalanUrl), santri.id, "hafalan")}
+      ${renderBelajarCardWali("📖 Baca", baca, assetUrl(jilid?.pdfBacaUrl), "baca")}
+      ${renderBelajarCardWali("🧠 Hafalan", hafalan, assetUrl(jilid?.pdfHafalanUrl), "hafalan")}
     </div>
     <div class="card" style="margin-top:18px">
       <h3>📚 Riwayat Pembelajaran</h3>
       <div class="table-container" style="margin-top:12px">
         <table><thead><tr><th>No.</th><th>Materi</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Tanggal</th></tr></thead>
-          <tbody>${await renderRiwayatWaliRows(santri.id)}</tbody>
+          <tbody id="riwayatWaliBody"></tbody>
         </table>
       </div>
     </div>
@@ -1535,7 +1985,7 @@ async function renderPembelajaranWaliView(santri){
       <h3>💰 Riwayat Keuangan</h3>
       <div class="table-container" style="margin-top:12px">
         <table><thead><tr><th>No.</th><th>Tagihan</th><th>Nilai</th><th>Terbayar</th><th>Metode</th><th>Status</th></tr></thead>
-          <tbody>${await renderRiwayatKeuanganWaliRows(santri.id)}</tbody>
+          <tbody id="riwayatKeuanganWaliBody"></tbody>
         </table>
       </div>
       <button class="btn btn-sm" id="btnLihatQris" style="margin-top:12px">📱 Lihat QRIS Pembayaran</button>
@@ -1543,52 +1993,87 @@ async function renderPembelajaranWaliView(santri){
 
   $("btnKembaliWali").addEventListener("click", renderDashboardWali);
   $("btnLihatQris").addEventListener("click", waliTampilkanQRIS);
-  $("page").querySelectorAll("[data-open-pdf]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
+
+  // Render tabel riwayat dengan data yang sudah ada (tidak query ulang)
+  await renderRiwayatWaliRows(santri, jilid);
+  await renderRiwayatKeuanganWaliRows(santri.id);
+
+  // Event untuk tombol PDF di dalam tabel yang baru dibuat
+  $("page").querySelectorAll("[data-open-pdf]").forEach(btn => {
+    btn.addEventListener("click", () => {
       const url = btn.dataset.url;
       if(!url){ alert("Buku PDF belum tersedia."); return; }
-      openPdfPreviewModal(url, Number(btn.dataset.page||1), btn.dataset.label);
+      openProfessionalPdfViewer(url, Number(btn.dataset.page||1), btn.dataset.label);
     });
   });
 }
 
-function renderBelajarCardWali(title, progress, pdfUrl, santriId, tipe){
+function renderBelajarCardWali(title, progress, pdfUrl, tipe){
   return `
     <div class="card">
       <h3>${title}</h3>
       <div>Halaman terakhir: <b>${progress?.halaman || 1}</b></div>
       <div style="margin-top:10px">${progress?.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</div>
       ${progress?.pesan ? `<div class="notice" style="margin-top:12px"><b>Pesan Ustadzah</b><p style="margin-bottom:0;white-space:pre-wrap">${escapeHTML(progress.pesan)}</p></div>` : ""}
-      <button class="btn btn-sm" style="margin-top:12px" data-open-pdf data-url="${escapeAttr(pdfUrl||"")}" data-page="${progress?.halaman||1}" data-label="${title}">${title.includes("Baca")?"📖":"🧠"} Buka Buku</button>
+      <button class="btn btn-sm" style="margin-top:12px" data-open-pdf data-url="${escapeAttr(pdfUrl||"")}" data-page="${progress?.halaman||1}" data-label="${escapeAttr(title)}">${tipe==="baca"?"📖":"🧠"} Buka Buku</button>
     </div>`;
 }
 
-async function renderRiwayatWaliRows(santriId){
+async function renderRiwayatWaliRows(santri, jilid){
   const data = await getCollectionData("riwayat");
-  const rows = data.filter(x=>x.santriId===santriId).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-  if(!rows.length) return `<tr><td colspan="6" class="empty">Belum ada riwayat pembelajaran.</td></tr>`;
-  const jilidBySantri = await getJilidBySantri((await getCollectionData("santri")).find(x=>x.id===santriId));
-  return rows.map((item,index)=>`
-    <tr>
-      <td>${index+1}</td>
-      <td>${item.tipe==="hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
-      <td><b>Halaman ${Number(item.halaman||1)}</b><br>
-        <button class="btn btn-sm" style="margin-top:5px" data-open-pdf data-url="${escapeAttr(item.tipe==="hafalan" ? assetUrl(jilidBySantri?.pdfHafalanUrl) : assetUrl(jilidBySantri?.pdfBacaUrl))}" data-page="${Number(item.halaman||1)}" data-label="${item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca"}">👁 Lihat</button>
-      </td>
-      <td>${item.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</td>
-      <td>${item.pesan ? escapeHTML(item.pesan) : "-"}</td>
-      <td>${formatTanggal(item.createdAt)}</td>
-    </tr>`).join("");
+  const rows = data.filter(x=>x.santriId===santri.id)
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+
+  const body = $("riwayatWaliBody");
+  if(!body) return;
+
+  if(!rows.length){
+    body.innerHTML = `<tr><td colspan="6" class="empty">Belum ada riwayat pembelajaran.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map((item,index) => {
+    const pdfUrl = item.tipe==="hafalan" ? assetUrl(jilid?.pdfHafalanUrl) : assetUrl(jilid?.pdfBacaUrl);
+    return `
+      <tr>
+        <td>${index+1}</td>
+        <td>${item.tipe==="hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
+        <td>
+          <b>Halaman ${Number(item.halaman||1)}</b><br>
+          <button class="btn btn-sm" style="margin-top:5px"
+            data-open-pdf
+            data-url="${escapeAttr(pdfUrl||"")}"
+            data-page="${Number(item.halaman||1)}"
+            data-label="${escapeAttr(item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca")}">
+            👁 Lihat
+          </button>
+        </td>
+        <td>${item.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</td>
+        <td>${item.pesan ? escapeHTML(item.pesan) : "-"}</td>
+        <td>${formatTanggal(item.createdAt)}</td>
+      </tr>`;
+  }).join("");
 }
 
 async function renderRiwayatKeuanganWaliRows(santriId){
   const data = await getCollectionData("keuangan");
-  const rows = data.filter(x=>x.santriId===santriId).sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
-  if(!rows.length) return `<tr><td colspan="6" class="empty">Belum ada riwayat keuangan.</td></tr>`;
-  return rows.map((item,index)=>{
-    const nominal = Number(item.nominalTagihan||0), terbayar = Number(item.terbayar||0), lunas = terbayar>=nominal;
+  const rows = data.filter(x=>x.santriId===santriId)
+    .sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+
+  const body = $("riwayatKeuanganWaliBody");
+  if(!body) return;
+
+  if(!rows.length){
+    body.innerHTML = `<tr><td colspan="6" class="empty">Belum ada riwayat keuangan.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map((item,index) => {
+    const nominal = Number(item.nominalTagihan||0);
+    const terbayar = Number(item.terbayar||0);
+    const lunas = terbayar >= nominal;
     return `<tr>
-      <td>${index+1}</td><td>${escapeHTML(item.tagihanNama||"-")}</td><td>${formatRupiah(nominal)}</td><td>${formatRupiah(terbayar)}</td>
+      <td>${index+1}</td><td>${escapeHTML(item.tagihanNama||"-")}</td>
+      <td>${formatRupiah(nominal)}</td><td>${formatRupiah(terbayar)}</td>
       <td>${item.metode==="QRIS" ? "📱 QRIS" : escapeHTML(item.metode||"-")}</td>
       <td>${lunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-yellow">Belum Lunas</span>`}</td>
     </tr>`;
@@ -1606,16 +2091,7 @@ async function waliTampilkanQRIS(){
     </div>`);
 }
 
-function openPdfPreviewModal(url, page, label){
-  const safePage = Math.max(1, Number(page || 1));
-  openModal(label, `
-    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-      <span class="badge badge-blue">Halaman ${safePage}</span>
-    </div>
-    <iframe src="${escapeHTML(url)}#page=${safePage}" style="width:100%;height:75vh;min-height:500px;border:0;border-radius:10px;background:#525659" title="${escapeHTML(label)}"></iframe>`);
-}
-
-/* ----- Ustadzah: editable PDF viewer with progress + recorder ----- */
+/* ----- USTADZAH: editable ----- */
 async function renderPdfEditorUstadzah(santri){
   const jilid = await getJilidBySantri(santri);
   if(!jilid){ alert("Jilid/kelas santri belum diatur admin."); return; }
@@ -1625,8 +2101,8 @@ async function renderPdfEditorUstadzah(santri){
       <button class="btn" data-tipe="baca">📖 Buka Modul Baca</button>
       <button class="btn btn-info" data-tipe="hafalan">🧠 Buka Modul Hafalan</button>
     </div>`);
-  $("modalContent").querySelectorAll("[data-tipe]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
+  $("modalContent").querySelectorAll("[data-tipe]").forEach(btn => {
+    btn.addEventListener("click", async () => {
       closeModal();
       await openPembelajaranEditor(santri, jilid, btn.dataset.tipe);
     });
@@ -1635,8 +2111,12 @@ async function renderPdfEditorUstadzah(santri){
 
 async function openPembelajaranEditor(santri, jilid, tipe){
   const pdfUrl = tipe === "hafalan" ? assetUrl(jilid.pdfHafalanUrl) : assetUrl(jilid.pdfBacaUrl);
-  if(!pdfUrl){ alert(tipe==="hafalan" ? "Buku PDF hafalan belum diatur admin." : "Buku PDF baca belum diatur admin."); return; }
-  const progress = await getProgressSantri(santri.id, tipe);
+  if(!pdfUrl){
+    alert(tipe==="hafalan" ? "Buku PDF hafalan belum diatur admin." : "Buku PDF baca belum diatur admin.");
+    return;
+  }
+  const allProgress = await getCollectionData("progress");
+  const progress = allProgress.find(x=>x.santriId===santri.id && x.tipe===tipe);
   const halaman = Math.max(1, Number(progress?.halaman || 1));
 
   $("page").innerHTML = `
@@ -1678,19 +2158,22 @@ async function openPembelajaranEditor(santri, jilid, tipe){
 
   let currentPageNum = halaman;
   const frame = $("pdfFrame");
+
   function updateViewerPage(){
     currentPageNum = Math.max(1, Number($("pdfPageInput").value || 1));
     $("currentPageBadge").textContent = `Halaman ${currentPageNum}`;
     frame.src = `${pdfUrl}#page=${currentPageNum}`;
   }
-  $("btnPrevPage").addEventListener("click", ()=>{ currentPageNum = Math.max(1, currentPageNum-1); $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
-  $("btnNextPage").addEventListener("click", ()=>{ currentPageNum++; $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
+  $("btnPrevPage").addEventListener("click", () => { currentPageNum = Math.max(1, currentPageNum-1); $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
+  $("btnNextPage").addEventListener("click", () => { currentPageNum++; $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
   $("pdfPageInput").addEventListener("change", updateViewerPage);
 
-  const saveWith = (status)=>saveProgress({
-    santriId: santri.id, tipe, halaman: currentPageNum, status,
-    pesan: $("pesanPembelajaran").value.trim()
-  });
+  const saveWith = async (status) => {
+    await saveProgress({
+      santriId: santri.id, tipe, halaman: currentPageNum,
+      status, pesan: $("pesanPembelajaran").value.trim()
+    });
+  };
   $("btnSavePage").addEventListener("click", ()=>saveWith(progress?.status || "mengulang"));
   $("btnNaik").addEventListener("click", ()=>saveWith("naik"));
   $("btnMengulang").addEventListener("click", ()=>saveWith("mengulang"));
@@ -1702,17 +2185,26 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan }){
     const data = await getCollectionData("progress");
     const existing = data.find(x=>x.santriId===santriId && x.tipe===tipe);
     const payload = {
-      santriId, tipe, halaman: Math.max(1, Number(halaman||1)), status: status || "mengulang",
+      santriId, tipe,
+      halaman: Math.max(1, Number(halaman||1)),
+      status: status || "mengulang",
       pesan: pesan || "",
-      ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || "",
+      ustadzahUid: currentProfile.uid,
+      ustadzahNama: currentProfile.nama || "",
       updatedAt: serverTimestamp()
     };
     if(existing) await updateCollectionData("progress", existing.id, payload);
     else await addCollectionData("progress", payload);
+
     await addCollectionData("riwayat", {
-      santriId, tipe, halaman: payload.halaman, status: payload.status, pesan: payload.pesan,
-      ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || ""
+      santriId, tipe,
+      halaman: payload.halaman,
+      status: payload.status,
+      pesan: payload.pesan,
+      ustadzahUid: currentProfile.uid,
+      ustadzahNama: currentProfile.nama || ""
     });
+    logAudit("UPDATE","progress",santriId,{ tipe, halaman: payload.halaman, status: payload.status });
     showToast("Hasil pembelajaran berhasil disimpan.");
   }catch(error){
     console.error(error);
@@ -1720,9 +2212,9 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan }){
   }
 }
 
-/* =========================================================
-   SHARED: PROFIL
-========================================================= */
+/* ============================================================
+   26. PROFIL
+============================================================ */
 async function renderProfil(){
   $("page").innerHTML = `
     <div class="toolbar"><div><h2 class="section-title">Profil</h2><p class="muted">Informasi akun yang sedang digunakan.</p></div></div>
@@ -1736,7 +2228,7 @@ async function renderProfil(){
       <button class="btn" id="btnResetPassword">Kirim Email Reset Password</button>
     </div>`;
 
-  $("btnResetPassword").addEventListener("click", withButtonLoading($("btnResetPassword"), "Mengirim...", async ()=>{
+  $("btnResetPassword").addEventListener("click", withButtonLoading($("btnResetPassword"), "Mengirim...", async () => {
     try{
       await sendPasswordResetEmail(auth, currentUser.email);
       showToast("Email reset password telah dikirim ke " + currentUser.email);
@@ -1744,6 +2236,83 @@ async function renderProfil(){
   }));
 }
 
+/* ============================================================
+   27. PDF VIEWER PROFESIONAL
+============================================================ */
+function openProfessionalPdfViewer(url, page=1, label="Dokumen PDF"){
+  const safeUrl = assetUrl(url);
+  if(!safeUrl){ showToast("PDF belum tersedia.", true); return; }
+
+  let currentPage = Math.max(1, Number(page) || 1);
+  let zoom = 100;
+
+  openModal(label, `
+    <div class="pdf-viewer">
+      <div class="pdf-toolbar">
+        <div class="pdf-toolbar-group">
+          <button type="button" id="pdfPrevButton" title="Halaman sebelumnya">◀</button>
+          <div class="pdf-page-indicator" id="pdfPageIndicator">Halaman ${currentPage}</div>
+          <button type="button" id="pdfNextButton" title="Halaman berikutnya">▶</button>
+        </div>
+        <div class="pdf-toolbar-group">
+          <button type="button" id="pdfZoomOut" title="Perkecil">−</button>
+          <span id="pdfZoomValue" style="min-width:45px;text-align:center;font-size:12px">100%</span>
+          <button type="button" id="pdfZoomIn" title="Perbesar">+</button>
+          <button type="button" id="pdfFullscreen" title="Fullscreen">⛶</button>
+        </div>
+      </div>
+      <div class="pdf-frame-wrap">
+        <div class="pdf-loading" id="pdfViewerLoading">
+          <div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat PDF...</div></div>
+        </div>
+        <iframe id="professionalPdfFrame" class="pdf-frame" title="${escapeHTML(label)}"
+          src="${escapeAttr(safeUrl)}#page=${currentPage}&view=FitH"></iframe>
+      </div>
+      <div class="pdf-info-bar">
+        <span>📄 ${escapeHTML(label)}</span>
+        <span>Gunakan tombol navigasi untuk berpindah halaman.</span>
+      </div>
+    </div>`);
+
+  const frame = $("professionalPdfFrame");
+  const loading = $("pdfViewerLoading");
+  const indicator = $("pdfPageIndicator");
+  const zoomValue = $("pdfZoomValue");
+
+  let loadingTimeout = setTimeout(() => loading?.classList.add("hidden"), 8000);
+  frame.addEventListener("load", () => {
+    clearTimeout(loadingTimeout);
+    loading?.classList.add("hidden");
+  });
+
+  function updatePdf(){
+    indicator.textContent = `Halaman ${currentPage}`;
+    loading?.classList.remove("hidden");
+    frame.src = `${safeUrl}#page=${currentPage}&zoom=${zoom}&view=FitH`;
+    clearTimeout(loadingTimeout);
+    loadingTimeout = setTimeout(() => loading?.classList.add("hidden"), 8000);
+  }
+
+  $("pdfPrevButton")?.addEventListener("click", ()=>{ currentPage = Math.max(1, currentPage-1); updatePdf(); });
+  $("pdfNextButton")?.addEventListener("click", ()=>{ currentPage++; updatePdf(); });
+  $("pdfZoomIn")?.addEventListener("click", ()=>{ zoom = Math.min(200, zoom+10); zoomValue.textContent = zoom+"%"; updatePdf(); });
+  $("pdfZoomOut")?.addEventListener("click", ()=>{ zoom = Math.max(50, zoom-10); zoomValue.textContent = zoom+"%"; updatePdf(); });
+  $("pdfFullscreen")?.addEventListener("click", ()=>{
+    const viewer = document.querySelector(".pdf-viewer");
+    if(!document.fullscreenElement) viewer?.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+  });
+}
+
+/* ============================================================
+   28. ONLINE / OFFLINE
+============================================================ */
+window.addEventListener("offline", () => showToast("⚠️ Anda sedang offline.", true));
+window.addEventListener("online",  () => showToast("✅ Koneksi kembali online."));
+
+/* ============================================================
+   END
+============================================================ */
 </script>
 </body>
 </html>
