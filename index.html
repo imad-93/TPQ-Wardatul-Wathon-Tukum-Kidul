@@ -567,16 +567,75 @@ async function navigate(page){
    10. ACCOUNT PROVISIONING
 ============================================================ */
 async function createManagedAccount({ email, password, role, profile }){
+  // Simpan info admin yang login
+  const adminUid = auth.currentUser?.uid;
+  if(!adminUid){
+    throw new Error("Anda harus login sebagai admin.");
+  }
+  console.log("[createManagedAccount] Admin yang login:", adminUid);
+  console.log("[createManagedAccount] Akan buat akun:", email, "role:", role);
+
+  // STEP 1: Buat user di secondary app (TIDAK mengganti sesi primary)
   const credential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
   const uid = credential.user.uid;
+  console.log("[createManagedAccount] Auth berhasil, UID baru:", uid);
+
+  // STEP 2: Bangun payload eksplisit
   const base = {
-    uid, email, role, aktif: true,
-    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-    ...profile
+    uid: uid,
+    email: email,
+    role: role,                       // ← otomatis (ustadzah/wali/admin)
+    nama: profile.nama || "",
+    telepon: profile.telepon || "",
+    alamat: profile.alamat || "",
+    jilidId: profile.jilidId || null,
+    jilidNama: profile.jilidNama || null,
+    aktif: profile.aktif !== false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   };
-  await setDoc(doc(db, "users", uid), base);
-  await setDoc(doc(db, role, uid), base);
-  await signOut(secondaryAuth);
+
+  console.log("[createManagedAccount] Payload:", base);
+
+  // STEP 3: Sign out dari secondary SEGERA (sebelum write ke Firestore)
+  //        supaya tidak mengganggu sesi primary
+  try{
+    await signOut(secondaryAuth);
+    console.log("[createManagedAccount] Secondary signout berhasil");
+  }catch(err){
+    console.warn("[createManagedAccount] Secondary signout error:", err);
+  }
+
+  // STEP 4: Pastikan primary auth masih admin
+  if(auth.currentUser?.uid !== adminUid){
+    console.error("[createManagedAccount] ⚠️ Sesi primary berubah!");
+    throw new Error("Sesi admin terputus. Silakan login ulang.");
+  }
+
+  // STEP 5: Tulis ke Firestore sebagai ADMIN (sesi primary)
+  try{
+    await setDoc(doc(db, "users", uid), base);
+    console.log("[createManagedAccount] ✅ users/" + uid + " tersimpan");
+
+    await setDoc(doc(db, role, uid), base);
+    console.log("[createManagedAccount] ✅ " + role + "/" + uid + " tersimpan");
+  }catch(err){
+    console.error("[createManagedAccount] ❌ Gagal tulis Firestore:", err);
+    throw err;
+  }
+
+  // STEP 6: Verifikasi
+  try{
+    const verify = await getDoc(doc(db, "users", uid));
+    if(!verify.exists()){
+      throw new Error("Verifikasi gagal: users/{uid} tidak ada.");
+    }
+    console.log("[createManagedAccount] ✅ Verifikasi berhasil");
+  }catch(err){
+    console.error("[createManagedAccount] Verifikasi error:", err);
+  }
+
+  console.log("[createManagedAccount] ✅ Selesai untuk UID:", uid);
   return uid;
 }
 async function updateManagedAccount(uid, role, data){
