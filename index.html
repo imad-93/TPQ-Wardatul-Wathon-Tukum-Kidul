@@ -1276,7 +1276,6 @@ async function uploadPdfToGoogleDrive(file, jenis, jilidId){
   return await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", APP_CONFIG.driveUploadUrl, true);
-    xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
     xhr.timeout = 120000;
 
     xhr.upload.addEventListener("progress", event => {
