@@ -257,9 +257,10 @@ const firebaseConfig = {
 };
 
 const APP_CONFIG = {
-  maxPdfSize: 25 * 1024 * 1024,
-  driveUploadUrl: "https://script.google.com/macros/s/AKfycbyBsZtsyXWHT25pzjWjIpjLmM7-NTi65gKSxsXLPBrkfeL--wm7kH9E2WvXusgZwAhx/exec",
-  driveFolderId: "1SP6RQ9zTGXN8N9fNFV8E03Et_eJ9eSdm",
+  maxPdfSize: 60 * 1024 * 1024,       // batas ukuran file PDF asli yang diproses di browser
+  maxHalamanBytes: 700 * 1024,        // target ukuran maksimal per halaman (base64) agar aman di bawah limit dokumen Firestore (1 MiB)
+  pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js",
+  pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
   cacheTtlMs: 30_000
 };
@@ -460,6 +461,100 @@ async function updateCollectionData(name, id, data){
 async function deleteCollectionData(name, id){
   await deleteDoc(doc(db, name, id));
   invalidateCache(name);
+}
+
+/* ============================================================
+   7B. HALAMAN BUKU (PDF per-halaman) DI FIRESTORE
+   Setiap halaman buku (baca/hafalan) disimpan sebagai satu dokumen
+   di koleksi "jilidHalaman" dengan id `${jilidId}_${tipe}_${halaman}`.
+   Ini membuat aplikasi jauh lebih ringan karena hanya halaman yang
+   sedang dibuka yang diunduh, bukan seluruh file PDF.
+============================================================ */
+const halamanImageCache = new Map();
+
+function halamanDocId(jilidId, tipe, halaman){
+  return `${jilidId}_${tipe}_${halaman}`;
+}
+
+async function fetchHalamanGambar(jilidId, tipe, halaman){
+  if(!jilidId || !tipe || !halaman) return null;
+  const id = halamanDocId(jilidId, tipe, halaman);
+  if(halamanImageCache.has(id)) return halamanImageCache.get(id);
+  const snap = await getDoc(doc(db, "jilidHalaman", id));
+  const gambar = snap.exists() ? (snap.data().gambar || null) : null;
+  if(gambar) halamanImageCache.set(id, gambar);
+  return gambar;
+}
+
+async function deleteHalamanRange(jilidId, tipe, fromPage, toPage){
+  for(let p = fromPage; p <= toPage; p++){
+    const id = halamanDocId(jilidId, tipe, p);
+    halamanImageCache.delete(id);
+    try{ await deleteDoc(doc(db, "jilidHalaman", id)); }catch{ /* abaikan jika sudah tidak ada */ }
+  }
+}
+
+let pdfJsLoadingPromise = null;
+async function loadPdfJsLibrary(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  if(!pdfJsLoadingPromise){
+    pdfJsLoadingPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = APP_CONFIG.pdfJsScriptUrl;
+      script.onload = () => resolve(window.pdfjsLib);
+      script.onerror = () => reject(new Error("Gagal memuat pustaka pdf.js. Periksa koneksi internet."));
+      document.head.appendChild(script);
+    });
+  }
+  const pdfjsLib = await pdfJsLoadingPromise;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = APP_CONFIG.pdfJsWorkerUrl;
+  return pdfjsLib;
+}
+
+async function renderPdfPageToDataUrl(pdfPage, maxBytes){
+  let scale = 1.4;
+  let quality = 0.72;
+  let lastDataUrl = null;
+  for(let attempt = 0; attempt < 7; attempt++){
+    const viewport = pdfPage.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(viewport.width));
+    canvas.height = Math.max(1, Math.round(viewport.height));
+    const ctx = canvas.getContext("2d");
+    await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    lastDataUrl = dataUrl;
+    const approxBytes = Math.ceil(dataUrl.length * 0.75);
+    if(approxBytes <= maxBytes) return dataUrl;
+    if(quality > 0.35) quality = Math.max(0.35, quality - 0.12);
+    else scale = Math.max(0.6, scale - 0.2);
+  }
+  return lastDataUrl;
+}
+
+async function uploadPdfPerPageToFirestore(file, jilidId, tipe, onProgress){
+  validatePdfFile(file);
+  if(!jilidId) throw new Error("ID Jilid/Kelas belum tersedia.");
+
+  const pdfjsLib = await loadPdfJsLibrary();
+  const buffer = await file.arrayBuffer();
+  const pdfDoc = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const totalPages = pdfDoc.numPages;
+
+  for(let p = 1; p <= totalPages; p++){
+    const pdfPage = await pdfDoc.getPage(p);
+    const dataUrl = await renderPdfPageToDataUrl(pdfPage, APP_CONFIG.maxHalamanBytes);
+    if(!dataUrl) throw new Error(`Gagal memproses halaman ${p} dari PDF.`);
+    const id = halamanDocId(jilidId, tipe, p);
+    await setDoc(doc(db, "jilidHalaman", id), {
+      jilidId, tipe, halaman: p,
+      gambar: dataUrl,
+      updatedAt: serverTimestamp()
+    });
+    halamanImageCache.set(id, dataUrl);
+    onProgress?.(p, totalPages);
+  }
+  return totalPages;
 }
 
 /* ============================================================
@@ -1214,8 +1309,8 @@ function openUstadzahForm(item, jilidList){
 /* ============================================================
    18. PDF UPLOAD
 ============================================================ */
-function pdfUploadComponent({ type, currentUrl="", label="PDF" }){
-  const current = assetUrl(currentUrl);
+function pdfUploadComponent({ type, totalHalaman=0, label="PDF" }){
+  const total = Math.max(0, Number(totalHalaman) || 0);
   return `
     <div class="pdf-upload-box">
       <div class="form-group">
@@ -1224,122 +1319,34 @@ function pdfUploadComponent({ type, currentUrl="", label="PDF" }){
           <div>
             <input id="pdfFile_${type}" type="file" accept="application/pdf,.pdf">
           </div>
-          <button type="button" class="btn btn-info" id="uploadPdfBtn_${type}">☁️ Upload PDF</button>
+          <button type="button" class="btn btn-info" id="uploadPdfBtn_${type}">☁️ Upload &amp; Pecah per Halaman</button>
         </div>
-        <div class="pdf-file-info" id="pdfFileInfo_${type}">Belum memilih file.</div>
+        <div class="pdf-file-info" id="pdfFileInfo_${type}">Belum memilih file. PDF akan diproses menjadi gambar per halaman di browser Anda, lalu setiap halaman disimpan sebagai dokumen tersendiri di Firestore (bukan Google Drive) agar lebih ringan.</div>
         <div class="pdf-progress" id="pdfUploadProgress_${type}">
           <div class="pdf-progress-track">
             <div class="pdf-progress-bar" id="pdfUploadProgressBar_${type}"></div>
           </div>
           <div class="pdf-progress-text" id="pdfUploadProgressText_${type}">Menunggu upload...</div>
         </div>
-        ${current ? `
-          <div class="pdf-current">
-            ✅ PDF saat ini tersedia.
-            <br>
-            <button type="button" class="btn btn-sm" style="margin-top:7px" data-preview-current-pdf="${escapeAttr(current)}">👁 Preview PDF</button>
-          </div>
-        ` : `
-          <div class="muted" style="font-size:12px;margin-top:8px">Belum ada PDF yang diupload.</div>
-        `}
-        <input type="hidden" id="pdfUrl_${type}" value="${escapeHTML(current)}">
+        <div id="pdfCurrentWrap_${type}">
+          ${total > 0 ? `
+            <div class="pdf-current">
+              ✅ ${total} halaman tersimpan di Firestore.
+              <br>
+              <div class="actions" style="margin-top:7px">
+                <button type="button" class="btn btn-sm" id="btnPreviewCurrent_${type}">👁 Lihat Buku</button>
+                <button type="button" class="btn btn-sm btn-danger" id="btnHapusHalaman_${type}">🗑 Hapus Semua Halaman</button>
+              </div>
+            </div>
+          ` : `
+            <div class="muted" style="font-size:12px;margin-top:8px">Belum ada halaman yang diupload.</div>
+          `}
+        </div>
+        <input type="hidden" id="pdfTotal_${type}" value="${total}">
       </div>
     </div>`;
 }
 
-async function uploadPdfToGoogleDrive(file, jenis, jilidId){
-  validatePdfFile(file);
-
-  if(!APP_CONFIG.driveUploadUrl || APP_CONFIG.driveUploadUrl.includes("GANTI_DENGAN")){
-    throw new Error("URL Google Apps Script belum diatur.");
-  }
-
-  console.log("[Upload] Mulai upload:", file.name, "(" + formatFileSize(file.size) + ")");
-
-  // Baca file sebagai base64
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = () => reject(new Error("Gagal membaca file PDF."));
-    reader.readAsDataURL(file);
-  });
-
-  console.log("[Upload] File dibaca. Base64 length:", base64.length);
-
-  const payload = {
-    action: "uploadPdf",
-    folderId: APP_CONFIG.driveFolderId,
-    fileName: file.name,
-    mimeType: "application/pdf",
-    base64,
-    jenis,
-    jilidId: jilidId || "",
-    uploadedBy: currentProfile?.uid || "",
-    uploadedByName: currentProfile?.nama || ""
-  };
-
-  const bodyString = JSON.stringify(payload);
-  console.log("[Upload] Payload size:", bodyString.length, "bytes");
-  console.log("[Upload] POST ke:", APP_CONFIG.driveUploadUrl);
-
-  // Simulasi progress manual (fetch tidak support upload progress)
-  const progress = document.getElementById(`pdfUploadProgress_${jenis}`);
-  const bar = document.getElementById(`pdfUploadProgressBar_${jenis}`);
-  const progressText = document.getElementById(`pdfUploadProgressText_${jenis}`);
-  if(progress) progress.classList.add("active");
-  if(bar) bar.style.width = "30%";
-  if(progressText) progressText.textContent = "Mengirim ke Google Drive...";
-
-  try{
-    // ⚠️ FETCH TANPA HEADERS SAMA SEKALI
-    // Ini mencegah CORS preflight sepenuhnya
-    const response = await fetch(APP_CONFIG.driveUploadUrl, {
-      method: "POST",
-      body: bodyString
-      // TIDAK ADA headers — JANGAN TAMBAHKAN APAPUN
-    });
-
-    console.log("[Upload] Response status:", response.status);
-    if(bar) bar.style.width = "80%";
-    if(progressText) progressText.textContent = "Memproses respons...";
-
-    const responseText = await response.text();
-    console.log("[Upload] Response text:", responseText.slice(0, 300));
-
-    if(!response.ok){
-      throw new Error(`Upload gagal. HTTP ${response.status}`);
-    }
-
-    let data;
-    try{
-      data = JSON.parse(responseText);
-    }catch{
-      throw new Error("Respons Google Drive tidak valid: " + responseText.slice(0, 200));
-    }
-
-    if(!data.success){
-      throw new Error(data.message || "Google Drive menolak upload.");
-    }
-
-    if(bar) bar.style.width = "100%";
-    if(progressText) progressText.textContent = "Upload selesai 100%.";
-    console.log("[Upload] ✅ Sukses. URL:", data.url);
-
-    return data;
-
-  }catch(err){
-    console.error("[Upload] ❌ Error:", err);
-    if(progressText) progressText.textContent = err.message;
-    throw new Error(
-      "Tidak dapat terhubung ke server Google Drive.\n\n" +
-      "Detail: " + err.message + "\n\n" +
-      "Kemungkinan penyebab:\n" +
-      "1. Apps Script belum di-deploy 'Anyone'\n" +
-      "2. Kode Apps Script belum di-redeploy (New version)\n" +
-      "3. Koneksi internet bermasalah"
-    );
-  }
-}
 function attachPdfUploader(type, jilidId){
   const fileInput    = $(`pdfFile_${type}`);
   const uploadButton = $(`uploadPdfBtn_${type}`);
@@ -1347,16 +1354,55 @@ function attachPdfUploader(type, jilidId){
   const progress     = $(`pdfUploadProgress_${type}`);
   const bar          = $(`pdfUploadProgressBar_${type}`);
   const progressText = $(`pdfUploadProgressText_${type}`);
-  const urlInput     = $(`pdfUrl_${type}`);
+  const totalInput   = $(`pdfTotal_${type}`);
+  const currentWrap  = $(`pdfCurrentWrap_${type}`);
+  const label        = type === "baca" ? "Buku Baca" : "Buku Hafalan";
 
   if(!fileInput || !uploadButton) return;
 
+  const defaultInfoText = "Belum memilih file. PDF akan diproses menjadi gambar per halaman di browser Anda, lalu setiap halaman disimpan sebagai dokumen tersendiri di Firestore (bukan Google Drive) agar lebih ringan.";
+
+  function refreshCurrentWrap(){
+    const total = Number(totalInput.value || 0);
+    currentWrap.innerHTML = total > 0 ? `
+      <div class="pdf-current">
+        ✅ ${total} halaman tersimpan di Firestore.
+        <br>
+        <div class="actions" style="margin-top:7px">
+          <button type="button" class="btn btn-sm" id="btnPreviewCurrent_${type}">👁 Lihat Buku</button>
+          <button type="button" class="btn btn-sm btn-danger" id="btnHapusHalaman_${type}">🗑 Hapus Semua Halaman</button>
+        </div>
+      </div>
+    ` : `<div class="muted" style="font-size:12px;margin-top:8px">Belum ada halaman yang diupload.</div>`;
+    attachCurrentWrapEvents();
+  }
+
+  function attachCurrentWrapEvents(){
+    $(`btnPreviewCurrent_${type}`)?.addEventListener("click", () => {
+      const total = Number(totalInput.value || 0);
+      if(!jilidId || total <= 0){ showToast("Belum ada halaman untuk ditampilkan.", true); return; }
+      openHalamanViewer({ jilidId, tipe: type, halaman: 1, totalHalaman: total, label });
+    });
+    $(`btnHapusHalaman_${type}`)?.addEventListener("click", async () => {
+      const total = Number(totalInput.value || 0);
+      if(!jilidId || total <= 0) return;
+      if(!confirm(`Hapus semua ${total} halaman ${label}? Tindakan ini tidak bisa dibatalkan.`)) return;
+      try{
+        await deleteHalamanRange(jilidId, type, 1, total);
+        totalInput.value = "0";
+        refreshCurrentWrap();
+        showToast(`Semua halaman ${label} berhasil dihapus.`);
+      }catch(error){ showToast("Gagal menghapus halaman: " + error.message, true); }
+    });
+  }
+  attachCurrentWrapEvents();
+
   fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
-    if(!file){ info.textContent = "Belum memilih file."; return; }
+    if(!file){ info.textContent = defaultInfoText; return; }
     try{
       validatePdfFile(file);
-      info.innerHTML = `<strong>📄 ${escapeHTML(file.name)}</strong>${formatFileSize(file.size)}`;
+      info.innerHTML = `<strong>📄 ${escapeHTML(file.name)}</strong>${formatFileSize(file.size)} — siap diproses per halaman.`;
     }catch(error){
       fileInput.value = "";
       info.textContent = error.message;
@@ -1367,38 +1413,44 @@ function attachPdfUploader(type, jilidId){
   uploadButton.addEventListener("click", async () => {
     const file = fileInput.files?.[0];
     if(!file){ showToast("Pilih file PDF terlebih dahulu.", true); return; }
+    if(!jilidId){ showToast("ID Jilid/Kelas belum siap. Coba lagi.", true); return; }
+
+    const oldTotal = Number(totalInput.value || 0);
 
     try{
       validatePdfFile(file);
       uploadButton.disabled = true;
-      uploadButton.textContent = "⏳ Mengupload...";
+      uploadButton.textContent = "⏳ Memproses...";
       progress.classList.add("active");
       bar.style.width = "0%";
-      progressText.textContent = "Menyiapkan upload...";
+      progressText.textContent = "Menyiapkan pustaka PDF...";
 
-      const result = await uploadPdfToGoogleDrive(file, type, jilidId);
-      if(!result.url) throw new Error("Upload berhasil tetapi URL PDF tidak diterima.");
+      const totalPages = await uploadPdfPerPageToFirestore(file, jilidId, type, (current, total) => {
+        const percent = Math.round((current/total)*100);
+        bar.style.width = percent + "%";
+        progressText.textContent = `Mengupload halaman ${current} dari ${total} (${percent}%)...`;
+      });
 
-      urlInput.value = result.url;
-      progressText.textContent = "Upload selesai 100%.";
+      // Bersihkan sisa halaman lama jika PDF baru lebih pendek
+      if(oldTotal > totalPages){
+        progressText.textContent = "Membersihkan sisa halaman lama...";
+        await deleteHalamanRange(jilidId, type, totalPages+1, oldTotal);
+      }
+
+      totalInput.value = String(totalPages);
+      progressText.textContent = `Selesai. ${totalPages} halaman tersimpan di Firestore.`;
       bar.style.width = "100%";
-      info.innerHTML = `<strong>✅ ${escapeHTML(file.name)}</strong>PDF berhasil diupload ke Google Drive.`;
-      showToast("PDF berhasil diupload ke Google Drive.");
+      info.innerHTML = `<strong>✅ ${escapeHTML(file.name)}</strong>${totalPages} halaman berhasil diupload ke Firestore.`;
+      refreshCurrentWrap();
+      showToast(`${label}: ${totalPages} halaman berhasil diupload ke Firestore.`);
     }catch(error){
       console.error(error);
       progressText.textContent = error.message;
       showToast(error.message, true);
     }finally{
       uploadButton.disabled = false;
-      uploadButton.textContent = "☁️ Upload PDF";
+      uploadButton.textContent = "☁️ Upload & Pecah per Halaman";
     }
-  });
-
-  document.querySelectorAll("[data-preview-current-pdf]").forEach(button => {
-    button.addEventListener("click", () => {
-      const url = button.dataset.previewCurrentPdf;
-      openProfessionalPdfViewer(url, 1, type === "baca" ? "Buku Baca" : "Buku Hafalan");
-    });
   });
 }
 
@@ -1425,8 +1477,8 @@ async function renderJilidAdmin(){
           </div>
           <hr style="border:0;border-top:1px solid var(--border);margin:15px 0">
           <div style="display:grid;gap:8px">
-            <div><b>📖 Buku Baca</b><div class="muted" style="font-size:12px">${assetUrl(item.pdfBacaUrl) ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
-            <div><b>🧠 Buku Hafalan</b><div class="muted" style="font-size:12px">${assetUrl(item.pdfHafalanUrl) ? "PDF sudah tersedia" : "Belum ada PDF"}</div></div>
+            <div><b>📖 Buku Baca</b><div class="muted" style="font-size:12px">${Number(item.totalHalamanBaca)>0 ? `${item.totalHalamanBaca} halaman tersimpan` : "Belum ada halaman"}</div></div>
+            <div><b>🧠 Buku Hafalan</b><div class="muted" style="font-size:12px">${Number(item.totalHalamanHafalan)>0 ? `${item.totalHalamanHafalan} halaman tersimpan` : "Belum ada halaman"}</div></div>
           </div>
           <div class="actions" style="margin-top:15px">
             <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
@@ -1452,6 +1504,10 @@ async function renderJilidAdmin(){
 }
 
 function openJilidForm(item=null){
+  // ID dibuat lebih dulu (untuk jilid baru) agar halaman yang diupload sebelum
+  // tombol "Simpan" ditekan tetap terhubung ke jilid yang benar.
+  const jilidId = item?.id || (crypto.randomUUID ? crypto.randomUUID() : `jilid_${Date.now()}_${Math.random().toString(16).slice(2)}`);
+
   openModal(item ? "Edit Jilid / Kelas" : "Tambah Jilid / Kelas", `
     <form id="jilidForm">
       <div class="form-group">
@@ -1465,7 +1521,7 @@ function openJilidForm(item=null){
 
       ${pdfUploadComponent({
         type:"baca",
-        currentUrl:item?.pdfBacaUrl || "",
+        totalHalaman:item?.totalHalamanBaca || 0,
         label:"📖 Buku Baca PDF"
       })}
 
@@ -1473,15 +1529,15 @@ function openJilidForm(item=null){
 
       ${pdfUploadComponent({
         type:"hafalan",
-        currentUrl:item?.pdfHafalanUrl || "",
+        totalHalaman:item?.totalHalamanHafalan || 0,
         label:"🧠 Buku Hafalan PDF"
       })}
 
       <div class="notice" style="margin-top:15px">
-        <b>Google Drive</b><br>
-        File PDF akan dikirim ke folder Google Drive TPQ Wardatul Wathon.
+        <b>Firestore</b><br>
+        PDF akan dipecah menjadi gambar per halaman langsung di browser Anda, lalu setiap halaman disimpan sebagai dokumen tersendiri di Firestore (tanpa Google Drive). Ini membuat aplikasi lebih ringan karena hanya halaman yang dibuka yang diunduh, dan halaman terakhir yang dibaca/dihafal bisa ditandai.
         <br><br>
-        <span class="muted">Maksimal ukuran file: ${formatFileSize(APP_CONFIG.maxPdfSize)}</span>
+        <span class="muted">Maksimal ukuran file PDF sumber: ${formatFileSize(APP_CONFIG.maxPdfSize)}. Upload bisa memakan waktu beberapa menit tergantung jumlah halaman — jangan tutup jendela ini selama proses berjalan.</span>
       </div>
 
       <div class="form-group">
@@ -1496,8 +1552,8 @@ function openJilidForm(item=null){
     </form>
   `);
 
-  attachPdfUploader("baca", item?.id || "");
-  attachPdfUploader("hafalan", item?.id || "");
+  attachPdfUploader("baca", jilidId);
+  attachPdfUploader("hafalan", jilidId);
 
   $("jilidForm").addEventListener("submit", async event => {
     event.preventDefault();
@@ -1506,19 +1562,19 @@ function openJilidForm(item=null){
       try{
         const nama = $("jilidNama").value.trim();
         const keterangan = $("jilidKeterangan").value.trim();
-        const pdfBacaUrl = $("pdfUrl_baca").value.trim();
-        const pdfHafalanUrl = $("pdfUrl_hafalan").value.trim();
+        const totalHalamanBaca = Number($("pdfTotal_baca").value || 0);
+        const totalHalamanHafalan = Number($("pdfTotal_hafalan").value || 0);
         const aktif = $("jilidAktif").value === "true";
-        const payload = { nama, keterangan, aktif,
-          pdfBacaUrl: pdfBacaUrl || null,
-          pdfHafalanUrl: pdfHafalanUrl || null
-        };
+        const payload = { nama, keterangan, aktif, totalHalamanBaca, totalHalamanHafalan };
         if(item){
           await updateCollectionData("jilid", item.id, payload);
           logAudit("UPDATE","jilid",item.id,{ nama });
         }else{
-          const created = await addCollectionData("jilid", payload);
-          logAudit("CREATE","jilid",created.id,{ nama });
+          await setDoc(doc(db, "jilid", jilidId), {
+            ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+          invalidateCache("jilid");
+          logAudit("CREATE","jilid",jilidId,{ nama });
         }
         closeModal();
         showToast("Jilid / kelas berhasil disimpan.");
@@ -2059,8 +2115,8 @@ async function renderPembelajaranWaliView(santri){
       <p class="muted">Ustadzah Pendamping: <b>${escapeHTML(ustadzah?.nama || "Belum ditentukan")}</b></p>
     </div>
     <div class="grid" style="margin-top:18px">
-      ${renderBelajarCardWali("📖 Baca", baca, assetUrl(jilid?.pdfBacaUrl), "baca")}
-      ${renderBelajarCardWali("🧠 Hafalan", hafalan, assetUrl(jilid?.pdfHafalanUrl), "hafalan")}
+      ${renderBelajarCardWali("📖 Baca", baca, jilid?.id, "baca", jilid?.totalHalamanBaca||0)}
+      ${renderBelajarCardWali("🧠 Hafalan", hafalan, jilid?.id, "hafalan", jilid?.totalHalamanHafalan||0)}
     </div>
     <div class="card" style="margin-top:18px">
       <h3>📚 Riwayat Pembelajaran</h3>
@@ -2087,24 +2143,27 @@ async function renderPembelajaranWaliView(santri){
   await renderRiwayatWaliRows(santri, jilid);
   await renderRiwayatKeuanganWaliRows(santri.id);
 
-  // Event untuk tombol PDF di dalam tabel yang baru dibuat
-  $("page").querySelectorAll("[data-open-pdf]").forEach(btn => {
+  // Event untuk tombol buku di dalam kartu dan tabel yang baru dibuat
+  $("page").querySelectorAll("[data-open-halaman]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const url = btn.dataset.url;
-      if(!url){ alert("Buku PDF belum tersedia."); return; }
-      openProfessionalPdfViewer(url, Number(btn.dataset.page||1), btn.dataset.label);
+      const { jilid: jid, tipe: t, page, total, label } = btn.dataset;
+      if(!jid || Number(total||0) <= 0){ showToast("Buku belum tersedia. Hubungi admin/ustadzah.", true); return; }
+      openHalamanViewer({ jilidId: jid, tipe: t, halaman: Number(page||1), totalHalaman: Number(total||0), label });
     });
   });
 }
 
-function renderBelajarCardWali(title, progress, pdfUrl, tipe){
+function renderBelajarCardWali(title, progress, jilidId, tipe, totalHalaman){
   return `
     <div class="card">
       <h3>${title}</h3>
-      <div>Halaman terakhir: <b>${progress?.halaman || 1}</b></div>
+      <div>Halaman terakhir: <b>${progress?.halaman || 1}</b>${totalHalaman ? ` dari ${totalHalaman}` : ""}</div>
       <div style="margin-top:10px">${progress?.status==="naik" ? `<span class="badge badge-green">Naik</span>` : `<span class="badge badge-yellow">Mengulang</span>`}</div>
       ${progress?.pesan ? `<div class="notice" style="margin-top:12px"><b>Pesan Ustadzah</b><p style="margin-bottom:0;white-space:pre-wrap">${escapeHTML(progress.pesan)}</p></div>` : ""}
-      <button class="btn btn-sm" style="margin-top:12px" data-open-pdf data-url="${escapeAttr(pdfUrl||"")}" data-page="${progress?.halaman||1}" data-label="${escapeAttr(title)}">${tipe==="baca"?"📖":"🧠"} Buka Buku</button>
+      <button class="btn btn-sm" style="margin-top:12px" data-open-halaman
+        data-jilid="${escapeAttr(jilidId||"")}" data-tipe="${escapeAttr(tipe)}"
+        data-page="${progress?.halaman||1}" data-total="${Number(totalHalaman)||0}"
+        data-label="${escapeAttr(title)}">${tipe==="baca"?"📖":"🧠"} Buka Buku</button>
     </div>`;
 }
 
@@ -2122,7 +2181,7 @@ async function renderRiwayatWaliRows(santri, jilid){
   }
 
   body.innerHTML = rows.map((item,index) => {
-    const pdfUrl = item.tipe==="hafalan" ? assetUrl(jilid?.pdfHafalanUrl) : assetUrl(jilid?.pdfBacaUrl);
+    const total = item.tipe==="hafalan" ? Number(jilid?.totalHalamanHafalan||0) : Number(jilid?.totalHalamanBaca||0);
     return `
       <tr>
         <td>${index+1}</td>
@@ -2130,9 +2189,11 @@ async function renderRiwayatWaliRows(santri, jilid){
         <td>
           <b>Halaman ${Number(item.halaman||1)}</b><br>
           <button class="btn btn-sm" style="margin-top:5px"
-            data-open-pdf
-            data-url="${escapeAttr(pdfUrl||"")}"
+            data-open-halaman
+            data-jilid="${escapeAttr(jilid?.id||"")}"
+            data-tipe="${item.tipe}"
             data-page="${Number(item.halaman||1)}"
+            data-total="${total}"
             data-label="${escapeAttr(item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca")}">
             👁 Lihat
           </button>
@@ -2199,14 +2260,14 @@ async function renderPdfEditorUstadzah(santri){
 }
 
 async function openPembelajaranEditor(santri, jilid, tipe){
-  const pdfUrl = tipe === "hafalan" ? assetUrl(jilid.pdfHafalanUrl) : assetUrl(jilid.pdfBacaUrl);
-  if(!pdfUrl){
-    alert(tipe==="hafalan" ? "Buku PDF hafalan belum diatur admin." : "Buku PDF baca belum diatur admin.");
+  const totalHalaman = Number(tipe === "hafalan" ? jilid.totalHalamanHafalan : jilid.totalHalamanBaca) || 0;
+  if(totalHalaman <= 0){
+    alert(tipe==="hafalan" ? "Buku hafalan belum diupload admin (belum ada halaman di Firestore)." : "Buku baca belum diupload admin (belum ada halaman di Firestore).");
     return;
   }
   const allProgress = await getCollectionData("progress");
   const progress = allProgress.find(x=>x.santriId===santri.id && x.tipe===tipe);
-  const halaman = Math.max(1, Number(progress?.halaman || 1));
+  const halaman = Math.min(totalHalaman, Math.max(1, Number(progress?.halaman || 1)));
 
   $("page").innerHTML = `
     <div class="toolbar"><button class="btn btn-sm" id="btnKembaliUstadzah">← Kembali</button></div>
@@ -2216,16 +2277,17 @@ async function openPembelajaranEditor(santri, jilid, tipe){
           <h2 style="margin:0">${tipe==="hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"}</h2>
           <div class="muted" style="margin-top:5px">Santri: <b>${escapeHTML(santri.nama)}</b> · ${escapeHTML(jilid.nama)}</div>
         </div>
-        <span class="badge badge-blue" id="currentPageBadge">Halaman ${halaman}</span>
+        <span class="badge badge-blue" id="currentPageBadge">Halaman ${halaman}/${totalHalaman}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px">
         <button class="btn btn-sm" id="btnPrevPage">◀</button>
-        <input id="pdfPageInput" type="number" min="1" value="${halaman}" style="width:90px;text-align:center">
+        <input id="pdfPageInput" type="number" min="1" max="${totalHalaman}" value="${halaman}" style="width:90px;text-align:center">
         <button class="btn btn-sm" id="btnNextPage">▶</button>
         <button class="btn btn-sm btn-success" id="btnSavePage">📌 Tandai Halaman Terakhir</button>
       </div>
-      <div style="margin-top:15px;background:#525659;border-radius:12px;overflow:hidden;min-height:650px">
-        <iframe id="pdfFrame" src="${escapeHTML(pdfUrl)}#page=${halaman}" style="width:100%;height:750px;border:0;display:block" title="Buku PDF"></iframe>
+      <div style="margin-top:15px;background:#525659;border-radius:12px;overflow:auto;min-height:650px;display:flex;align-items:flex-start;justify-content:center;padding:12px;position:relative">
+        <div class="pdf-loading" id="editorPageLoading"><div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat halaman...</div></div></div>
+        <img id="editorPageImage" style="max-width:100%;display:block;border-radius:4px" alt="Halaman buku">
       </div>
       <div class="card" style="margin-top:15px;background:#f8fafc">
         <h3>Hasil Pembelajaran</h3>
@@ -2246,16 +2308,28 @@ async function openPembelajaranEditor(santri, jilid, tipe){
   $("btnKembaliUstadzah").addEventListener("click", renderDaftarSantriUstadzah);
 
   let currentPageNum = halaman;
-  const frame = $("pdfFrame");
+  const imgEl = $("editorPageImage");
+  const loadingEl = $("editorPageLoading");
 
-  function updateViewerPage(){
-    currentPageNum = Math.max(1, Number($("pdfPageInput").value || 1));
-    $("currentPageBadge").textContent = `Halaman ${currentPageNum}`;
-    frame.src = `${pdfUrl}#page=${currentPageNum}`;
+  async function updateViewerPage(){
+    currentPageNum = Math.min(totalHalaman, Math.max(1, Number($("pdfPageInput").value || 1)));
+    $("pdfPageInput").value = currentPageNum;
+    $("currentPageBadge").textContent = `Halaman ${currentPageNum}/${totalHalaman}`;
+    loadingEl?.classList.remove("hidden");
+    try{
+      const gambar = await fetchHalamanGambar(jilid.id, tipe, currentPageNum);
+      if(gambar) imgEl.src = gambar;
+      else{ imgEl.removeAttribute("src"); showToast(`Halaman ${currentPageNum} belum tersedia.`, true); }
+    }catch(err){
+      showToast("Gagal memuat halaman: " + err.message, true);
+    }finally{
+      loadingEl?.classList.add("hidden");
+    }
   }
-  $("btnPrevPage").addEventListener("click", () => { currentPageNum = Math.max(1, currentPageNum-1); $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
-  $("btnNextPage").addEventListener("click", () => { currentPageNum++; $("pdfPageInput").value = currentPageNum; updateViewerPage(); });
+  $("btnPrevPage").addEventListener("click", () => { $("pdfPageInput").value = Math.max(1, currentPageNum-1); updateViewerPage(); });
+  $("btnNextPage").addEventListener("click", () => { $("pdfPageInput").value = Math.min(totalHalaman, currentPageNum+1); updateViewerPage(); });
   $("pdfPageInput").addEventListener("change", updateViewerPage);
+  updateViewerPage();
 
   const saveWith = async (status) => {
     await saveProgress({
@@ -2326,71 +2400,76 @@ async function renderProfil(){
 }
 
 /* ============================================================
-   27. PDF VIEWER PROFESIONAL
+   27. VIEWER HALAMAN BUKU (dari Firestore, per halaman)
 ============================================================ */
-function openProfessionalPdfViewer(url, page=1, label="Dokumen PDF"){
-  const safeUrl = assetUrl(url);
-  if(!safeUrl){ showToast("PDF belum tersedia.", true); return; }
+function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Buku" }){
+  if(!jilidId || !tipe){ showToast("Buku belum tersedia.", true); return; }
 
-  let currentPage = Math.max(1, Number(page) || 1);
+  let currentPage = Math.max(1, Number(halaman) || 1);
+  const total = Math.max(0, Number(totalHalaman) || 0);
   let zoom = 100;
 
   openModal(label, `
     <div class="pdf-viewer">
       <div class="pdf-toolbar">
         <div class="pdf-toolbar-group">
-          <button type="button" id="pdfPrevButton" title="Halaman sebelumnya">◀</button>
-          <div class="pdf-page-indicator" id="pdfPageIndicator">Halaman ${currentPage}</div>
-          <button type="button" id="pdfNextButton" title="Halaman berikutnya">▶</button>
+          <button type="button" id="halPrevButton" title="Halaman sebelumnya">◀</button>
+          <div class="pdf-page-indicator" id="halPageIndicator">Halaman ${currentPage}${total?`/${total}`:""}</div>
+          <button type="button" id="halNextButton" title="Halaman berikutnya">▶</button>
         </div>
         <div class="pdf-toolbar-group">
-          <button type="button" id="pdfZoomOut" title="Perkecil">−</button>
-          <span id="pdfZoomValue" style="min-width:45px;text-align:center;font-size:12px">100%</span>
-          <button type="button" id="pdfZoomIn" title="Perbesar">+</button>
-          <button type="button" id="pdfFullscreen" title="Fullscreen">⛶</button>
+          <button type="button" id="halZoomOut" title="Perkecil">−</button>
+          <span id="halZoomValue" style="min-width:45px;text-align:center;font-size:12px">100%</span>
+          <button type="button" id="halZoomIn" title="Perbesar">+</button>
+          <button type="button" id="halFullscreen" title="Fullscreen">⛶</button>
         </div>
       </div>
-      <div class="pdf-frame-wrap">
-        <div class="pdf-loading" id="pdfViewerLoading">
-          <div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat PDF...</div></div>
+      <div class="pdf-frame-wrap" style="display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:10px">
+        <div class="pdf-loading" id="halLoading">
+          <div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat halaman...</div></div>
         </div>
-        <iframe id="professionalPdfFrame" class="pdf-frame" title="${escapeHTML(label)}"
-          src="${escapeAttr(safeUrl)}#page=${currentPage}&view=FitH"></iframe>
+        <img id="halImage" style="max-width:100%;display:block;transform-origin:top center;border-radius:4px" alt="${escapeHTML(label)}">
       </div>
       <div class="pdf-info-bar">
         <span>📄 ${escapeHTML(label)}</span>
-        <span>Gunakan tombol navigasi untuk berpindah halaman.</span>
+        <span>Halaman dimuat langsung dari Firestore, satu per satu.</span>
       </div>
     </div>`);
 
-  const frame = $("professionalPdfFrame");
-  const loading = $("pdfViewerLoading");
-  const indicator = $("pdfPageIndicator");
-  const zoomValue = $("pdfZoomValue");
+  const imgEl       = $("halImage");
+  const loadingEl   = $("halLoading");
+  const indicatorEl = $("halPageIndicator");
+  const zoomValueEl = $("halZoomValue");
 
-  let loadingTimeout = setTimeout(() => loading?.classList.add("hidden"), 8000);
-  frame.addEventListener("load", () => {
-    clearTimeout(loadingTimeout);
-    loading?.classList.add("hidden");
-  });
-
-  function updatePdf(){
-    indicator.textContent = `Halaman ${currentPage}`;
-    loading?.classList.remove("hidden");
-    frame.src = `${safeUrl}#page=${currentPage}&zoom=${zoom}&view=FitH`;
-    clearTimeout(loadingTimeout);
-    loadingTimeout = setTimeout(() => loading?.classList.add("hidden"), 8000);
+  async function loadPage(){
+    indicatorEl.textContent = `Halaman ${currentPage}${total?`/${total}`:""}`;
+    loadingEl?.classList.remove("hidden");
+    try{
+      const gambar = await fetchHalamanGambar(jilidId, tipe, currentPage);
+      if(!gambar){
+        imgEl.removeAttribute("src");
+        showToast(`Halaman ${currentPage} belum tersedia.`, true);
+      }else{
+        imgEl.src = gambar;
+      }
+    }catch(err){
+      showToast("Gagal memuat halaman: " + err.message, true);
+    }finally{
+      loadingEl?.classList.add("hidden");
+    }
   }
 
-  $("pdfPrevButton")?.addEventListener("click", ()=>{ currentPage = Math.max(1, currentPage-1); updatePdf(); });
-  $("pdfNextButton")?.addEventListener("click", ()=>{ currentPage++; updatePdf(); });
-  $("pdfZoomIn")?.addEventListener("click", ()=>{ zoom = Math.min(200, zoom+10); zoomValue.textContent = zoom+"%"; updatePdf(); });
-  $("pdfZoomOut")?.addEventListener("click", ()=>{ zoom = Math.max(50, zoom-10); zoomValue.textContent = zoom+"%"; updatePdf(); });
-  $("pdfFullscreen")?.addEventListener("click", ()=>{
+  $("halPrevButton")?.addEventListener("click", ()=>{ currentPage = Math.max(1, currentPage-1); loadPage(); });
+  $("halNextButton")?.addEventListener("click", ()=>{ if(!total || currentPage < total){ currentPage++; loadPage(); } });
+  $("halZoomIn")?.addEventListener("click", ()=>{ zoom = Math.min(200, zoom+10); zoomValueEl.textContent = zoom+"%"; imgEl.style.transform = `scale(${zoom/100})`; });
+  $("halZoomOut")?.addEventListener("click", ()=>{ zoom = Math.max(50, zoom-10); zoomValueEl.textContent = zoom+"%"; imgEl.style.transform = `scale(${zoom/100})`; });
+  $("halFullscreen")?.addEventListener("click", ()=>{
     const viewer = document.querySelector(".pdf-viewer");
     if(!document.fullscreenElement) viewer?.requestFullscreen().catch(()=>{});
     else document.exitFullscreen();
   });
+
+  loadPage();
 }
 
 /* ============================================================
