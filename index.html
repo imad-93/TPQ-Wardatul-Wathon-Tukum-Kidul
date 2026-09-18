@@ -259,8 +259,8 @@ const firebaseConfig = {
 const APP_CONFIG = {
   maxPdfSize: 60 * 1024 * 1024,       // batas ukuran file PDF asli yang diproses di browser
   maxHalamanBytes: 700 * 1024,        // target ukuran maksimal per halaman (base64) agar aman di bawah limit dokumen Firestore (1 MiB)
-  pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js",
-  pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js",
+  pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
   cacheTtlMs: 30_000
 };
@@ -496,13 +496,18 @@ async function deleteHalamanRange(jilidId, tipe, fromPage, toPage){
 
 let pdfJsLoadingPromise = null;
 async function loadPdfJsLibrary(){
-  if(window.pdfjsLib) return window.pdfjsLib;
+  const resolveGlobal = () => window.pdfjsLib || window["pdfjs-dist/build/pdf"] || null;
+  if(resolveGlobal()) return resolveGlobal();
   if(!pdfJsLoadingPromise){
     pdfJsLoadingPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = APP_CONFIG.pdfJsScriptUrl;
-      script.onload = () => resolve(window.pdfjsLib);
-      script.onerror = () => reject(new Error("Gagal memuat pustaka pdf.js. Periksa koneksi internet."));
+      script.onload = () => {
+        const lib = resolveGlobal();
+        if(lib) resolve(lib);
+        else reject(new Error("Pustaka pdf.js dimuat tetapi tidak dikenali oleh browser."));
+      };
+      script.onerror = () => reject(new Error("Gagal memuat pustaka pdf.js dari CDN. Periksa koneksi internet atau coba lagi."));
       document.head.appendChild(script);
     });
   }
