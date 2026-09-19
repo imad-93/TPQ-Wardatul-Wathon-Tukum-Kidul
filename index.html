@@ -2938,53 +2938,6 @@ function openKlaimKelasModal(bisaKlaim){
     })();
   });
 }
-function openKlaimKelasModal(bisaKlaim){
-  if(!bisaKlaim.length){
-    alert("Tidak ada kelas yang tersedia untuk diklaim.");
-    return;
-  }
-
-  openModal("Klaim Kelas Pengganti", `
-    <div class="notice">
-      Pilih kelas yang ingin Anda gantikan <b>hari ini</b>. Klaim otomatis berakhir sesuai tanggal yang Anda tentukan.
-    </div>
-    <div class="form-group">
-      <label>Pilih Kelas</label>
-      <select id="klaimJilid">
-        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML((j.ustadzahNames||[]).join(", ") || "belum ditentukan")}</option>`).join("")}
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Alasan Menggantikan (opsional)</label>
-      <input id="klaimAlasan" placeholder="Contoh: Ustadzah A sakit">
-    </div>
-    <div class="form-group">
-      <label>Berlaku Sampai Tanggal</label>
-      <input id="klaimSampai" type="date" value="${todayStr()}" required>
-      <div class="muted" style="font-size:12px;margin-top:4px">Boleh lebih dari 1 hari kalau memang diperlukan.</div>
-    </div>
-    <button class="btn btn-full" id="klaimSaveBtn">Klaim Sekarang</button>
-  `);
-
-  $("klaimSaveBtn").addEventListener("click", async () => {
-    const jilidId = $("klaimJilid").value;
-    if(!jilidId){ showToast("Pilih kelas terlebih dahulu.", true); return; }
-    await withButtonLoading($("klaimSaveBtn"), "Menyimpan...", async () => {
-      try{
-        await updateCollectionData("jilid", jilidId, {
-          substituteUid: currentProfile.uid,
-          substituteNama: currentProfile.nama || "",
-          substituteUntil: $("klaimSampai").value || todayStr(),
-          substituteAlasan: $("klaimAlasan").value.trim()
-        });
-        logAudit("UPDATE","jilid",jilidId,{ klaim:true, uid: currentProfile.uid });
-        closeModal();
-        showToast("Kelas berhasil diklaim.");
-        renderDaftarSantriUstadzah();
-      }catch(err){ alert("Gagal klaim: " + err.message); }
-    })();
-  });
-}
 
 async function renderKeuanganSantriUstadzah(santriId){
   const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
