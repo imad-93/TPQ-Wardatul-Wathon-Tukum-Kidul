@@ -7,6 +7,7 @@
 <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
 <title>TPQ Wardatul Wathon</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --primary:#166534; --primary-dark:#14532d; --primary-light:#22c55e;
@@ -1190,6 +1191,8 @@ async function renderSantriAdmin(){
       </div>
       <div class="actions">
         <input id="searchSantri" class="search-box" placeholder="Cari nama santri...">
+        <button class="btn btn-light" id="btnTemplateSantri">⬇ Template</button>
+        <button class="btn btn-info" id="btnImportSantri">⬆ Import</button>
         <button class="btn" id="addSantri">+ Tambah Santri</button>
       </div>
     </div>
@@ -1215,8 +1218,9 @@ async function renderSantriAdmin(){
     </div>`;
 
   attachTableSearch("searchSantri","tableSantri");
-
   $("addSantri").addEventListener("click", ()=>openSantriForm());
+  $("btnTemplateSantri").addEventListener("click", downloadTemplateSantri);
+  $("btnImportSantri").addEventListener("click", ()=>openImportSantriModal(data));
   $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", async () => {
     const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openSantriForm(item);
@@ -1303,6 +1307,301 @@ async function openSantriForm(item=null){
         showToast("Data santri berhasil disimpan.");
         renderSantriAdmin();
       }catch(error){ alert("Gagal menyimpan: " + error.message); }
+    })();
+  });
+}
+/* ============================================================
+   15B. IMPORT & TEMPLATE DATA SANTRI
+============================================================ */
+
+// Kolom template. Urutan kolom di file yang di-upload bebas, tapi header
+// harus mengandung kata kunci berikut (case-insensitive).
+const SANTRI_TEMPLATE_HEADERS = [
+  "Nama Santri",
+  "Jenis Kelamin",
+  "Kelas / Jilid",
+  "Email Wali",
+  "Nama Wali (Tampilan)",
+  "Password Wali (opsional)",
+  "Status (Aktif/Nonaktif)"
+];
+
+function downloadTemplateSantri(){
+  const rows = [
+    SANTRI_TEMPLATE_HEADERS,
+    ["Ahmad Fauzi",   "Laki-laki", "Jilid 1", "ayah.ahmad@gmail.com", "Bpk. Ahmad",   "wali123456", "Aktif"],
+    ["Siti Aminah",   "Perempuan", "Jilid 2", "ibu.siti@gmail.com",   "Ibu Siti",     "",           "Aktif"],
+    ["Muhammad Rizki","Laki-laki", "",        "",                     "Bpk. Rizki",   "",           "Aktif"]
+  ];
+  const csv = rows.map(r =>
+    r.map(cell => `"${String(cell ?? "").replaceAll('"','""')}"`).join(",")
+  ).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "template-import-santri.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Template CSV berhasil diunduh.");
+}
+// Baca file (csv / xlsx / xls) jadi array of object {header: value}.
+async function parseSpreadsheetFile(file){
+  if(!window.XLSX) throw new Error("Pustaka pembaca Excel belum siap. Coba reload halaman.");
+  if(!file) throw new Error("File belum dipilih.");
+
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type:"array" });
+  const sheetName = wb.SheetNames[0];
+  const sheet = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval:"", raw:false });
+  return rows;
+}
+
+// Cari header dengan kata kunci tertentu (case-insensitive, mengandung).
+function findHeader(keys, keywordGroup){
+  // keywordGroup: array of string keywords; header cocok jika mengandung salah satu.
+  return keys.find(k => {
+    const lk = String(k).toLowerCase();
+    return keywordGroup.some(kw => lk.includes(kw.toLowerCase()));
+  }) || null;
+}
+
+function normalizeGender(val){
+  const v = String(val||"").trim().toLowerCase();
+  if(!v) return "";
+  if(/^(l|lk|laki|pria|male|m)/.test(v)) return "Laki-laki";
+  if(/^(p|pr|perempuan|wanita|female|f)/.test(v)) return "Perempuan";
+  return "";
+}
+
+function normalizeAktif(val){
+  const v = String(val||"").trim().toLowerCase();
+  if(!v) return true;
+  if(["nonaktif","non-aktif","non aktif","tidak","no","n","0","false","off"].includes(v)) return false;
+  return true;
+}
+
+// Modal import: pilih file, preview, konfirmasi, jalankan.
+function openImportSantriModal(existingSantri){
+  openModal("Import Data Santri", `
+  <form id="importSantriForm">
+    <div class="notice">
+      <b>Petunjuk:</b>
+      <ol style="margin:6px 0 0 18px;padding:0">
+        <li>Unduh <b>Template</b> terlebih dahulu untuk melihat format kolom.</li>
+        <li>Kolom <b>Nama Santri</b> wajib diisi. Kolom lain opsional.</li>
+        <li><b>Jenis Kelamin</b>: Laki-laki / Perempuan (boleh singkat L/P).</li>
+        <li><b>Kelas / Jilid</b>: tulis nama jilid persis seperti yang ada di menu Jilid/Kelas.</li>
+        <li><b>Email Wali</b>: kalau <b>belum terdaftar</b>, sistem akan otomatis membuatkan akun login wali baru.</li>
+        <li><b>Password Wali</b>: opsional. Kalau kosong, akan memakai password default di bawah.</li>
+        <li><b>Status</b>: Aktif / Nonaktif (kosong = Aktif).</li>
+      </ol>
+    </div>
+    <div class="form-group">
+      <label>File CSV / Excel (.csv, .xls, .xlsx)</label>
+      <input id="importSantriFile" type="file" accept=".csv,.xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required>
+    </div>
+    <div class="form-group">
+      <label>Password Default untuk Wali Baru (minimal 6 karakter)</label>
+      <input id="importDefaultPassword" type="text" minlength="6" value="wali123456" required>
+      <div class="muted" style="font-size:12px;margin-top:4px">Dipakai kalau kolom "Password Wali" di file kosong. Wali dapat mengganti lewat menu Profil → Reset Password.</div>
+    </div>
+    <div id="importSantriPreviewWrap"></div>
+    <button type="submit" class="btn btn-full" id="importSantriSubmit" style="margin-top:14px">Import Sekarang</button>
+  </form>`);
+
+  const fileInput = $("importSantriFile");
+  const previewWrap = $("importSantriPreviewWrap");
+
+  fileInput.addEventListener("change", async () => {
+    previewWrap.innerHTML = "";
+    const file = fileInput.files?.[0];
+    if(!file) return;
+    try{
+      const rows = await parseSpreadsheetFile(file);
+      if(!rows.length){
+        previewWrap.innerHTML = `<div class="notice notice-warn">File kosong atau tidak ada baris data.</div>`;
+        return;
+      }
+      previewWrap.innerHTML = `
+        <div class="notice" style="margin-top:12px">
+          Terbaca <b>${rows.length} baris</b>. Pratinjau 3 baris pertama:
+          <pre style="white-space:pre-wrap;font-size:12px;margin-top:8px;max-height:160px;overflow:auto">${escapeHTML(JSON.stringify(rows.slice(0,3), null, 2))}</pre>
+        </div>`;
+    }catch(err){
+      previewWrap.innerHTML = `<div class="notice notice-warn">Gagal membaca file: ${escapeHTML(err.message)}</div>`;
+    }
+  });
+
+  $("importSantriForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("importSantriSubmit");
+    const file = fileInput.files?.[0];
+    if(!file){ showToast("Pilih file terlebih dahulu.", true); return; }
+
+    await withButtonLoading(btn, "Mengimpor...", async () => {
+      try{
+        const rows = await parseSpreadsheetFile(file);
+        if(!rows.length) throw new Error("Tidak ada baris data di file.");
+
+        // Ambil referensi jilid & wali sekali saja.
+// Ambil referensi jilid & wali sekali saja.
+const [jilidList, waliList] = await Promise.all([
+  getCollectionData("jilid", { forceRefresh:true }),
+  getCollectionData("wali",  { forceRefresh:true })
+]);
+const jilidByName = new Map(jilidList.map(j=>[String(j.nama).trim().toLowerCase(), j]));
+const waliByEmail = new Map(waliList.map(w=>[String(w.email||"").trim().toLowerCase(), w]));
+const waliByNama  = new Map(waliList.map(w=>[String(w.nama ||"").trim().toLowerCase(), w]));
+
+// Cek duplikat: nama santri + jilidNama (kalau sama, skip).
+const existingKeys = new Set(
+  existingSantri.map(s=>`${String(s.nama||"").trim().toLowerCase()}|${String(s.jilidId||"").trim()}`)
+);
+
+let berhasil = 0, dilewati = 0, waliDibuat = 0;
+const gagal = [];
+const tanpaJilid = [];
+const waliBaruList = [];
+
+// Cari nama-nama header yang relevan.
+const sampleKeys = Object.keys(rows[0]);
+const hNama      = findHeader(sampleKeys, ["nama santri","nama"]);
+const hGender    = findHeader(sampleKeys, ["jenis kelamin","gender","jk"]);
+const hJilid     = findHeader(sampleKeys, ["kelas","jilid"]);
+const hWaliEmail = findHeader(sampleKeys, ["email wali","wali (email)","login wali","email"]);
+const hWaliNama  = findHeader(sampleKeys, ["nama wali","wali (tampilan)","wali"]);
+const hWaliPass  = findHeader(sampleKeys, ["password wali","password"]);
+const hAktif     = findHeader(sampleKeys, ["status"]);
+
+if(!hNama) throw new Error("Kolom 'Nama Santri' tidak ditemukan di file.");
+
+const defaultPassword = $("importDefaultPassword").value.trim();
+
+for(let i=0; i<rows.length; i++){
+  const row = rows[i];
+  const nama = String(row[hNama]||"").trim();
+  if(!nama){ dilewati++; continue; }
+
+  const genderRaw  = hGender    ? row[hGender]                              : "";
+  const jilidRaw   = hJilid     ? String(row[hJilid]     || "").trim()      : "";
+  const waliEmailRaw = hWaliEmail ? String(row[hWaliEmail] || "").trim()    : "";
+  const waliNamaRaw  = hWaliNama  ? String(row[hWaliNama]  || "").trim()    : "";
+  const waliPassRaw  = hWaliPass  ? String(row[hWaliPass]  || "").trim()    : "";
+  const aktifRaw     = hAktif     ? row[hAktif]                             : "";
+
+  // Match jilid
+  let jilidObj = null;
+  if(jilidRaw){
+    jilidObj = jilidByName.get(jilidRaw.toLowerCase()) || null;
+    if(!jilidObj) tanpaJilid.push(`${nama} → "${jilidRaw}"`);
+  }
+
+  // === AUTO-CREATE WALI ===
+  // Prioritas pencarian: email → nama tampilan.
+  let waliObj = null;
+  if(waliEmailRaw){
+    waliObj = waliByEmail.get(waliEmailRaw.toLowerCase()) || null;
+  }
+  if(!waliObj && waliNamaRaw){
+    waliObj = waliByNama.get(waliNamaRaw.toLowerCase()) || null;
+  }
+
+  // Kalau email ada & belum terdaftar → buat akun wali baru.
+  if(!waliObj && waliEmailRaw){
+    try{
+      const password = waliPassRaw || defaultPassword;
+      if(password.length < 6){
+        throw new Error("password minimal 6 karakter");
+      }
+      const namaWali = waliNamaRaw || waliEmailRaw.split("@")[0];
+      const profile = {
+        nama: namaWali,
+        telepon: "",
+        alamat: "",
+        aktif: true
+      };
+      const newUid = await createManagedAccount({
+        email: waliEmailRaw,
+        password,
+        role: "wali",
+        profile
+      });
+      waliObj = { id: newUid, email: waliEmailRaw, nama: namaWali, ...profile };
+      waliByEmail.set(waliEmailRaw.toLowerCase(), waliObj);
+      waliByNama.set(namaWali.toLowerCase(), waliObj);
+      waliBaruList.push(`${namaWali} <${waliEmailRaw}>`);
+      waliDibuat++;
+    }catch(err){
+      gagal.push(`Wali untuk "${nama}" (${waliEmailRaw}): ${firebaseError(err)}`);
+      // Lanjutkan: tetap buat santri tanpa wali, atau skip? Kita buat tanpa wali.
+      waliObj = null;
+    }
+  }
+
+  const key = `${nama.toLowerCase()}|${jilidObj?.id || ""}`;
+  if(existingKeys.has(key)){ dilewati++; continue; }
+
+  try{
+    await addCollectionData("santri", {
+      nama,
+      jenisKelamin: normalizeGender(genderRaw),
+      jilidId:   jilidObj?.id   || null,
+      jilidNama: jilidObj?.nama || (jilidRaw || null),
+      waliUid:   waliObj?.id    || null,
+      waliNama:  waliObj?.nama  || (waliNamaRaw || null),
+      aktif: normalizeAktif(aktifRaw)
+    });
+    existingKeys.add(key);
+    berhasil++;
+  }catch(err){
+    gagal.push(`${nama}: ${err.message}`);
+  }
+}
+
+logAudit("IMPORT","santri","",{ berhasil, dilewati, waliDibuat, gagal: gagal.length });
+
+
+        // Tampilkan ringkasan hasil
+        closeModal();
+openModal("Hasil Import Santri", `
+  <div class="notice">
+    ✅ <b>${berhasil}</b> santri berhasil ditambahkan.<br>
+    👤 <b>${waliDibuat}</b> akun wali baru otomatis dibuat.<br>
+    ⏭ <b>${dilewati}</b> baris dilewati (nama kosong / duplikat).<br>
+    ❌ <b>${gagal.length}</b> baris gagal disimpan.
+  </div>
+  ${waliBaruList.length ? `
+    <div class="notice" style="margin-top:10px">
+      <b>Akun wali baru (${waliBaruList.length}):</b><br>
+      <span style="font-size:12px">${waliBaruList.map(escapeHTML).join("<br>")}</span>
+      <div class="muted" style="font-size:12px;margin-top:6px">
+        Password awal: <b>${escapeHTML(defaultPassword)}</b> (atau dari kolom "Password Wali"). Mohon infokan ke wali masing-masing, dan sarankan untuk reset lewat menu Profil.
+      </div>
+    </div>` : ""}
+  ${tanpaJilid.length ? `
+    <div class="notice notice-warn" style="margin-top:10px">
+      <b>Jilid tidak ditemukan (${tanpaJilid.length}):</b><br>
+      <span style="font-size:12px">${tanpaJilid.map(escapeHTML).join("<br>")}</span>
+      <div class="muted" style="font-size:12px;margin-top:6px">Santri tetap dibuat tanpa jilid. Buat jilid-nya dulu di menu Jilid/Kelas, lalu edit santri via menu Data Santri.</div>
+    </div>` : ""}
+  ${gagal.length ? `
+    <div class="notice notice-warn" style="margin-top:10px">
+      <b>Gagal (${gagal.length}):</b><br>
+      <span style="font-size:12px">${gagal.map(escapeHTML).join("<br>")}</span>
+    </div>` : ""}
+  <button class="btn btn-full" id="importSelesaiBtn" style="margin-top:14px">Selesai</button>
+`);
+$("importSelesaiBtn").addEventListener("click", ()=>{ closeModal(); renderSantriAdmin(); });
+       
+      }catch(error){
+        console.error(error);
+        alert("Gagal import: " + error.message);
+      }
     })();
   });
 }
