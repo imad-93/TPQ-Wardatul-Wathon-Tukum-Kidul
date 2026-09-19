@@ -552,6 +552,23 @@ async function catatPembayaranTagihan(billId, { jumlah, metode, keterangan }){
   logAudit("BAYAR","tagihanSantri",billId,{ jumlah: Number(jumlah||0), status });
   return { terbayar, status };
 }
+async function hapusTagihanSantri(billId){
+  const bill = await getDocument("tagihanSantri", billId);
+  if(!bill) throw new Error("Tagihan tidak ditemukan.");
+  await deleteCollectionData("tagihanSantri", billId);
+  logAudit("DELETE","tagihanSantri",billId,{
+    jenis: bill.jenis, judul: bill.judul, santriNama: bill.santriNama,
+    nominal: bill.nominal, terbayar: bill.terbayar
+  });
+}
+async function hapusTransaksiTabungan(trxId){
+  const trx = await getDocument("tabungan", trxId);
+  if(!trx) throw new Error("Transaksi tabungan tidak ditemukan.");
+  await deleteCollectionData("tabungan", trxId);
+  logAudit("DELETE","tabungan",trxId,{
+    santriNama: trx.santriNama, jenis: trx.jenis, jumlah: trx.jumlah
+  });
+}
 
 // Buat kegiatan Iuran Kegiatan + tagihan per santri target + pengumuman otomatis.
 async function buatIuranKegiatan({ nama, nominal, tanggalMulai, tanggalSelesai, target, targetNama, penerima }){
@@ -2091,7 +2108,10 @@ async function renderKeuanganAdmin(){
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${formatPeriodeLabel(item.periode)}</td>
                 <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
                 <td>${badgeStatusTagihan(item.status)}${menunggak?` <span class="badge badge-red">Menunggak</span>`:""}</td>
-                <td><button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button></td>
+                <td> <div class="actions">
+                    <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
+                    <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button> </div>
+                </td>
               </tr>`;
             }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan SPP. Atur nominal SPP di menu Master Tagihan.</td></tr>`}
           </tbody>
@@ -2110,8 +2130,12 @@ async function renderKeuanganAdmin(){
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${escapeHTML(item.judul||"-")}</td>
                 <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
                 <td>${badgeStatusTagihan(item.status)}</td>
-                <td><button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button></td>
-              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan. Buat lewat menu Master Tagihan.</td></tr>`}
+<td>
+  <div class="actions">
+    <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
+    <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button>
+  </div>
+</td>              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan. Buat lewat menu Master Tagihan.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -2124,15 +2148,16 @@ async function renderKeuanganAdmin(){
       </div>
       <div class="table-container">
         <table id="tableTabungan">
-          <thead><tr><th>No</th><th>Santri</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th></tr></thead>
+          <thead><tr><th>No</th><th>Santri</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th><th>Aksi</th></tr></thead>
           <tbody>
             ${tabunganSorted.length ? tabunganSorted.map((item,index)=>`
-              <tr data-row>
+             <tr data-row>
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td>
                 <td>${item.jenis==="tarik"?`<span class="badge badge-red">Tarik</span>`:`<span class="badge badge-green">Setor</span>`}</td>
                 <td>${formatRupiah(item.jumlah||0)}</td><td>${escapeHTML(item.keterangan||"-")}</td>
                 <td>${formatTanggal(item.tanggal)}</td>
-              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada transaksi tabungan.</td></tr>`}
+                <td><button class="btn btn-sm btn-danger" data-hapus-tabungan="${item.id}">Hapus</button></td>
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada transaksi tabungan.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -2158,6 +2183,32 @@ async function renderKeuanganAdmin(){
     const bill = tagihanSantriList.find(x=>x.id===btn.dataset.bayar);
     if(bill) openCatatPembayaranModal(bill, renderKeuanganAdmin);
   }));
+  // Hapus tagihan SPP / Iuran
+$("page").querySelectorAll("[data-hapus-tagihan]").forEach(btn => btn.addEventListener("click", async () => {
+  const bill = tagihanSantriList.find(x=>x.id===btn.dataset.hapusTagihan);
+  if(!bill) return;
+  const pesan = bill.jenis === "SPP"
+    ? `Hapus tagihan SPP ${formatPeriodeLabel(bill.periode)} untuk ${bill.santriNama}?\n\nTotal sudah dibayar: ${formatRupiah(bill.terbayar||0)}.\nTindakan ini tidak bisa dibatalkan.`
+    : `Hapus tagihan "${bill.judul}" untuk ${bill.santriNama}?\n\nTotal sudah dibayar: ${formatRupiah(bill.terbayar||0)}.\nTindakan ini tidak bisa dibatalkan.`;
+  if(!confirm(pesan)) return;
+  try{
+    await hapusTagihanSantri(bill.id);
+    showToast("Tagihan berhasil dihapus.");
+    renderKeuanganAdmin();
+  }catch(error){ showToast("Gagal menghapus: " + error.message, true); }
+}));
+
+// Hapus transaksi tabungan
+$("page").querySelectorAll("[data-hapus-tabungan]").forEach(btn => btn.addEventListener("click", async () => {
+  const trx = tabunganList.find(x=>x.id===btn.dataset.hapusTabungan);
+  if(!trx) return;
+  if(!confirm(`Hapus transaksi ${trx.jenis==="tarik"?"tarik":"setor"} ${formatRupiah(trx.jumlah||0)} untuk ${trx.santriNama}?\n\nTindakan ini tidak bisa dibatalkan.`)) return;
+  try{
+    await hapusTransaksiTabungan(trx.id);
+    showToast("Transaksi tabungan berhasil dihapus.");
+    renderKeuanganAdmin();
+  }catch(error){ showToast("Gagal menghapus: " + error.message, true); }
+}));
   $("btnCatatTabungan").addEventListener("click", async () => {
     const santriList = (await getCollectionData("santri")).filter(s=>s.aktif!==false);
     openCatatTabunganModal(santriList, renderKeuanganAdmin);
