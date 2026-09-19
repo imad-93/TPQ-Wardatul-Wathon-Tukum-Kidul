@@ -2087,13 +2087,13 @@ async function renderKeuanganAdmin(){
       ${statCard("💵","SPP Tertagih Bulan Ini", formatRupiah(totalSppTertagihBulanIni))}
       ${statCard("✅","SPP Terbayar Bulan Ini", formatRupiah(totalSppTerbayarBulanIni))}
       ${statCard("⚠️","Total Tunggakan SPP", formatRupiah(totalTunggakanSpp))}
-      ${statCard("🐷","Total Saldo Tabungan", formatRupiah(totalSaldoTabungan))}
+      ${statCard("💰","Total Saldo Tabungan", formatRupiah(totalSaldoTabungan))}
     </div>
 
     <div class="actions" style="margin-bottom:16px">
       <button class="btn" id="tabSpp">💵 SPP</button>
       <button class="btn btn-light" id="tabIuran">🎉 Iuran Kegiatan ${totalIuranTerkumpul?`(${formatRupiah(totalIuranTerkumpul)} terkumpul)`:""}</button>
-      <button class="btn btn-light" id="tabTabungan">🐷 Tabungan</button>
+      <button class="btn btn-light" id="tabTabungan">💰 Tabungan</button>
     </div>
 
     <div id="panelSpp">
@@ -2567,7 +2567,7 @@ async function renderPembelajaranWaliView(santri){
       </div>
     </div>
     <div class="card" style="margin-top:18px">
-      <h3 id="riwayatTabunganWaliTitle">🐷 Riwayat Tabungan</h3>
+      <h3 id="riwayatTabunganWaliTitle">💰 Riwayat Tabungan</h3>
       <div class="table-container" style="margin-top:12px">
         <table><thead><tr><th>No.</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th></tr></thead>
           <tbody id="riwayatTabunganWaliBody"></tbody>
@@ -2679,7 +2679,7 @@ async function renderRiwayatKeuanganWaliRows(santriId){
   }
 
   const tabunganTitle = $("riwayatTabunganWaliTitle");
-  if(tabunganTitle) tabunganTitle.textContent = `🐷 Riwayat Tabungan (Saldo: ${formatRupiah(saldoTabungan)})`;
+  if(tabunganTitle) tabunganTitle.textContent = `💰 Riwayat Tabungan (Saldo: ${formatRupiah(saldoTabungan)})`;
   const tabunganBody = $("riwayatTabunganWaliBody");
   if(tabunganBody){
     tabunganBody.innerHTML = tabunganSantri.length ? tabunganSantri.map((item,index)=>`
