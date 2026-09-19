@@ -3458,6 +3458,41 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
 
   loadPage();
 }
+/* ============================================================
+   27B. MIGRASI DATA (JALANKAN SEKALI SAJA)
+============================================================ */
+async function jalankanMigrasiMultiUstadzah(){
+  if(!confirm("Jalankan migrasi struktur data? Jalankan hanya sekali setelah update.")) return;
+  try{
+    const jilids = await getCollectionData("jilid", { forceRefresh:true });
+    let countJilid = 0;
+    for(const j of jilids){
+      if(!Array.isArray(j.ustadzahIds)){
+        const ids = j.ustadzahId ? [j.ustadzahId] : [];
+        const names = j.ustadzahNama ? [j.ustadzahNama] : [];
+        await updateCollectionData("jilid", j.id, { ustadzahIds: ids, ustadzahNames: names });
+        countJilid++;
+      }
+    }
+    const us = await getCollectionData("ustadzah", { forceRefresh:true });
+    let countUstadzah = 0;
+    for(const u of us){
+      if(!Array.isArray(u.jilidIds)){
+        await updateCollectionData("ustadzah", u.id, {
+          jilidIds: u.jilidId ? [u.jilidId] : [],
+          jilidNames: u.jilidNama ? [u.jilidNama] : []
+        });
+        countUstadzah++;
+      }
+    }
+    alert(`Migrasi selesai.\n\nJilid diperbarui: ${countJilid}\nUstadzah diperbarui: ${countUstadzah}`);
+  }catch(err){
+    alert("Gagal migrasi: " + err.message);
+  }
+}
+
+// Daftarkan ke window supaya bisa dipanggil dari Console
+window.jalankanMigrasiMultiUstadzah = jalankanMigrasiMultiUstadzah;
 
 /* ============================================================
    28. ONLINE / OFFLINE
