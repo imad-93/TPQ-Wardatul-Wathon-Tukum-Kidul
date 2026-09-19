@@ -263,7 +263,11 @@ const APP_CONFIG = {
   pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
   pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
-  cacheTtlMs: 30_000
+  cacheTtlMs: 30_000,
+  batasIzinJam: 15,
+  batasAlphaJam: 18,
+  batasAlphaHari: 2,
+  izinDefaultRentangHari: 1
 };
 
 /* ============================================================
@@ -678,6 +682,123 @@ async function getJilidUstadzahNames(jilid){
     return ids.map(id => map.get(id) || "Ustadzah").filter(Boolean);
   }
   return stored;
+}
+/* ============================================================
+   6D. HELPER KEHADIRAN & IZIN
+============================================================ */
+
+function nowWIB(){
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+}
+
+function isLewatBatasIzin(){
+  return nowWIB().getHours() >= APP_CONFIG.batasIzinJam;
+}
+
+function isLewatBatasAlpha(){
+  return nowWIB().getHours() >= APP_CONFIG.batasAlphaJam;
+}
+
+function dateKey(d){
+  const x = d instanceof Date ? d : new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
+
+function rentangTanggal(startStr, endStr){
+  const out = [];
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if(end < start) return [startStr];
+  let cur = new Date(start);
+  while(cur <= end){
+    out.push(dateKey(cur));
+    cur.setDate(cur.getDate()+1);
+  }
+  return out;
+}
+
+function labelAlasan(alasan){
+  return {
+    sakit: "Sakit",
+    kegiatan: "Kegiatan Tidak Bisa Ditinggal",
+    lainnya: "Lainnya"
+  }[alasan] || alasan || "-";
+}
+
+function badgeAlasan(alasan){
+  if(alasan === "sakit")     return `<span class="badge badge-yellow">Sakit</span>`;
+  if(alasan === "kegiatan")  return `<span class="badge badge-blue">Kegiatan</span>`;
+  return `<span class="badge badge-gray">Lainnya</span>`;
+}
+
+function badgeKehadiran(status){
+  if(status === "hadir")   return `<span class="badge badge-green">Hadir</span>`;
+  if(status === "izin")    return `<span class="badge badge-yellow">Izin</span>`;
+  if(status === "alpha")   return `<span class="badge badge-red">Alpha</span>`;
+  return `<span class="badge badge-gray">-</span>`;
+}
+
+function pesanSuksesIzin(alasan){
+  if(alasan === "sakit"){
+    return "Izin anda sedang diajukan, semoga lekas sehat Aaamiin....";
+  }
+  if(alasan === "kegiatan"){
+    return "Izin anda sedang diajukan, semoga urusannya lancar dan selamat sampai tujuan Aaamiin....";
+  }
+  return "Izin anda sedang diajukan, semoga urusannya lancar Aaamiin....";
+}
+
+function isIzinAktifDiTanggal(izin, tanggal){
+  if(izin.aktif === false) return false;
+  const dates = rentangTanggal(izin.tanggalMulai, izin.tanggalSelesai);
+  return dates.includes(tanggal);
+}
+
+function cariIzinSantri(izinList, santriId, tanggal){
+  return izinList.find(z => z.santriId === santriId && isIzinAktifDiTanggal(z, tanggal)) || null;
+}
+
+function hitungKehadiranSantri({ santriId, tanggal, izinList, progressList }){
+  const izin = cariIzinSantri(izinList, santriId, tanggal);
+  if(izin) return { status: "izin", izin, progress: null };
+
+  const progressHariItu = progressList.filter(p => {
+    if(p.santriId !== santriId) return false;
+    const ts = p.updatedAt?.toDate?.() || p.updatedAt;
+    if(!ts) return false;
+    return dateKey(ts) === tanggal;
+  });
+
+  if(progressHariItu.length > 0) return { status: "hadir", izin: null, progress: progressHariItu[0] };
+
+  const today = dateKey(nowWIB());
+  if(tanggal === today && !isLewatBatasAlpha()){
+    return { status: "belum", izin: null, progress: null };
+  }
+  return { status: "alpha", izin: null, progress: null };
+}
+
+function hitungRekapKehadiran({ santriList, izinList, progressList, jumlahHari = 7 }){
+  const today = nowWIB();
+  const tanggalList = [];
+  for(let i = 0; i < jumlahHari; i++){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    tanggalList.push(dateKey(d));
+  }
+
+  return santriList.map(s => {
+    let hadir = 0, izin = 0, alpha = 0;
+    tanggalList.forEach(t => {
+      const r = hitungKehadiranSantri({
+        santriId: s.id, tanggal: t, izinList, progressList
+      });
+      if(r.status === "hadir") hadir++;
+      else if(r.status === "izin") izin++;
+      else if(r.status === "alpha") alpha++;
+    });
+    return { santri: s, hadir, izin, alpha, total: hadir + izin + alpha };
+  }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
 }
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
@@ -1171,15 +1292,30 @@ async function renderDashboardUstadzah(){
   const jilidList = await getCollectionData("jilid");
   const klaimAktif = jilidList.filter(j => isSubstituteActive(j) && j.substituteUid === currentProfile.uid);
 
+  const izinList = await getCollectionData("izin", { forceRefresh:true });
+  const progressList = await getCollectionData("progress", { forceRefresh:true });
+
+  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, jumlahHari: 7 });
+  const peringatan = rekap.filter(r => r.alpha >= APP_CONFIG.batasAlphaHari);
+
+  const riwayatIzin = izinList
+    .filter(z => santri.some(s => s.id === z.santriId))
+    .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+    .slice(0, 10);
+
+  const lewatBatas = isLewatBatasIzin();
+
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Ustadzah</h2>
     <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama || "Ustadzah")}.</p>
+
     <div class="grid" style="margin-top:18px">
       ${statCard("👨‍🎓","Santri Terkelola", santri.length)}
       ${statCard("📚","Kelas Efektif", jilidNames.length)}
       ${statCard("🤝","Kelas Diklaim", klaimAktif.length)}
       ${statCard("🟢","Santri Aktif", santri.filter(x=>x.aktif!==false).length)}
     </div>
+
     <div class="card" style="margin-top:18px">
       <h3>Kelas Anda Hari Ini</h3>
       ${jilidNames.length ? `<p>${jilidNames.map(escapeHTML).join(", ")}</p>` : `<p class="muted">Belum ada kelas.</p>`}
@@ -1189,22 +1325,156 @@ async function renderDashboardUstadzah(){
           ${klaimAktif.map(j=>`• ${escapeHTML(j.nama)}${j.substituteAlasan?` — ${escapeHTML(j.substituteAlasan)}`:""}`).join("<br>")}
         </div>` : ""}
       <button class="btn btn-sm" id="btnKeKlaim" style="margin-top:12px">🤝 Kelola Klaim Kelas</button>
-    </div>`;
-  $("btnKeKlaim").addEventListener("click", ()=>navigate("daftarSantri"));
-}
+    </div>
 
+    ${peringatan.length ? `
+      <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
+        <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
+        <p class="muted" style="color:#7f1d1d;margin-bottom:6px">
+          Santri berikut tidak masuk <b>${APP_CONFIG.batasAlphaHari} hari atau lebih</b> dalam 7 hari terakhir:
+        </p>
+        <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">
+          ${peringatan.map(r => `<li><b>${escapeHTML(r.santri.nama)}</b> — ${r.alpha} hari alpha</li>`).join("")}
+        </ul>
+      </div>` : ""}
+
+    <!-- ============ FORM IZIN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📝 Ajukan Izin Tidak Masuk</h3>
+      ${lewatBatas ? `
+        <div class="notice notice-warn" style="margin-top:10px">
+          ⏰ Sudah lewat jam <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>. Anda tetap bisa mengajukan izin untuk <b>besok</b>.
+        </div>` : `
+        <div class="notice" style="margin-top:10px">
+          ⏰ Batas pengajuan izin untuk hari ini: <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>.
+        </div>`}
+
+      ${santri.length ? `
+        <form id="izinForm" style="margin-top:12px">
+          <div class="form-group">
+            <label>Santri</label>
+            <select id="izinSantri" required>
+              <option value="">Pilih santri</option>
+              ${santri.map(s => `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-jilid="${escapeAttr(s.jilidId||"")}">${escapeHTML(s.nama)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>Tanggal Mulai</label>
+              <input id="izinMulai" type="date" value="${dateKey(nowWIB())}" required>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Selesai</label>
+              <input id="izinSelesai" type="date" value="${dateKey(nowWIB())}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Alasan</label>
+            <select id="izinAlasan" required>
+              <option value="">Pilih alasan</option>
+              <option value="sakit">🤒 Sakit</option>
+              <option value="kegiatan">📅 Kegiatan tidak bisa ditinggal</option>
+              <option value="lainnya">📌 Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="izinKegiatanWrap">
+            <label>Nama Kegiatan</label>
+            <input id="izinNamaKegiatan" placeholder="Contoh: Lomba MTQ tingkat kabupaten">
+          </div>
+          <div class="form-group hidden" id="izinKeteranganWrap">
+            <label>Keterangan Tambahan (opsional)</label>
+            <textarea id="izinKeterangan" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Klaimkan Kelas ke Ustadzah Lain (opsional)</label>
+            <select id="izinKlaimUstadzah">
+              <option value="">Tidak perlu diklaimkan</option>
+            </select>
+            <div class="muted" style="font-size:12px;margin-top:4px">
+              Jika diisi, kelas Anda akan otomatis diklaim ustadzah tersebut untuk tanggal izin.
+            </div>
+          </div>
+          <button class="btn btn-full" type="submit" id="izinSaveBtn">Ajukan Izin</button>
+        </form>` : `<p class="muted">Belum ada santri di kelas Anda.</p>`}
+    </div>
+
+    <!-- ============ RIWAYAT IZIN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📋 Riwayat Izin</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead><tr><th>No.</th><th>Santri</th><th>Tanggal</th><th>Alasan</th><th>Status</th><th>Pengaju</th></tr></thead>
+          <tbody>
+            ${riwayatIzin.length ? riwayatIzin.map((z,index)=>`
+              <tr>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(z.santriNama)}</b></td>
+                <td>${z.tanggalMulai === z.tanggalSelesai ? z.tanggalMulai : `${z.tanggalMulai} s/d ${z.tanggalSelesai}`}</td>
+                <td>${badgeAlasan(z.alasan)} ${z.alasan==="kegiatan" && z.namaKegiatan ? `— ${escapeHTML(z.namaKegiatan)}` : ""}</td>
+                <td>${z.aktif === false ? `<span class="badge badge-gray">Dibatalkan</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td>${escapeHTML(z.diajukanOlehNama || "-")}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada riwayat izin.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ REKAP KEHADIRAN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📊 Rekap Kehadiran (7 Hari Terakhir)</h3>
+      <p class="muted" style="font-size:13px">Diurutkan dari kehadiran tertinggi.</p>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            ${rekap.length ? rekap.map((r,index)=>`
+              <tr>
+                <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
+                <td><b>${escapeHTML(r.santri.nama)}</b></td>
+                <td><span class="badge badge-green">${r.hadir}</span></td>
+                <td><span class="badge badge-yellow">${r.izin}</span></td>
+                <td>${r.alpha >= APP_CONFIG.batasAlphaHari
+                      ? `<span class="badge badge-red">${r.alpha}</span>`
+                      : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
+                <td>${r.total}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  $("btnKeKlaim").addEventListener("click", ()=>navigate("daftarSantri"));
+
+  if(santri.length) pasangFormIzin({ santriList: santri, isUstadzah: true });
+}
 async function renderDashboardWali(){
   const santri = await getSantriWali();
   const pengumuman = await getCollectionData("pengumuman");
   const pengumumanAktif = pengumuman.filter(x=>x.aktif!==false)
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
+  const izinList = await getCollectionData("izin", { forceRefresh:true });
+  const progressList = await getCollectionData("progress", { forceRefresh:true });
+
+  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, jumlahHari: 7 });
+  const peringatan = rekap.filter(r => r.alpha >= APP_CONFIG.batasAlphaHari);
+
+  const riwayatIzin = izinList
+    .filter(z => santri.some(s => s.id === z.santriId))
+    .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
+    .slice(0, 10);
+
   let pendamping = null;
   if(santri[0]) pendamping = await getUstadzahPendamping(santri[0]);
+
+  const lewatBatas = isLewatBatasIzin();
 
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Wali</h2>
     <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama || "Wali Santri")}.</p>
+
     <div class="grid" style="margin-top:18px">
       ${statCard("👨‍🎓","Jumlah Santri", santri.length)}
       ${statCard("📢","Pengumuman", pengumumanAktif.length)}
@@ -1214,6 +1484,18 @@ async function renderDashboardWali(){
         <div style="font-weight:800;margin-top:6px">${escapeHTML(pendamping?.nama || "Belum ditentukan")}</div>
       </div>
     </div>
+
+    ${peringatan.length ? `
+      <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
+        <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
+        <p class="muted" style="color:#7f1d1d;margin-bottom:6px">
+          Santri berikut tidak masuk <b>${APP_CONFIG.batasAlphaHari} hari atau lebih</b> dalam 7 hari terakhir tanpa keterangan:
+        </p>
+        <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">
+          ${peringatan.map(r => `<li><b>${escapeHTML(r.santri.nama)}</b> — ${r.alpha} hari alpha</li>`).join("")}
+        </ul>
+      </div>` : ""}
+
     ${santri.length ? `
       <div class="card" style="margin-top:18px">
         <h3>Santri Anda</h3>
@@ -1226,6 +1508,106 @@ async function renderDashboardWali(){
             </div>`).join("")}
         </div>
       </div>` : `<div class="card" style="margin-top:18px"><div class="empty">Belum ada data santri yang terhubung dengan akun wali Anda. Hubungi admin.</div></div>`}
+
+    <!-- ============ FORM IZIN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📝 Ajukan Izin Tidak Masuk</h3>
+      ${lewatBatas ? `
+        <div class="notice notice-warn" style="margin-top:10px">
+          ⏰ Sudah lewat jam <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>. Anda tetap bisa mengajukan izin untuk <b>besok</b>.
+        </div>` : `
+        <div class="notice" style="margin-top:10px">
+          ⏰ Batas pengajuan izin untuk hari ini: <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>.
+        </div>`}
+
+      ${santri.length ? `
+        <form id="izinForm" style="margin-top:12px">
+          <div class="form-group">
+            <label>Santri</label>
+            <select id="izinSantri" required>
+              <option value="">Pilih santri</option>
+              ${santri.map(s => `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-jilid="${escapeAttr(s.jilidId||"")}">${escapeHTML(s.nama)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>Tanggal Mulai</label>
+              <input id="izinMulai" type="date" value="${dateKey(nowWIB())}" required>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Selesai</label>
+              <input id="izinSelesai" type="date" value="${dateKey(nowWIB())}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Alasan</label>
+            <select id="izinAlasan" required>
+              <option value="">Pilih alasan</option>
+              <option value="sakit">🤒 Sakit</option>
+              <option value="kegiatan">📅 Kegiatan tidak bisa ditinggal</option>
+              <option value="lainnya">📌 Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="izinKegiatanWrap">
+            <label>Nama Kegiatan</label>
+            <input id="izinNamaKegiatan" placeholder="Contoh: Lomba MTQ tingkat kabupaten">
+          </div>
+          <div class="form-group hidden" id="izinKeteranganWrap">
+            <label>Keterangan Tambahan (opsional)</label>
+            <textarea id="izinKeterangan" rows="3"></textarea>
+          </div>
+          <button class="btn btn-full" type="submit" id="izinSaveBtn">Ajukan Izin</button>
+        </form>` : `<p class="muted">Belum ada santri terhubung. Hubungi admin.</p>`}
+    </div>
+
+    <!-- ============ RIWAYAT IZIN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📋 Riwayat Izin</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead><tr><th>No.</th><th>Santri</th><th>Tanggal</th><th>Alasan</th><th>Status</th><th>Pengaju</th></tr></thead>
+          <tbody>
+            ${riwayatIzin.length ? riwayatIzin.map((z,index)=>`
+              <tr>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(z.santriNama)}</b></td>
+                <td>${z.tanggalMulai === z.tanggalSelesai ? z.tanggalMulai : `${z.tanggalMulai} s/d ${z.tanggalSelesai}`}</td>
+                <td>${badgeAlasan(z.alasan)} ${z.alasan==="kegiatan" && z.namaKegiatan ? `— ${escapeHTML(z.namaKegiatan)}` : ""}</td>
+                <td>${z.aktif === false ? `<span class="badge badge-gray">Dibatalkan</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td>${escapeHTML(z.diajukanOlehNama || "-")}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada riwayat izin.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ REKAP KEHADIRAN ============ -->
+    <div class="card" style="margin-top:18px">
+      <h3>📊 Rekap Kehadiran (7 Hari Terakhir)</h3>
+      <p class="muted" style="font-size:13px">Diurutkan dari kehadiran tertinggi.</p>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            ${rekap.length ? rekap.map((r,index)=>`
+              <tr>
+                <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
+                <td><b>${escapeHTML(r.santri.nama)}</b></td>
+                <td><span class="badge badge-green">${r.hadir}</span></td>
+                <td><span class="badge badge-yellow">${r.izin}</span></td>
+                <td>${r.alpha >= APP_CONFIG.batasAlphaHari
+                      ? `<span class="badge badge-red">${r.alpha}</span>`
+                      : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
+                <td>${r.total}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PENGUMUMAN ============ -->
     <div class="card" style="margin-top:18px">
       <h3>📢 Pengumuman Terbaru</h3>
       <div style="display:grid;gap:12px;margin-top:12px">
@@ -1238,11 +1620,134 @@ async function renderDashboardWali(){
       </div>
     </div>`;
 
+  // Event lihat santri
   $("page").querySelectorAll('[data-action="lihat-santri"]').forEach(btn=>{
     btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.santriId));
   });
-}
 
+  // Pasang form izin
+  if(santri.length) pasangFormIzin({ santriList: santri, isUstadzah: false });
+}
+/* ============================================================
+   14B. FORM IZIN (dipakai di dashboard wali & ustadzah)
+============================================================ */
+
+async function pasangFormIzin({ santriList, isUstadzah }){
+  const izinList = await getCollectionData("izin", { forceRefresh:true });
+  const alasanSelect = $("izinAlasan");
+  if(!alasanSelect) return;
+
+  // Show/hide field by alasan
+  alasanSelect.addEventListener("change", () => {
+    const v = alasanSelect.value;
+    $("izinKegiatanWrap").classList.toggle("hidden", v !== "kegiatan");
+    $("izinKeteranganWrap").classList.toggle("hidden", v === "");
+    if(v === "kegiatan") $("izinNamaKegiatan").required = true;
+    else $("izinNamaKegiatan").required = false;
+  });
+
+  // Khusus ustadzah: isi dropdown ustadzah pengganti
+  if(isUstadzah && $("izinKlaimUstadzah")){
+    const allUstadzah = await getCollectionData("ustadzah");
+    const options = allUstadzah.filter(u => u.id !== currentProfile.uid && u.aktif !== false);
+    $("izinKlaimUstadzah").innerHTML = `
+      <option value="">Tidak perlu diklaimkan</option>
+      ${options.map(u => `<option value="${u.id}" data-nama="${escapeAttr(u.nama||u.email||"")}">${escapeHTML(u.nama || u.email || "-")}</option>`).join("")}
+    `;
+  }
+
+  // Set min tanggal = hari ini
+  const today = dateKey(nowWIB());
+  $("izinMulai").min = today;
+  $("izinSelesai").min = today;
+
+  $("izinForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("izinSaveBtn");
+    const santriSelect = $("izinSantri");
+    const santriId = santriSelect.value;
+    const santriNama = santriSelect.options[santriSelect.selectedIndex]?.dataset.nama || "-";
+    const santriJilidId = santriSelect.options[santriSelect.selectedIndex]?.dataset.jilid || null;
+
+    if(!santriId){ showToast("Pilih santri terlebih dahulu.", true); return; }
+
+    const alasan = $("izinAlasan").value;
+    if(!alasan){ showToast("Pilih alasan izin.", true); return; }
+
+    const namaKegiatan = alasan === "kegiatan" ? $("izinNamaKegiatan").value.trim() : "";
+    if(alasan === "kegiatan" && !namaKegiatan){
+      showToast("Nama kegiatan wajib diisi.", true); return;
+    }
+
+    const tanggalMulai = $("izinMulai").value;
+    const tanggalSelesai = $("izinSelesai").value;
+
+    if(tanggalMulai < today){
+      showToast("Tanggal mulai tidak boleh di masa lalu.", true); return;
+    }
+    if(tanggalSelesai < tanggalMulai){
+      showToast("Tanggal selesai tidak boleh sebelum tanggal mulai.", true); return;
+    }
+    if(tanggalMulai === today && isLewatBatasIzin()){
+      showToast(`Batas pengajuan izin untuk hari ini sudah lewat (${APP_CONFIG.batasIzinJam}.00 WIB). Silakan ajukan untuk besok.`, true);
+      return;
+    }
+
+    const existingIzin = izinList.find(z =>
+      z.santriId === santriId && z.aktif !== false &&
+      rentangTanggal(tanggalMulai, tanggalSelesai).some(t => isIzinAktifDiTanggal(z, t))
+    );
+    if(existingIzin){
+      if(!confirm(`Sudah ada izin untuk tanggal tersebut (${existingIzin.tanggalMulai} s/d ${existingIzin.tanggalSelesai}). Lanjutkan?`)) return;
+    }
+
+    await withButtonLoading(btn, "Mengirim...", async () => {
+      try{
+        const payload = {
+          santriId, santriNama, santriJilidId,
+          tanggalMulai, tanggalSelesai,
+          alasan, namaKegiatan,
+          keterangan: $("izinKeterangan")?.value.trim() || "",
+          diajukanOleh: currentProfile.uid,
+          diajukanOlehNama: currentProfile.nama || "",
+          diajukanOlehRole: currentProfile.role,
+          ustadzahId: isUstadzah ? currentProfile.uid : null,
+          aktif: true
+        };
+        const ref = await addCollectionData("izin", payload);
+
+        // Kalau ustadzah & pilih pengganti → klaim kelas untuk rentang tanggal
+        if(isUstadzah && santriJilidId){
+          const penggantiUid = $("izinKlaimUstadzah")?.value;
+          if(penggantiUid){
+            const penggantiNama = $("izinKlaimUstadzah").options[$("izinKlaimUstadzah").selectedIndex]?.dataset.nama || "";
+            const jilidList = await getCollectionData("jilid", { forceRefresh:true });
+            const jilidDiampu = jilidList.filter(j => getJilidUstadzahIds(j).includes(currentProfile.uid));
+            for(const j of jilidDiampu){
+              await updateCollectionData("jilid", j.id, {
+                substituteUid: penggantiUid,
+                substituteNama: penggantiNama,
+                substituteUntil: tanggalSelesai,
+                substituteAlasan: `Izin ${labelAlasan(alasan)}${namaKegiatan ? " — " + namaKegiatan : ""}`
+              });
+              logAudit("UPDATE","jilid",j.id,{ klaimOleh: penggantiUid, viaIzin: ref.id });
+            }
+          }
+        }
+
+        logAudit("CREATE","izin",ref.id,{ santriId, alasan, tanggalMulai, tanggalSelesai });
+        showToast(pesanSuksesIzin(alasan));
+
+        // Refresh dashboard agar riwayat terbaru muncul
+        if(currentProfile.role === "wali") renderDashboardWali();
+        else renderDashboardUstadzah();
+      }catch(error){
+        console.error(error);
+        alert("Gagal mengirim izin: " + error.message);
+      }
+    })();
+  });
+}
 /* ============================================================
    15. ADMIN: DATA SANTRI
 ============================================================ */
@@ -2735,6 +3240,29 @@ async function renderSettingsAdmin(){
       </form>
     </div>
     <div class="card" style="margin-top:18px">
+  <h3>📝 Konfigurasi Izin & Kehadiran</h3>
+  <form id="izinConfigForm" style="margin-top:12px">
+    <div class="row">
+      <div class="form-group">
+        <label>Batas Jam Input Izin (WIB)</label>
+        <input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? 15)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, izin untuk hari ini ditolak.</div>
+      </div>
+      <div class="form-group">
+        <label>Batas Jam Status Alpha (WIB)</label>
+        <input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? 18)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, siswa tanpa izin & tanpa progress = Alpha.</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Batas Hari Alpha untuk Peringatan</label>
+      <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? 2)}" required>
+      <div class="muted" style="font-size:12px;margin-top:4px">Peringatan muncul jika santri alpha ≥ N hari dalam 7 hari terakhir.</div>
+    </div>
+    <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
+  </form>
+</div>
+    <div class="card" style="margin-top:18px">
       <h3>QRIS Pembayaran</h3>
       <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub.</p>
       ${assetUrl(appSettings.qrisUrl) ? `<img src="${escapeHTML(assetUrl(appSettings.qrisUrl))}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
@@ -2778,6 +3306,23 @@ async function renderSettingsAdmin(){
       renderSettingsAdmin();
     }catch(error){ alert("Gagal menyimpan URL QRIS: " + error.message); }
   }));
+  $("izinConfigForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("izinConfigSaveBtn");
+  await withButtonLoading(btn, "Menyimpan...", async () => {
+    try{
+      await setDoc(doc(db,"settings","app"), {
+        batasIzinJam: Number($("cfgBatasIzin").value || 15),
+        batasAlphaJam: Number($("cfgBatasAlpha").value || 18),
+        batasAlphaHari: Number($("cfgBatasAlphaHari").value || 2),
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+      invalidateCache("settings");
+      logAudit("UPDATE","settings","app",{ izinConfig:true });
+      showToast("Konfigurasi izin & kehadiran disimpan.");
+    }catch(error){ alert(error.message); }
+  })();
+});
 }
 
 /* ============================================================
