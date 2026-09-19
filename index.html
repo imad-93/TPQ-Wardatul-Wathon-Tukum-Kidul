@@ -622,7 +622,49 @@ function hitungSaldoTabungan(transaksiList, santriId){
     return t.jenis === "tarik" ? saldo - Number(t.jumlah||0) : saldo + Number(t.jumlah||0);
   }, 0);
 }
+/* ============================================================
+   6C. HELPER MULTI-USTADZAH & GURU PENGGANTI
+============================================================ */
 
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+// Ambil array ustadzahIds dari dokumen jilid, dengan fallback ke struktur lama.
+function getJilidUstadzahIds(jilid){
+  if(Array.isArray(jilid?.ustadzahIds)) return jilid.ustadzahIds.filter(Boolean);
+  if(jilid?.ustadzahId) return [jilid.ustadzahId];
+  return [];
+}
+
+// Apakah klaim pengganti pada jilid ini masih berlaku hari ini?
+function isSubstituteActive(jilid){
+  if(!jilid?.substituteUid || !jilid?.substituteUntil) return false;
+  return jilid.substituteUntil >= todayStr();
+}
+
+// Daftar jilidId yang efektif untuk profil ustadzah (asli + pengganti aktif).
+async function getEffectiveJilidIdsForUstadzah(profile){
+  const jilidList = await getCollectionData("jilid");
+  const ids = new Set();
+
+  (profile.jilidIds || (profile.jilidId ? [profile.jilidId] : [])).forEach(x => x && ids.add(x));
+
+  jilidList.forEach(j => {
+    if(getJilidUstadzahIds(j).includes(profile.uid)) ids.add(j.id);
+    if(isSubstituteActive(j) && j.substituteUid === profile.uid) ids.add(j.id);
+  });
+
+  return [...ids];
+}
+
+// Daftar nama jilid efektif untuk ditampilkan di dashboard ustadzah.
+async function getEffectiveJilidNamesForUstadzah(profile){
+  const ids = await getEffectiveJilidIdsForUstadzah(profile);
+  const jilidList = await getCollectionData("jilid");
+  return jilidList.filter(j => ids.includes(j.id)).map(j => j.nama);
+}
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
 ============================================================ */
@@ -1111,19 +1153,30 @@ async function renderDashboardAdmin(){
 async function renderDashboardUstadzah(){
   await ensureSppBulanIniUntukSemuaSantri();
   const santri = await getSantriUstadzah();
+  const jilidNames = await getEffectiveJilidNamesForUstadzah(currentProfile);
+  const jilidList = await getCollectionData("jilid");
+  const klaimAktif = jilidList.filter(j => isSubstituteActive(j) && j.substituteUid === currentProfile.uid);
+
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Ustadzah</h2>
     <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama || "Ustadzah")}.</p>
     <div class="grid" style="margin-top:18px">
-      ${statCard("👨‍🎓","Santri Kelas", santri.length)}
-      ${statCard("📚","Kelas Diampu", currentProfile.jilidNama || "Belum diatur")}
+      ${statCard("👨‍🎓","Santri Terkelola", santri.length)}
+      ${statCard("📚","Kelas Efektif", jilidNames.length)}
+      ${statCard("🤝","Kelas Diklaim", klaimAktif.length)}
       ${statCard("🟢","Santri Aktif", santri.filter(x=>x.aktif!==false).length)}
     </div>
     <div class="card" style="margin-top:18px">
-      <h3>Petunjuk</h3>
-      <p class="muted">Buka menu <b>Santri Kelas</b> untuk mencatat baca, hafalan, dan pembayaran setiap santri.</p>
-      ${!currentProfile.jilidId ? `<div class="notice notice-warn">Anda belum ditugaskan ke kelas/jilid manapun. Hubungi admin.</div>` : ""}
+      <h3>Kelas Anda Hari Ini</h3>
+      ${jilidNames.length ? `<p>${jilidNames.map(escapeHTML).join(", ")}</p>` : `<p class="muted">Belum ada kelas.</p>`}
+      ${klaimAktif.length ? `
+        <div class="notice" style="margin-top:10px">
+          <b>Anda menggantikan:</b><br>
+          ${klaimAktif.map(j=>`• ${escapeHTML(j.nama)}${j.substituteAlasan?` — ${escapeHTML(j.substituteAlasan)}`:""}`).join("<br>")}
+        </div>` : ""}
+      <button class="btn btn-sm" id="btnKeKlaim" style="margin-top:12px">🤝 Kelola Klaim Kelas</button>
     </div>`;
+  $("btnKeKlaim").addEventListener("click", ()=>navigate("daftarSantri"));
 }
 
 async function renderDashboardWali(){
@@ -1724,7 +1777,7 @@ async function renderUstadzahAdmin(){
           ${data.length ? data.map((item,index)=>`
             <tr data-row>
               <td>${index+1}</td><td><b>${escapeHTML(item.nama)}</b></td><td>${escapeHTML(item.email)}</td>
-              <td>${escapeHTML(item.jilidNama || "Belum diatur")}</td>
+              <td>${escapeHTML((item.jilidNames||[]).join(", ") || item.jilidNama || "Belum diatur")}</td>
               <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
               <td><div class="actions">
                 <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
@@ -1753,19 +1806,30 @@ async function renderUstadzahAdmin(){
 }
 
 function openUstadzahForm(item, jilidList){
+  const currentJilidIds = Array.isArray(item?.jilidIds)
+    ? item.jilidIds
+    : (item?.jilidId ? [item.jilidId] : []);
+
   openModal(item ? "Edit Data Ustadzah" : "Buat Akun Ustadzah", `
     <form id="ustadzahForm">
       <div class="form-group"><label>Nama</label><input id="ustadzahNama" value="${escapeHTML(item?.nama || "")}" required></div>
       <div class="form-group"><label>Email</label><input id="ustadzahEmail" type="email" value="${escapeHTML(item?.email || "")}" ${item?"disabled":""} required></div>
       ${!item ? `<div class="form-group"><label>Password Awal</label><input id="ustadzahPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required></div>` : ""}
       <div class="form-group"><label>Telepon</label><input id="ustadzahTelepon" value="${escapeHTML(item?.telepon || "")}" placeholder="08xxxxxxxxxx"></div>
+
       <div class="form-group">
-        <label>Kelas / Jilid Diampu</label>
-        <select id="ustadzahJilid">
-          <option value="">Belum ditentukan</option>
-          ${jilidList.map(k=>`<option value="${k.id}" ${item?.jilidId===k.id?"selected":""}>${escapeHTML(k.nama)}</option>`).join("")}
-        </select>
+        <label>Kelas / Jilid Diampu (boleh lebih dari satu)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px">
+          ${jilidList.map(k=>`
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer">
+              <input type="checkbox" class="jilid-check" value="${k.id}"
+                ${currentJilidIds.includes(k.id)?"checked":""}
+                style="width:auto;margin:0">
+              ${escapeHTML(k.nama)}
+            </label>`).join("")}
+        </div>
       </div>
+
       <div class="form-group">
         <label>Status</label>
         <select id="ustadzahAktif">
@@ -1779,15 +1843,20 @@ function openUstadzahForm(item, jilidList){
   $("ustadzahForm").addEventListener("submit", async event => {
     event.preventDefault();
     const btn = $("ustadzahSaveBtn");
-    const jilidSelect = $("ustadzahJilid");
-    const jilidOption = jilidSelect.options[jilidSelect.selectedIndex];
+
+    const jilidIds = [...document.querySelectorAll(".jilid-check:checked")].map(x=>x.value);
+    const jilidNames = jilidList.filter(k=>jilidIds.includes(k.id)).map(k=>k.nama);
+
     const profile = {
       nama: $("ustadzahNama").value.trim(),
       telepon: $("ustadzahTelepon").value.trim(),
-      jilidId: jilidSelect.value || null,
-      jilidNama: jilidSelect.value ? jilidOption.textContent.trim() : null,
+      jilidIds,
+      jilidNames,
+      jilidId: jilidIds[0] || null,
+      jilidNama: jilidNames[0] || null,
       aktif: $("ustadzahAktif").value === "true"
     };
+
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
         if(item){
@@ -1806,7 +1875,6 @@ function openUstadzahForm(item, jilidList){
     })();
   });
 }
-
 /* ============================================================
    18. PDF UPLOAD
 ============================================================ */
@@ -2004,10 +2072,12 @@ async function renderJilidAdmin(){
   }));
 }
 
-function openJilidForm(item=null){
-  // ID dibuat lebih dulu (untuk jilid baru) agar halaman yang diupload sebelum
-  // tombol "Simpan" ditekan tetap terhubung ke jilid yang benar.
+async function openJilidForm(item=null){
   const jilidId = item?.id || (crypto.randomUUID ? crypto.randomUUID() : `jilid_${Date.now()}_${Math.random().toString(16).slice(2)}`);
+
+  // >>> Ambil daftar ustadzah untuk checkbox multi-ustadzah
+  const ustadzahList = await getCollectionData("ustadzah");
+  const currentIds = getJilidUstadzahIds(item);
 
   openModal(item ? "Edit Jilid / Kelas" : "Tambah Jilid / Kelas", `
     <form id="jilidForm">
@@ -2018,6 +2088,21 @@ function openJilidForm(item=null){
       <div class="form-group">
         <label>Keterangan</label>
         <textarea id="jilidKeterangan" rows="3">${escapeHTML(item?.keterangan || "")}</textarea>
+      </div>
+
+      <!-- >>> Checkbox multi-ustadzah -->
+      <div class="form-group">
+        <label>Ustadzah Pengampu (boleh lebih dari satu)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px">
+          ${ustadzahList.length ? ustadzahList.map(u=>`
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer">
+              <input type="checkbox" class="ustadzah-check" value="${u.id}"
+                ${currentIds.includes(u.id)?"checked":""}
+                style="width:auto;margin:0">
+              ${escapeHTML(u.nama || u.email || "-")}
+            </label>`).join("")
+          : `<div class="muted" style="font-size:12px">Belum ada akun ustadzah.</div>`}
+        </div>
       </div>
 
       ${pdfUploadComponent({
@@ -2066,7 +2151,17 @@ function openJilidForm(item=null){
         const totalHalamanBaca = Number($("pdfTotal_baca").value || 0);
         const totalHalamanHafalan = Number($("pdfTotal_hafalan").value || 0);
         const aktif = $("jilidAktif").value === "true";
-        const payload = { nama, keterangan, aktif, totalHalamanBaca, totalHalamanHafalan };
+
+        // >>> Ambil ustadzahIds dari checkbox
+        const ustadzahIds = [...document.querySelectorAll(".ustadzah-check:checked")].map(x=>x.value);
+        const ustadzahNames = ustadzahList.filter(u=>ustadzahIds.includes(u.id)).map(u=>u.nama || u.email || "");
+
+        const payload = {
+          nama, keterangan, aktif,
+          totalHalamanBaca, totalHalamanHafalan,
+          ustadzahIds, ustadzahNames
+        };
+
         if(item){
           await updateCollectionData("jilid", item.id, payload);
           logAudit("UPDATE","jilid",item.id,{ nama });
@@ -2087,7 +2182,6 @@ function openJilidForm(item=null){
     })();
   });
 }
-
 /* ============================================================
    20. PENGUMUMAN
 ============================================================ */
@@ -2676,21 +2770,85 @@ async function renderSettingsAdmin(){
    24. USTADZAH: DAFTAR SANTRI KELAS
 ============================================================ */
 async function getSantriUstadzah(){
-  if(!currentProfile?.jilidId) return [];
+  const effectiveIds = await getEffectiveJilidIdsForUstadzah(currentProfile);
+  if(!effectiveIds.length) return [];
   const semua = await getCollectionData("santri");
-  return semua.filter(x => x.jilidId === currentProfile.jilidId);
+  return semua.filter(x => effectiveIds.includes(x.jilidId));
 }
 
 async function renderDaftarSantriUstadzah(){
   if(!requireRole("ustadzah")) return;
   await ensureSppBulanIniUntukSemuaSantri();
-  const santri = await getSantriUstadzah();
+
+  const [santri, jilidList] = await Promise.all([
+    getSantriUstadzah(),
+    getCollectionData("jilid", { forceRefresh:true })
+  ]);
+
+  const today = todayStr();
+
+  const klaimAktif = jilidList.filter(j =>
+    isSubstituteActive(j) && j.substituteUid === currentProfile.uid
+  );
+
+  const asliIds = jilidList
+    .filter(j => getJilidUstadzahIds(j).includes(currentProfile.uid))
+    .map(j => j.id);
+
+  const bisaKlaim = jilidList.filter(j =>
+    j.aktif !== false &&
+    !asliIds.includes(j.id) &&
+    !(isSubstituteActive(j) && j.substituteUid !== currentProfile.uid)
+  );
+
+  const jilidEfektif = jilidList
+    .filter(j => asliIds.includes(j.id) || klaimAktif.some(k=>k.id===j.id))
+    .map(j => j.nama);
 
   $("page").innerHTML = `
     <div class="toolbar">
-      <div><h2 class="section-title">Daftar Santri</h2><p class="muted">Santri di kelas ${escapeHTML(currentProfile.jilidNama || "Anda")}.</p></div>
+      <div>
+        <h2 class="section-title">Daftar Santri</h2>
+        <p class="muted">
+          Kelas efektif hari ini: <b>${jilidEfektif.length ? escapeHTML(jilidEfektif.join(", ")) : "Belum ada"}</b>
+        </p>
+      </div>
       <input id="searchSantriUstadzah" class="search-box" placeholder="Cari nama santri...">
     </div>
+
+    ${klaimAktif.length ? `
+      <div class="card" style="margin-bottom:16px;background:#f0fdf4;border-color:#bbf7d0">
+        <h3 style="margin-top:0">🤝 Anda Menggantikan Kelas Hari Ini (${today})</h3>
+        <div class="table-container" style="margin-top:10px">
+          <table>
+            <thead><tr><th>Kelas</th><th>Pengampu Asli</th><th>Alasan</th><th>Aksi</th></tr></thead>
+            <tbody>
+              ${klaimAktif.map(j=>`
+                <tr>
+                  <td><b>${escapeHTML(j.nama)}</b></td>
+                  <td>${escapeHTML((j.ustadzahNames||[]).join(", ") || "-")}</td>
+                  <td>${escapeHTML(j.substituteAlasan || "-")}</td>
+                  <td><button class="btn btn-sm btn-danger" data-lepas="${j.id}">Lepas Klaim</button></td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>` : ""}
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">🤝 Klaim Kelas Pengganti</h3>
+          <p class="muted" style="margin:4px 0 0 0;font-size:13px">
+            Gunakan tombol di bawah jika Anda menggantikan ustadzah lain yang tidak hadir hari ini.
+          </p>
+        </div>
+        ${bisaKlaim.length
+          ? `<button class="btn" id="btnBukaKlaim">+ Klaim Kelas</button>`
+          : `<span class="badge badge-gray">Tidak ada kelas yang bisa diklaim</span>`}
+      </div>
+    </div>
+
     <div class="table-container">
       <table id="tableSantriUstadzah">
         <thead><tr><th>No.</th><th>Nama Santri</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -2703,7 +2861,7 @@ async function renderDaftarSantriUstadzah(){
                 <button class="btn btn-sm" data-view="${item.id}">📖 Baca &amp; Hafalan</button>
                 <button class="btn btn-sm btn-info" data-keuangan="${item.id}">💰 Keuangan</button>
               </div></td>
-            </tr>`).join("") : `<tr><td colspan="4" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
+            </tr>`).join("") : `<tr><td colspan="4" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId && !(currentProfile.jilidIds||[]).length ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
         </tbody>
       </table>
     </div>`;
@@ -2711,6 +2869,121 @@ async function renderDaftarSantriUstadzah(){
   attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
   $("page").querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
   $("page").querySelectorAll("[data-keuangan]").forEach(btn => btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
+
+  $("btnBukaKlaim")?.addEventListener("click", ()=>openKlaimKelasModal(bisaKlaim));
+
+  $("page").querySelectorAll("[data-lepas]").forEach(btn => btn.addEventListener("click", async () => {
+    const j = jilidList.find(x=>x.id===btn.dataset.lepas);
+    if(!j) return;
+    if(!confirm(`Lepas klaim kelas "${j.nama}"?`)) return;
+    try{
+      await updateCollectionData("jilid", j.id, {
+        substituteUid: null,
+        substituteNama: null,
+        substituteUntil: null,
+        substituteAlasan: ""
+      });
+      logAudit("UPDATE","jilid",j.id,{ lepasKlaim:true });
+      showToast("Klaim dilepas.");
+      renderDaftarSantriUstadzah();
+    }catch(err){ showToast("Gagal: " + err.message, true); }
+  }));
+}
+
+/* Modal klaim kelas pengganti */
+function openKlaimKelasModal(bisaKlaim){
+  if(!bisaKlaim.length){
+    alert("Tidak ada kelas yang tersedia untuk diklaim.");
+    return;
+  }
+
+  openModal("Klaim Kelas Pengganti", `
+    <div class="notice">
+      Pilih kelas yang ingin Anda gantikan <b>hari ini</b>. Klaim otomatis berakhir sesuai tanggal yang Anda tentukan.
+    </div>
+    <div class="form-group">
+      <label>Pilih Kelas</label>
+      <select id="klaimJilid">
+        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML((j.ustadzahNames||[]).join(", ") || "belum ditentukan")}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Alasan Menggantikan (opsional)</label>
+      <input id="klaimAlasan" placeholder="Contoh: Ustadzah A sakit">
+    </div>
+    <div class="form-group">
+      <label>Berlaku Sampai Tanggal</label>
+      <input id="klaimSampai" type="date" value="${todayStr()}" required>
+      <div class="muted" style="font-size:12px;margin-top:4px">Boleh lebih dari 1 hari kalau memang diperlukan.</div>
+    </div>
+    <button class="btn btn-full" id="klaimSaveBtn">Klaim Sekarang</button>
+  `);
+
+  $("klaimSaveBtn").addEventListener("click", async () => {
+    const jilidId = $("klaimJilid").value;
+    if(!jilidId){ showToast("Pilih kelas terlebih dahulu.", true); return; }
+    await withButtonLoading($("klaimSaveBtn"), "Menyimpan...", async () => {
+      try{
+        await updateCollectionData("jilid", jilidId, {
+          substituteUid: currentProfile.uid,
+          substituteNama: currentProfile.nama || "",
+          substituteUntil: $("klaimSampai").value || todayStr(),
+          substituteAlasan: $("klaimAlasan").value.trim()
+        });
+        logAudit("UPDATE","jilid",jilidId,{ klaim:true, uid: currentProfile.uid });
+        closeModal();
+        showToast("Kelas berhasil diklaim.");
+        renderDaftarSantriUstadzah();
+      }catch(err){ alert("Gagal klaim: " + err.message); }
+    })();
+  });
+}
+function openKlaimKelasModal(bisaKlaim){
+  if(!bisaKlaim.length){
+    alert("Tidak ada kelas yang tersedia untuk diklaim.");
+    return;
+  }
+
+  openModal("Klaim Kelas Pengganti", `
+    <div class="notice">
+      Pilih kelas yang ingin Anda gantikan <b>hari ini</b>. Klaim otomatis berakhir sesuai tanggal yang Anda tentukan.
+    </div>
+    <div class="form-group">
+      <label>Pilih Kelas</label>
+      <select id="klaimJilid">
+        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML((j.ustadzahNames||[]).join(", ") || "belum ditentukan")}</option>`).join("")}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Alasan Menggantikan (opsional)</label>
+      <input id="klaimAlasan" placeholder="Contoh: Ustadzah A sakit">
+    </div>
+    <div class="form-group">
+      <label>Berlaku Sampai Tanggal</label>
+      <input id="klaimSampai" type="date" value="${todayStr()}" required>
+      <div class="muted" style="font-size:12px;margin-top:4px">Boleh lebih dari 1 hari kalau memang diperlukan.</div>
+    </div>
+    <button class="btn btn-full" id="klaimSaveBtn">Klaim Sekarang</button>
+  `);
+
+  $("klaimSaveBtn").addEventListener("click", async () => {
+    const jilidId = $("klaimJilid").value;
+    if(!jilidId){ showToast("Pilih kelas terlebih dahulu.", true); return; }
+    await withButtonLoading($("klaimSaveBtn"), "Menyimpan...", async () => {
+      try{
+        await updateCollectionData("jilid", jilidId, {
+          substituteUid: currentProfile.uid,
+          substituteNama: currentProfile.nama || "",
+          substituteUntil: $("klaimSampai").value || todayStr(),
+          substituteAlasan: $("klaimAlasan").value.trim()
+        });
+        logAudit("UPDATE","jilid",jilidId,{ klaim:true, uid: currentProfile.uid });
+        closeModal();
+        showToast("Kelas berhasil diklaim.");
+        renderDaftarSantriUstadzah();
+      }catch(err){ alert("Gagal klaim: " + err.message); }
+    })();
+  });
 }
 
 async function renderKeuanganSantriUstadzah(santriId){
