@@ -1414,10 +1414,24 @@ async function renderDashboardUstadzah(){
   });
   const statUstadzah = rekapUstadzah[0] || { hadir: 0, izin: 0, alpha: 0, total: 0 };
   const peringatanUstadzah = statUstadzah.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari);
-  // Riwayat izin: izin santri kelasnya + izin ustadzah sendiri
+  // Riwayat izin: izin santri kelasnya + izin dirinya + izin ustadzah lain yang kelasnya diklaim
   const santriIds = new Set(santri.map(s => s.id));
+  const klaimJilidIds = klaimAktif.map(j => j.id);
+  const izinUstadzahDariKelasKlaim = izinList.filter(z => {
+    if(z.jenis !== "ustadzah" || z.aktif === false) return false;
+    // Cari ustadzah yang mengampu jilid yang sedang saya klaim
+    return klaimJilidIds.some(jid => {
+      const j = jilidList.find(x => x.id === jid);
+      return j && getJilidUstadzahIds(j).includes(z.ustadzahId);
+    });
+  });
+
   const riwayatIzin = izinList
-    .filter(z => santriIds.has(z.santriId) || z.ustadzahId === currentProfile.uid)
+    .filter(z =>
+      santriIds.has(z.santriId) ||
+      z.ustadzahId === currentProfile.uid ||
+      izinUstadzahDariKelasKlaim.includes(z)
+    )
     .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
     .slice(0, 10);
 
@@ -1444,6 +1458,33 @@ async function renderDashboardUstadzah(){
         </div>` : ""}
       <button class="btn btn-sm" id="btnKeKlaim" style="margin-top:12px">🤝 Kelola Klaim Kelas</button>
     </div>
+    ${(() => {
+      const today = dateKey(nowWIB());
+      const izinSantriHariIni = izinList.filter(z =>
+        z.jenis !== "ustadzah" && z.aktif !== false &&
+        santri.some(s => s.id === z.santriId) &&
+        isIzinAktifDiTanggal(z, today)
+      );
+      if(!izinSantriHariIni.length) return "";
+      return `
+        <div class="card" style="margin-top:18px;background:#fffbeb;border-color:#fde68a">
+          <h3 style="color:#92400e;margin-top:0">📝 Santri Izin Hari Ini</h3>
+          <div class="table-container" style="margin-top:10px">
+            <table>
+              <thead><tr><th>Santri</th><th>Alasan</th><th>Tanggal</th><th>Pengaju</th></tr></thead>
+              <tbody>
+                ${izinSantriHariIni.map(z=>`
+                  <tr>
+                    <td><b style="color:#dc2626">${escapeHTML(z.santriNama)}</b></td>
+                    <td>${badgeAlasan(z.alasan)}${z.alasan==="kegiatan" && z.namaKegiatan ? ` — ${escapeHTML(z.namaKegiatan)}` : ""}</td>
+                    <td>${z.tanggalMulai === z.tanggalSelesai ? z.tanggalMulai : `${z.tanggalMulai} s/d ${z.tanggalSelesai}`}</td>
+                    <td>${escapeHTML(z.diajukanOlehNama || "-")}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    })()}
 
     ${peringatan.length ? `
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
@@ -1639,14 +1680,26 @@ async function renderDashboardWali(){
 
     ${santri.length ? `
       <div class="card" style="margin-top:18px">
-        <h3>Santri Anda</h3>
+        <h3>Ananda</h3>
         <div class="grid" style="margin-top:12px">
-          ${santri.map(s=>`
-            <div class="card" style="background:#f8fafc">
-              <h3 style="margin:0">${escapeHTML(s.nama || "-")}</h3>
-              <p class="muted">${escapeHTML(s.jilidNama || "-")}</p>
-              <button class="btn btn-sm" data-santri-id="${s.id}" data-action="lihat-santri">Lihat Pembelajaran &amp; Keuangan</button>
-            </div>`).join("")}
+${santri.map(s=>{
+  const st = hitungKehadiranSantri({ santriId: s.id, tanggal: dateKey(nowWIB()), izinList, progressList });
+  const isIzin = st.status === "izin";
+  const namaStyle = isIzin ? "color:#dc2626;font-weight:800;margin:0" : "margin:0";
+  const badge = isIzin
+    ? `<span class="badge badge-yellow" style="margin-top:6px;display:inline-block">Izin (${labelAlasan(st.izin.alasan)})</span>`
+    : (st.status === "hadir"
+        ? `<span class="badge badge-green" style="margin-top:6px;display:inline-block">Hadir</span>`
+        : (st.status === "alpha"
+            ? `<span class="badge badge-red" style="margin-top:6px;display:inline-block">Alpha</span>`
+            : ""));
+  return `<div class="card" style="background:#f8fafc">
+    <h3 style="${namaStyle}">${escapeHTML(s.nama || "-")}</h3>
+    <p class="muted" style="margin:4px 0 0 0">${escapeHTML(s.jilidNama || "-")}</p>
+    ${badge}
+    <button class="btn btn-sm" style="margin-top:10px" data-santri-id="${s.id}" data-action="lihat-santri">Lihat Pembelajaran &amp; Keuangan</button>
+  </div>`;
+}).join("")}
         </div>
       </div>` : `<div class="card" style="margin-top:18px"><div class="empty">Belum ada data santri yang terhubung dengan akun wali Anda. Hubungi admin.</div></div>`}
 
@@ -1951,7 +2004,13 @@ async function pasangFormIzin({ santriList, isUstadzah }){
 ============================================================ */
 async function renderSantriAdmin(){
   if(!requireRole("admin")) return;
-  const data = await getCollectionData("santri");
+  const [data, izinList, progressList] = await Promise.all([
+    getCollectionData("santri"),
+    getCollectionData("izin", { forceRefresh:true }),
+    getCollectionData("progress", { forceRefresh:true })
+  ]);
+
+  const today = dateKey(nowWIB());
 
   $("page").innerHTML = `
     <div class="toolbar">
@@ -1968,21 +2027,34 @@ async function renderSantriAdmin(){
     </div>
     <div class="table-container">
       <table id="tableSantri">
-        <thead><tr><th>No</th><th>Nama Santri</th><th>Jenis Kelamin</th><th>Kelas/Jilid</th><th>Wali</th><th>Status</th><th>Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th>Nama Santri</th><th>JK</th><th>Kelas/Jilid</th><th>Wali</th><th>Status Hari Ini</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody>
-          ${data.length ? data.map((item,index)=>`
-            <tr data-row>
+          ${data.length ? data.map((item,index)=>{
+            const st = hitungKehadiranSantri({
+              santriId: item.id, tanggal: today, izinList, progressList
+            });
+            const isIzin = st.status === "izin";
+            const namaStyle = isIzin ? "color:#dc2626;font-weight:800" : "font-weight:800";
+            let statusBadge = `<span class="badge badge-gray">-</span>`;
+            if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
+            else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
+            else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
+            else statusBadge = `<span class="badge badge-gray">Belum</span>`;
+
+            return `<tr data-row>
               <td>${index+1}</td>
-              <td><b>${escapeHTML(item.nama)}</b></td>
+              <td><span style="${namaStyle}">${escapeHTML(item.nama)}</span></td>
               <td>${escapeHTML(item.jenisKelamin || "-")}</td>
               <td>${escapeHTML(item.jilidNama || "-")}</td>
               <td>${escapeHTML(item.waliNama || "-")}</td>
+              <td>${statusBadge}</td>
               <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
               <td><div class="actions">
                 <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
                 <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
               </div></td>
-            </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>`}
+            </tr>`;
+          }).join("") : `<tr><td colspan="8" class="empty">Belum ada data santri.</td></tr>`}
         </tbody>
       </table>
     </div>`;
@@ -2005,7 +2077,6 @@ async function renderSantriAdmin(){
     }catch(error){ showToast(error.message, true); }
   }));
 }
-
 async function openSantriForm(item=null){
   const [wali, jilid] = await Promise.all([
     getCollectionData("wali"), getCollectionData("jilid")
@@ -3437,29 +3508,6 @@ async function renderSettingsAdmin(){
         <button class="btn" type="submit" id="settingsSaveBtn">Simpan Pengaturan</button>
       </form>
     </div>
-    <div class="card" style="margin-top:18px">
-  <h3>📝 Konfigurasi Izin & Kehadiran</h3>
-  <form id="izinConfigForm" style="margin-top:12px">
-    <div class="row">
-      <div class="form-group">
-        <label>Batas Jam Input Izin (WIB)</label>
-        <input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? 15)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, izin untuk hari ini ditolak.</div>
-      </div>
-      <div class="form-group">
-        <label>Batas Jam Status Alpha (WIB)</label>
-        <input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? 18)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, siswa tanpa izin & tanpa progress = Alpha.</div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Batas Hari Alpha untuk Peringatan</label>
-      <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? 2)}" required>
-      <div class="muted" style="font-size:12px;margin-top:4px">Peringatan muncul jika santri alpha ≥ N hari dalam 7 hari terakhir.</div>
-    </div>
-    <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
-  </form>
-</div>
 <div class="card" style="margin-top:18px">
   <h3>📝 Konfigurasi Izin & Kehadiran</h3>
   <form id="izinConfigForm" style="margin-top:12px">
@@ -3574,14 +3622,17 @@ async function renderDaftarSantriUstadzah(){
   if(!requireRole("ustadzah")) return;
   await ensureSppBulanIniUntukSemuaSantri();
 
-  const [santri, jilidList] = await Promise.all([
+  const [santri, jilidList, izinList, progressList] = await Promise.all([
     getSantriUstadzah(),
-    getCollectionData("jilid", { forceRefresh:true })
+    getCollectionData("jilid", { forceRefresh:true }),
+    getCollectionData("izin", { forceRefresh:true }),
+    getCollectionData("progress", { forceRefresh:true })
   ]);
-  // Lengkapi nama pengampu di setiap jilid (fallback kalau ustadzahNames kosong)
-await Promise.all(jilidList.map(async j => {
-  j._pengampuNames = await getJilidUstadzahNames(j);
-}));
+
+  await Promise.all(jilidList.map(async j => {
+    j._pengampuNames = await getJilidUstadzahNames(j);
+  }));
+
   const today = todayStr();
 
   const klaimAktif = jilidList.filter(j =>
@@ -3601,6 +3652,17 @@ await Promise.all(jilidList.map(async j => {
   const jilidEfektif = jilidList
     .filter(j => asliIds.includes(j.id) || klaimAktif.some(k=>k.id===j.id))
     .map(j => j.nama);
+
+  // Izin ustadzah (untuk ditampilkan di klaim modal)
+  const izinUstadzahList = izinList.filter(z => z.jenis === "ustadzah" && z.aktif !== false);
+
+  // Bangun status kehadiran per santri hari ini
+  const statusSantri = {};
+  santri.forEach(s => {
+    statusSantri[s.id] = hitungKehadiranSantri({
+      santriId: s.id, tanggal: today, izinList, progressList
+    });
+  });
 
   $("page").innerHTML = `
     <div class="toolbar">
@@ -3648,17 +3710,29 @@ await Promise.all(jilidList.map(async j => {
 
     <div class="table-container">
       <table id="tableSantriUstadzah">
-        <thead><tr><th>No.</th><th>Nama Santri</th><th>Status</th><th>Aksi</th></tr></thead>
+        <thead><tr><th>No.</th><th>Nama Santri</th><th>Status Hari Ini</th><th>Status Akun</th><th>Aksi</th></tr></thead>
         <tbody>
-          ${santri.length ? santri.map((item,index)=>`
-            <tr data-row>
-              <td>${index+1}</td><td><b>${escapeHTML(item.nama || "-")}</b></td>
+          ${santri.length ? santri.map((item,index)=>{
+            const st = statusSantri[item.id] || { status: "belum" };
+            const isIzin = st.status === "izin";
+            const namaStyle = isIzin ? "color:#dc2626;font-weight:800" : "font-weight:800";
+            let statusBadge = `<span class="badge badge-gray">-</span>`;
+            if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
+            else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
+            else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
+            else statusBadge = `<span class="badge badge-gray">Belum</span>`;
+
+            return `<tr data-row>
+              <td>${index+1}</td>
+              <td><span style="${namaStyle}">${escapeHTML(item.nama || "-")}</span></td>
+              <td>${statusBadge}</td>
               <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
               <td><div class="actions" style="flex-wrap:wrap">
                 <button class="btn btn-sm" data-view="${item.id}">📖 Baca &amp; Hafalan</button>
                 <button class="btn btn-sm btn-info" data-keuangan="${item.id}">💰 Keuangan</button>
               </div></td>
-            </tr>`).join("") : `<tr><td colspan="4" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId && !(currentProfile.jilidIds||[]).length ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
+            </tr>`;
+          }).join("") : `<tr><td colspan="5" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId && !(currentProfile.jilidIds||[]).length ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
         </tbody>
       </table>
     </div>`;
@@ -3667,7 +3741,7 @@ await Promise.all(jilidList.map(async j => {
   $("page").querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
   $("page").querySelectorAll("[data-keuangan]").forEach(btn => btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
 
-  $("btnBukaKlaim")?.addEventListener("click", ()=>openKlaimKelasModal(bisaKlaim));
+  $("btnBukaKlaim")?.addEventListener("click", ()=>openKlaimKelasModal(bisaKlaim, izinUstadzahList));
 
   $("page").querySelectorAll("[data-lepas]").forEach(btn => btn.addEventListener("click", async () => {
     const j = jilidList.find(x=>x.id===btn.dataset.lepas);
@@ -3675,10 +3749,8 @@ await Promise.all(jilidList.map(async j => {
     if(!confirm(`Lepas klaim kelas "${j.nama}"?`)) return;
     try{
       await updateCollectionData("jilid", j.id, {
-        substituteUid: null,
-        substituteNama: null,
-        substituteUntil: null,
-        substituteAlasan: ""
+        substituteUid: null, substituteNama: null,
+        substituteUntil: null, substituteAlasan: ""
       });
       logAudit("UPDATE","jilid",j.id,{ lepasKlaim:true });
       showToast("Klaim dilepas.");
@@ -3686,13 +3758,30 @@ await Promise.all(jilidList.map(async j => {
     }catch(err){ showToast("Gagal: " + err.message, true); }
   }));
 }
-
 /* Modal klaim kelas pengganti */
-function openKlaimKelasModal(bisaKlaim){
+function openKlaimKelasModal(bisaKlaim, izinUstadzahList){
   if(!bisaKlaim.length){
     alert("Tidak ada kelas yang tersedia untuk diklaim.");
     return;
   }
+
+  // Map ustadzahId → izin aktif
+  const mapIzin = {};
+  (izinUstadzahList || []).forEach(z => {
+    if(z.jenis === "ustadzah" && z.aktif !== false){
+      mapIzin[z.ustadzahId] = z;
+    }
+  });
+
+  const opsiHtml = bisaKlaim.map(j => {
+    const pengampuIds = getJilidUstadzahIds(j);
+    // Cari ustadzah pengampu yang sedang izin
+    const pengampuIzin = pengampuIds.map(uid => mapIzin[uid]).filter(Boolean);
+    const keteranganIzin = pengampuIzin.length
+      ? ` ⚠️ ${pengampuIzin.map(z => z.santriNama || "Ustadzah").join(", ")} sedang izin (${labelAlasan(pengampuIzin[0].alasan)})`
+      : "";
+    return `<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML(j._pengampuNames?.join(", ") || "belum ditentukan")}${keteranganIzin}</option>`;
+  }).join("");
 
   openModal("Klaim Kelas Pengganti", `
     <div class="notice">
@@ -3701,7 +3790,7 @@ function openKlaimKelasModal(bisaKlaim){
     <div class="form-group">
       <label>Pilih Kelas</label>
       <select id="klaimJilid">
-        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML(j._pengampuNames?.join(", ") || "belum ditentukan")}</option>`).join("")}
+        ${opsiHtml}
       </select>
     </div>
     <div class="form-group">
@@ -3735,7 +3824,6 @@ function openKlaimKelasModal(bisaKlaim){
     })();
   });
 }
-
 async function renderKeuanganSantriUstadzah(santriId){
   const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
   if(!santri){ alert("Santri tidak ditemukan."); return; }
