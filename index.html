@@ -428,6 +428,184 @@ document.addEventListener("keydown", e => {
 });
 
 /* ============================================================
+   6B. KEUANGAN: HELPER SPP / IURAN KEGIATAN / TABUNGAN
+============================================================ */
+function getPeriodeSekarang(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+  const key = `${year}-${String(month).padStart(2,"0")}`;
+  return { key, year, month, tanggal: now.getDate() };
+}
+function formatPeriodeLabel(periodeKey){
+  if(!periodeKey) return "-";
+  const [y,m] = periodeKey.split("-").map(Number);
+  if(!y || !m) return periodeKey;
+  const namaBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  return `${namaBulan[m-1]} ${y}`;
+}
+function daftarBulanTahunIni(){
+  const { year, month } = getPeriodeSekarang();
+  const namaBulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const list = [];
+  for(let m=1; m<=month; m++){
+    list.push({ key: `${year}-${String(m).padStart(2,"0")}`, label: `${namaBulan[m-1]} ${year}` });
+  }
+  return list.reverse(); // bulan terbaru dulu
+}
+function hitungStatusTagihan(nominal, terbayar){
+  const n = Number(nominal||0), t = Number(terbayar||0);
+  if(t <= 0) return "belum";
+  if(t >= n) return "lunas";
+  return "sebagian";
+}
+function badgeStatusTagihan(status){
+  if(status === "lunas") return `<span class="badge badge-green">Lunas</span>`;
+  if(status === "sebagian") return `<span class="badge badge-yellow">Sebagian</span>`;
+  return `<span class="badge badge-red">Belum Bayar</span>`;
+}
+function isSppMenunggak(bill, sppTanggalPeringatan){
+  if(!bill || bill.jenis !== "SPP" || bill.status === "lunas") return false;
+  const { key: periodeIni, tanggal } = getPeriodeSekarang();
+  if(bill.periode < periodeIni) return true; // bulan lalu belum lunas = pasti menunggak
+  if(bill.periode === periodeIni && tanggal >= Number(sppTanggalPeringatan||10)) return true;
+  return false;
+}
+
+async function getAppSettings(){
+  const settings = await getCollectionData("settings");
+  return settings.find(x=>x.id==="app") || {};
+}
+
+// Buat/pastikan tagihan SPP bulan berjalan untuk semua santri aktif.
+// Dipanggil otomatis saat admin/ustadzah membuka dashboard/menu keuangan.
+// Tidak menagihkan mundur ke bulan-bulan lama secara otomatis (itu memakai
+// fitur "Backfill SPP" manual di menu Master Tagihan agar tidak tiba-tiba
+// membuat banyak tagihan lama tanpa sepengetahuan admin).
+let sppEnsureDone = false;
+async function ensureSppBulanIniUntukSemuaSantri(){
+  if(sppEnsureDone) return;
+  try{
+    const appSettings = await getAppSettings();
+    const nominal = Number(appSettings.sppNominal || 0);
+    if(nominal <= 0){ sppEnsureDone = true; return; } // admin belum atur nominal SPP
+
+    const { key: periode } = getPeriodeSekarang();
+    const [santriList, existingBills] = await Promise.all([
+      getCollectionData("santri"),
+      getCollectionData("tagihanSantri")
+    ]);
+    const existingIds = new Set(existingBills.map(b=>b.id));
+    const aktifSantri = santriList.filter(s=>s.aktif!==false);
+
+    for(const s of aktifSantri){
+      const id = `spp_${s.id}_${periode}`;
+      if(existingIds.has(id)) continue;
+      await setDoc(doc(db,"tagihanSantri", id), {
+        santriId: s.id, santriNama: s.nama || "-",
+        jenis: "SPP", judul: `SPP ${formatPeriodeLabel(periode)}`,
+        periode, kegiatanId: null,
+        nominal, terbayar: 0, status: "belum", riwayat: [],
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      });
+    }
+    invalidateCache("tagihanSantri");
+    sppEnsureDone = true;
+  }catch(err){
+    console.warn("Gagal auto-generate SPP bulan ini:", err);
+  }
+}
+
+// Backfill manual: buat tagihan SPP untuk santri & bulan tertentu (tahun ini)
+// jika belum ada. Dipakai untuk santri yang menunggak lama.
+async function backfillSppSantri(santriId, santriNama, periode, nominal){
+  const id = `spp_${santriId}_${periode}`;
+  const existing = await getDocument("tagihanSantri", id);
+  if(existing) return existing;
+  await setDoc(doc(db,"tagihanSantri", id), {
+    santriId, santriNama,
+    jenis: "SPP", judul: `SPP ${formatPeriodeLabel(periode)}`,
+    periode, kegiatanId: null,
+    nominal: Number(nominal||0), terbayar: 0, status: "belum", riwayat: [],
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  });
+  invalidateCache("tagihanSantri");
+  return await getDocument("tagihanSantri", id);
+}
+
+// Catat pembayaran (mendukung cicilan/bertahap) untuk satu tagihan santri (SPP/Iuran).
+async function catatPembayaranTagihan(billId, { jumlah, metode, keterangan }){
+  const bill = await getDocument("tagihanSantri", billId);
+  if(!bill) throw new Error("Tagihan tidak ditemukan.");
+  const riwayat = Array.isArray(bill.riwayat) ? [...bill.riwayat] : [];
+  riwayat.push({
+    tanggal: new Date().toISOString(),
+    jumlah: Number(jumlah||0),
+    metode: metode || "Tunai",
+    keterangan: keterangan || "",
+    dicatatOleh: currentProfile?.uid || "",
+    dicatatOlehNama: currentProfile?.nama || ""
+  });
+  const terbayar = riwayat.reduce((sum,r)=>sum+Number(r.jumlah||0), 0);
+  const status = hitungStatusTagihan(bill.nominal, terbayar);
+  await updateCollectionData("tagihanSantri", billId, { riwayat, terbayar, status });
+  logAudit("BAYAR","tagihanSantri",billId,{ jumlah: Number(jumlah||0), status });
+  return { terbayar, status };
+}
+
+// Buat kegiatan Iuran Kegiatan + tagihan per santri target + pengumuman otomatis.
+async function buatIuranKegiatan({ nama, nominal, tanggalMulai, tanggalSelesai, target, targetNama, penerima }){
+  const kegiatanRef = await addCollectionData("kegiatan", {
+    nama, nominal: Number(nominal||0), tanggalMulai, tanggalSelesai,
+    target, targetNama, penerima: penerima || "", aktif: true
+  });
+  const kegiatanId = kegiatanRef.id;
+
+  const santriList = await getCollectionData("santri");
+  const targetSantri = santriList.filter(s => s.aktif!==false && (target==="semua" || s.jilidId===target));
+
+  for(const s of targetSantri){
+    const id = `iuran_${s.id}_${kegiatanId}`;
+    await setDoc(doc(db,"tagihanSantri", id), {
+      santriId: s.id, santriNama: s.nama || "-",
+      jenis: "Iuran Kegiatan", judul: nama,
+      periode: null, kegiatanId,
+      nominal: Number(nominal||0), terbayar: 0, status: "belum", riwayat: [],
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+  }
+  invalidateCache("tagihanSantri");
+
+  const isiPengumuman =
+    `Terdapat iuran kegiatan baru: "${nama}".\n\n` +
+    `Nominal: ${formatRupiah(nominal)}\n` +
+    `Periode pembayaran: ${tanggalMulai || "-"} s/d ${tanggalSelesai || "-"}\n` +
+    `Berlaku untuk: ${targetNama || "Semua Santri"}\n` +
+    (penerima ? `Pembayaran ditujukan kepada: ${penerima}\n` : "") +
+    `\nSilakan lakukan pembayaran sesuai batas waktu di atas.`;
+  await addCollectionData("pengumuman", { judul: `📢 Iuran Kegiatan: ${nama}`, isi: isiPengumuman, aktif: true });
+
+  return kegiatanId;
+}
+
+// Catat transaksi tabungan (setor/tarik) yang sifatnya sukarela & bebas kapan saja.
+async function catatTabungan({ santriId, santriNama, jenis, jumlah, keterangan }){
+  await addCollectionData("tabungan", {
+    santriId, santriNama, jenis, jumlah: Number(jumlah||0),
+    keterangan: keterangan || "",
+    dicatatOleh: currentProfile?.uid || "",
+    dicatatOlehNama: currentProfile?.nama || "",
+    tanggal: serverTimestamp()
+  });
+  logAudit("CREATE","tabungan",santriId,{ jenis, jumlah: Number(jumlah||0) });
+}
+function hitungSaldoTabungan(transaksiList, santriId){
+  return transaksiList.filter(t=>t.santriId===santriId).reduce((saldo,t)=>{
+    return t.jenis === "tarik" ? saldo - Number(t.jumlah||0) : saldo + Number(t.jumlah||0);
+  }, 0);
+}
+
+/* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
 ============================================================ */
 const cache = new Map();
@@ -890,6 +1068,7 @@ async function renderDashboard(){
 }
 
 async function renderDashboardAdmin(){
+  await ensureSppBulanIniUntukSemuaSantri();
   const [santri, wali, ustadzah, jilid] = await Promise.all([
     getCollectionData("santri"),
     getCollectionData("wali"),
@@ -912,6 +1091,7 @@ async function renderDashboardAdmin(){
 }
 
 async function renderDashboardUstadzah(){
+  await ensureSppBulanIniUntukSemuaSantri();
   const santri = await getSantriUstadzah();
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Ustadzah</h2>
@@ -1683,99 +1863,174 @@ function openPengumumanForm(item=null){
 }
 
 /* ============================================================
-   21. ADMIN: MASTER TAGIHAN
+   21. ADMIN: MASTER TAGIHAN (Pengaturan SPP + Iuran Kegiatan)
 ============================================================ */
 async function renderTagihanAdmin(){
   if(!requireRole("admin")) return;
-  const data = await getCollectionData("tagihan");
+  await ensureSppBulanIniUntukSemuaSantri();
+  const [appSettings, kegiatanList, jilidList] = await Promise.all([
+    getAppSettings(), getCollectionData("kegiatan"), getCollectionData("jilid")
+  ]);
+
   $("page").innerHTML = `
     <div class="toolbar">
-      <div><h2 class="section-title">Master Tagihan</h2><p class="muted">Atur SPP, tabungan dan iuran kegiatan.</p></div>
-      <button class="btn" id="btnTambahTagihan">+ Tambah Tagihan</button>
+      <div><h2 class="section-title">Master Tagihan</h2><p class="muted">Atur SPP bulanan dan Iuran Kegiatan.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>💵 Pengaturan SPP</h3>
+      <p class="muted">SPP otomatis ditagihkan ke semua santri aktif setiap awal bulan sesuai nominal di bawah ini. Peringatan tunggakan tampil mulai tanggal yang ditentukan.</p>
+      <form id="sppSettingsForm" style="margin-top:12px">
+        <div class="row">
+          <div class="form-group"><label>Nominal SPP per Bulan</label><input id="sppNominal" type="number" min="0" value="${Number(appSettings.sppNominal||0)}" required></div>
+          <div class="form-group"><label>Tanggal Mulai Peringatan Tunggakan</label><input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${Number(appSettings.sppTanggalPeringatan||10)}" required></div>
+        </div>
+        <button class="btn" type="submit" id="sppSettingsSaveBtn">💾 Simpan Pengaturan SPP</button>
+      </form>
+      <div class="notice" style="margin-top:15px">
+        SPP bulan berjalan (${formatPeriodeLabel(getPeriodeSekarang().key)}) otomatis dibuatkan untuk semua santri aktif setiap kali admin/ustadzah membuka aplikasi pada atau setelah tanggal 1. Untuk santri yang menunggak dari bulan-bulan sebelumnya di tahun ini, gunakan tombol <b>Backfill SPP Menunggak</b> di bawah agar tagihan bulan lama bisa dicatat pembayarannya.
+      </div>
+      <button class="btn btn-light" id="btnBackfillSpp" style="margin-top:8px">⏱ Backfill SPP Menunggak (Bulan Lalu)</button>
+    </div>
+
+    <div class="toolbar" style="margin-top:24px">
+      <div><h3 class="section-title" style="margin:0">🎉 Iuran Kegiatan</h3><p class="muted">Iuran bersifat event/sekali jalan, otomatis dibuatkan tagihan per santri &amp; pengumuman.</p></div>
+      <button class="btn" id="btnTambahKegiatan">+ Buat Iuran Kegiatan</button>
     </div>
     <div class="table-container">
       <table>
-        <thead><tr><th>No</th><th>Nama Tagihan</th><th>Jenis</th><th>Nominal</th><th>Periode</th><th>Status</th><th>Aksi</th></tr></thead>
+        <thead><tr><th>No</th><th>Nama Kegiatan</th><th>Nominal</th><th>Rentang Tanggal</th><th>Berlaku Untuk</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody>
-          ${data.length ? data.map((item,index)=>`
+          ${kegiatanList.length ? kegiatanList.map((item,index)=>`
             <tr>
-              <td>${index+1}</td><td><b>${escapeHTML(item.nama || "-")}</b></td><td>${escapeHTML(item.jenis || "-")}</td>
-              <td>${formatRupiah(item.nominal || 0)}</td><td>${escapeHTML(item.periode || "-")}</td>
+              <td>${index+1}</td><td><b>${escapeHTML(item.nama || "-")}</b>${item.penerima?`<br><span class="muted" style="font-size:12px">Kepada: ${escapeHTML(item.penerima)}</span>`:""}</td>
+              <td>${formatRupiah(item.nominal || 0)}</td>
+              <td>${escapeHTML(item.tanggalMulai||"-")} s/d ${escapeHTML(item.tanggalSelesai||"-")}</td>
+              <td>${escapeHTML(item.targetNama || "Semua Santri")}</td>
               <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
               <td><div class="actions">
-                <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
-                <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+                <button class="btn btn-sm btn-danger" data-remove-kegiatan="${item.id}">Nonaktifkan</button>
               </div></td>
-            </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada master tagihan.</td></tr>`}
+            </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan.</td></tr>`}
         </tbody>
       </table>
     </div>`;
 
-  $("btnTambahTagihan").addEventListener("click", ()=>openTagihanForm());
-  $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
-    const item = data.find(x=>x.id===btn.dataset.edit);
-    if(item) openTagihanForm(item);
-  }));
-  $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
-    if(!confirm("Hapus master tagihan ini?")) return;
+  $("sppSettingsForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("sppSettingsSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await setDoc(doc(db,"settings","app"), {
+          sppNominal: Number($("sppNominal").value||0),
+          sppTanggalPeringatan: Number($("sppTanggalPeringatan").value||10),
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+        invalidateCache("settings");
+        logAudit("UPDATE","settings","app",{ spp:true });
+        showToast("Pengaturan SPP berhasil disimpan.");
+      }catch(error){ alert(error.message); }
+    })();
+  });
+
+  $("btnBackfillSpp").addEventListener("click", ()=>openBackfillSppForm(appSettings));
+  $("btnTambahKegiatan").addEventListener("click", ()=>openKegiatanForm(jilidList));
+  $("page").querySelectorAll("[data-remove-kegiatan]").forEach(btn => btn.addEventListener("click", async () => {
+    if(!confirm("Nonaktifkan iuran kegiatan ini? Tagihan yang sudah dibuat untuk santri tidak akan terhapus.")) return;
     try{
-      await deleteCollectionData("tagihan", btn.dataset.remove);
-      logAudit("DELETE","tagihan",btn.dataset.remove);
-      showToast("Tagihan dihapus.");
+      await updateCollectionData("kegiatan", btn.dataset.removeKegiatan, { aktif:false });
+      logAudit("UPDATE","kegiatan",btn.dataset.removeKegiatan,{ aktif:false });
+      showToast("Iuran kegiatan dinonaktifkan.");
       renderTagihanAdmin();
     }catch(error){ showToast(error.message, true); }
   }));
 }
 
-function openTagihanForm(item=null){
-  openModal(item ? "Edit Tagihan" : "Tambah Tagihan", `
-    <form id="tagihanForm">
-      <div class="form-group"><label>Nama Tagihan</label><input id="tagihanNama" value="${escapeHTML(item?.nama || "")}" placeholder="SPP September 2026" required></div>
-      <div class="row">
+function openBackfillSppForm(appSettings){
+  getCollectionData("santri").then(santriList => {
+    const aktifSantri = santriList.filter(s=>s.aktif!==false);
+    const bulanList = daftarBulanTahunIni();
+    openModal("Backfill SPP Menunggak", `
+      <form id="backfillSppForm">
+        <div class="notice">Gunakan form ini untuk membuatkan tagihan SPP bulan-bulan sebelumnya (tahun ini) bagi santri yang menunggak lama, supaya pembayarannya bisa dicatat.</div>
         <div class="form-group">
-          <label>Jenis</label>
-          <select id="tagihanJenis">
-            <option value="SPP" ${item?.jenis==="SPP"?"selected":""}>SPP</option>
-            <option value="Tabungan" ${item?.jenis==="Tabungan"?"selected":""}>Tabungan</option>
-            <option value="Iuran Kegiatan" ${item?.jenis==="Iuran Kegiatan"?"selected":""}>Iuran Kegiatan</option>
+          <label>Santri</label>
+          <select id="backfillSantri" required>
+            <option value="">Pilih santri</option>
+            ${aktifSantri.map(s=>`<option value="${s.id}" data-nama="${escapeAttr(s.nama)}">${escapeHTML(s.nama)}</option>`).join("")}
           </select>
         </div>
-        <div class="form-group"><label>Nominal</label><input id="tagihanNominal" type="number" min="0" value="${item?.nominal || 0}" required></div>
+        <div class="form-group">
+          <label>Bulan Tertagih</label>
+          <select id="backfillBulan" required>
+            ${bulanList.map(b=>`<option value="${b.key}">${b.label}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group"><label>Nominal SPP Bulan Tersebut</label><input id="backfillNominal" type="number" min="0" value="${Number(appSettings.sppNominal||0)}" required></div>
+        <button class="btn btn-full" type="submit" id="backfillSaveBtn">Buat Tagihan SPP Bulan Ini</button>
+      </form>
+    `);
+    $("backfillSppForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("backfillSaveBtn");
+      const select = $("backfillSantri");
+      const santriId = select.value;
+      const santriNama = select.options[select.selectedIndex]?.dataset.nama || "-";
+      const periode = $("backfillBulan").value;
+      const nominal = Number($("backfillNominal").value||0);
+      if(!santriId){ alert("Pilih santri terlebih dahulu."); return; }
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          await backfillSppSantri(santriId, santriNama, periode, nominal);
+          closeModal();
+          showToast(`Tagihan SPP ${formatPeriodeLabel(periode)} untuk ${santriNama} siap dicatat pembayarannya.`);
+        }catch(error){ alert("Gagal membuat tagihan: " + error.message); }
+      })();
+    });
+  });
+}
+
+function openKegiatanForm(jilidList){
+  openModal("Buat Iuran Kegiatan", `
+    <form id="kegiatanForm">
+      <div class="form-group"><label>Nama Kegiatan</label><input id="kegiatanNama" placeholder="Contoh: Iuran Peringatan Maulid Nabi" required></div>
+      <div class="form-group"><label>Nominal per Santri</label><input id="kegiatanNominal" type="number" min="0" required></div>
+      <div class="row">
+        <div class="form-group"><label>Tanggal Mulai</label><input id="kegiatanMulai" type="date" required></div>
+        <div class="form-group"><label>Tanggal Selesai (Batas Bayar)</label><input id="kegiatanSelesai" type="date" required></div>
       </div>
-      <div class="form-group"><label>Periode</label><input id="tagihanPeriode" value="${escapeHTML(item?.periode || "")}" placeholder="September 2026"></div>
       <div class="form-group">
-        <label>Status</label>
-        <select id="tagihanAktif">
-          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
-          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        <label>Berlaku Untuk</label>
+        <select id="kegiatanTarget">
+          <option value="semua">Semua Santri</option>
+          ${jilidList.map(j=>`<option value="${j.id}">Kelas/Jilid: ${escapeHTML(j.nama)}</option>`).join("")}
         </select>
       </div>
-      <button class="btn btn-full" type="submit" id="tagihanSaveBtn">Simpan</button>
+      <div class="form-group"><label>Pembayaran Ditujukan Kepada (opsional)</label><input id="kegiatanPenerima" placeholder="Contoh: Bendahara TPQ / Ustadzah Fulanah"></div>
+      <div class="notice">Setelah disimpan, sistem otomatis membuat tagihan untuk setiap santri pada target di atas, dan mengirim pengumuman ke wali &amp; ustadzah.</div>
+      <button class="btn btn-full" type="submit" id="kegiatanSaveBtn">💾 Simpan &amp; Umumkan</button>
     </form>`);
 
-  $("tagihanForm").addEventListener("submit", async e => {
+  $("kegiatanForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const btn = $("tagihanSaveBtn");
-    const payload = {
-      nama: $("tagihanNama").value.trim(),
-      jenis: $("tagihanJenis").value,
-      nominal: Number($("tagihanNominal").value),
-      periode: $("tagihanPeriode").value.trim(),
-      aktif: $("tagihanAktif").value === "true"
-    };
+    const btn = $("kegiatanSaveBtn");
+    const targetSelect = $("kegiatanTarget");
+    const targetValue = targetSelect.value;
+    const targetNama = targetValue === "semua" ? "Semua Santri" : targetSelect.options[targetSelect.selectedIndex].textContent.trim();
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(item){
-          await updateCollectionData("tagihan", item.id, payload);
-          logAudit("UPDATE","tagihan",item.id);
-        }else{
-          const created = await addCollectionData("tagihan", payload);
-          logAudit("CREATE","tagihan",created.id,{ nama: payload.nama });
-        }
+        await buatIuranKegiatan({
+          nama: $("kegiatanNama").value.trim(),
+          nominal: Number($("kegiatanNominal").value||0),
+          tanggalMulai: $("kegiatanMulai").value,
+          tanggalSelesai: $("kegiatanSelesai").value,
+          target: targetValue, targetNama,
+          penerima: $("kegiatanPenerima").value.trim()
+        });
         closeModal();
-        showToast("Tagihan berhasil disimpan.");
+        showToast("Iuran kegiatan dibuat & diumumkan ke wali/ustadzah.");
         renderTagihanAdmin();
-      }catch(error){ alert(error.message); }
+      }catch(error){ alert("Gagal membuat kegiatan: " + error.message); }
     })();
   });
 }
@@ -1785,89 +2040,144 @@ function openTagihanForm(item=null){
 ============================================================ */
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
-  const [keuangan, santriList, tagihanList] = await Promise.all([
-    getCollectionData("keuangan"),
-    getCollectionData("santri"),
-    getCollectionData("tagihan")
+  await ensureSppBulanIniUntukSemuaSantri();
+  const appSettings = await getAppSettings();
+  const [tagihanSantriList, tabunganList] = await Promise.all([
+    getCollectionData("tagihanSantri"),
+    getCollectionData("tabungan")
   ]);
 
-  const santriMap = Object.fromEntries(santriList.map(s=>[s.id, s]));
-  const rows = keuangan
-    .map(k => ({ ...k, santriNama: santriMap[k.santriId]?.nama || "(santri dihapus)" }))
-    .sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  const sppTanggalPeringatan = Number(appSettings.sppTanggalPeringatan||10);
+  const { key: periodeIni } = getPeriodeSekarang();
 
-  const totalTagihan  = rows.reduce((sum,r)=>sum+Number(r.nominalTagihan||0),0);
-  const totalTerbayar = rows.reduce((sum,r)=>sum+Number(r.terbayar||0),0);
-  const totalTunggakan = Math.max(0, totalTagihan - totalTerbayar);
+  const sppBills = tagihanSantriList.filter(x=>x.jenis==="SPP")
+    .sort((a,b)=> (b.periode||"").localeCompare(a.periode||"") || (a.santriNama||"").localeCompare(b.santriNama||""));
+  const iuranBills = tagihanSantriList.filter(x=>x.jenis==="Iuran Kegiatan")
+    .sort((a,b)=>(a.santriNama||"").localeCompare(b.santriNama||""));
+  const tabunganSorted = tabunganList.slice().sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+
+  const totalSppTertagihBulanIni = sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.nominal||0),0);
+  const totalSppTerbayarBulanIni = sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.terbayar||0),0);
+  const totalTunggakanSpp = sppBills.reduce((s,x)=>s+Math.max(0, Number(x.nominal||0)-Number(x.terbayar||0)),0);
+  const totalIuranTerkumpul = iuranBills.reduce((s,x)=>s+Number(x.terbayar||0),0);
+  const totalSaldoTabungan = tabunganList.reduce((saldo,t)=> t.jenis==="tarik" ? saldo-Number(t.jumlah||0) : saldo+Number(t.jumlah||0), 0);
 
   $("page").innerHTML = `
     <div class="toolbar">
-      <div><h2 class="section-title">Keuangan</h2><p class="muted">Rekap seluruh transaksi pembayaran santri.</p></div>
-      <div class="actions">
-        <input id="searchKeuangan" class="search-box" placeholder="Cari nama santri...">
-        <button class="btn" id="btnCatatPembayaran">+ Catat Pembayaran</button>
-      </div>
+      <div><h2 class="section-title">Keuangan</h2><p class="muted">SPP bulanan, Iuran Kegiatan, dan Tabungan santri.</p></div>
     </div>
     <div class="summary-strip">
-      ${statCard("🧾","Total Transaksi", rows.length)}
-      ${statCard("💵","Total Tertagih", formatRupiah(totalTagihan))}
-      ${statCard("✅","Total Terbayar", formatRupiah(totalTerbayar))}
-      ${statCard("⚠️","Total Tunggakan", formatRupiah(totalTunggakan))}
+      ${statCard("💵","SPP Tertagih Bulan Ini", formatRupiah(totalSppTertagihBulanIni))}
+      ${statCard("✅","SPP Terbayar Bulan Ini", formatRupiah(totalSppTerbayarBulanIni))}
+      ${statCard("⚠️","Total Tunggakan SPP", formatRupiah(totalTunggakanSpp))}
+      ${statCard("🐷","Total Saldo Tabungan", formatRupiah(totalSaldoTabungan))}
     </div>
-    <div class="table-container">
-      <table id="tableKeuangan">
-        <thead><tr><th>No</th><th>Santri</th><th>Tagihan</th><th>Nominal</th><th>Terbayar</th><th>Metode</th><th>Status</th><th>Tanggal</th></tr></thead>
-        <tbody>
-          ${rows.length ? rows.map((item,index)=>{
-            const lunas = Number(item.terbayar||0) >= Number(item.nominalTagihan||0);
-            return `<tr data-row>
-              <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${escapeHTML(item.tagihanNama || "-")}</td>
-              <td>${formatRupiah(item.nominalTagihan||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
-              <td>${escapeHTML(item.metode || "-")}</td>
-              <td>${lunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-yellow">Belum Lunas</span>`}</td>
-              <td>${formatTanggal(item.tanggal)}</td>
-            </tr>`;
-          }).join("") : `<tr><td colspan="8" class="empty">Belum ada transaksi keuangan.</td></tr>`}
-        </tbody>
-      </table>
+
+    <div class="actions" style="margin-bottom:16px">
+      <button class="btn" id="tabSpp">💵 SPP</button>
+      <button class="btn btn-light" id="tabIuran">🎉 Iuran Kegiatan ${totalIuranTerkumpul?`(${formatRupiah(totalIuranTerkumpul)} terkumpul)`:""}</button>
+      <button class="btn btn-light" id="tabTabungan">🐷 Tabungan</button>
+    </div>
+
+    <div id="panelSpp">
+      <div class="toolbar"><input id="searchSpp" class="search-box" placeholder="Cari nama santri..."></div>
+      <div class="table-container">
+        <table id="tableSpp">
+          <thead><tr><th>No</th><th>Santri</th><th>Bulan</th><th>Nominal</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${sppBills.length ? sppBills.map((item,index)=>{
+              const menunggak = isSppMenunggak(item, sppTanggalPeringatan);
+              return `<tr data-row>
+                <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${formatPeriodeLabel(item.periode)}</td>
+                <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+                <td>${badgeStatusTagihan(item.status)}${menunggak?` <span class="badge badge-red">Menunggak</span>`:""}</td>
+                <td><button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan SPP. Atur nominal SPP di menu Master Tagihan.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panelIuran" class="hidden">
+      <div class="toolbar"><input id="searchIuran" class="search-box" placeholder="Cari nama santri..."></div>
+      <div class="table-container">
+        <table id="tableIuran">
+          <thead><tr><th>No</th><th>Santri</th><th>Kegiatan</th><th>Nominal</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${iuranBills.length ? iuranBills.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${escapeHTML(item.judul||"-")}</td>
+                <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+                <td>${badgeStatusTagihan(item.status)}</td>
+                <td><button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button></td>
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan. Buat lewat menu Master Tagihan.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panelTabungan" class="hidden">
+      <div class="toolbar">
+        <input id="searchTabungan" class="search-box" placeholder="Cari nama santri...">
+        <button class="btn" id="btnCatatTabungan">+ Catat Tabungan</button>
+      </div>
+      <div class="table-container">
+        <table id="tableTabungan">
+          <thead><tr><th>No</th><th>Santri</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th></tr></thead>
+          <tbody>
+            ${tabunganSorted.length ? tabunganSorted.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td>
+                <td>${item.jenis==="tarik"?`<span class="badge badge-red">Tarik</span>`:`<span class="badge badge-green">Setor</span>`}</td>
+                <td>${formatRupiah(item.jumlah||0)}</td><td>${escapeHTML(item.keterangan||"-")}</td>
+                <td>${formatTanggal(item.tanggal)}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada transaksi tabungan.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
     </div>`;
 
-  attachTableSearch("searchKeuangan","tableKeuangan");
-  $("btnCatatPembayaran").addEventListener("click", ()=>openCatatPembayaranModal(null, santriList, tagihanList));
+  attachTableSearch("searchSpp","tableSpp");
+  attachTableSearch("searchIuran","tableIuran");
+  attachTableSearch("searchTabungan","tableTabungan");
+
+  function switchTab(tab){
+    $("panelSpp").classList.toggle("hidden", tab!=="spp");
+    $("panelIuran").classList.toggle("hidden", tab!=="iuran");
+    $("panelTabungan").classList.toggle("hidden", tab!=="tabungan");
+    $("tabSpp").className = tab==="spp" ? "btn" : "btn btn-light";
+    $("tabIuran").className = tab==="iuran" ? "btn" : "btn btn-light";
+    $("tabTabungan").className = tab==="tabungan" ? "btn" : "btn btn-light";
+  }
+  $("tabSpp").addEventListener("click", ()=>switchTab("spp"));
+  $("tabIuran").addEventListener("click", ()=>switchTab("iuran"));
+  $("tabTabungan").addEventListener("click", ()=>switchTab("tabungan"));
+
+  $("page").querySelectorAll("[data-bayar]").forEach(btn => btn.addEventListener("click", () => {
+    const bill = tagihanSantriList.find(x=>x.id===btn.dataset.bayar);
+    if(bill) openCatatPembayaranModal(bill, renderKeuanganAdmin);
+  }));
+  $("btnCatatTabungan").addEventListener("click", async () => {
+    const santriList = (await getCollectionData("santri")).filter(s=>s.aktif!==false);
+    openCatatTabunganModal(santriList, renderKeuanganAdmin);
+  });
 }
 
-async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null, tagihanListArg=null){
-  const santriList  = santriListArg || await getCollectionData("santri");
-  const tagihanList = (tagihanListArg || await getCollectionData("tagihan")).filter(x=>x.aktif!==false);
-  const keuangan    = await getCollectionData("keuangan");
-
-  const preselected = preselectedSantriId
-    ? santriList.find(s => s.id === preselectedSantriId)
-    : null;
-
-  openModal("Catat Pembayaran", `
+// Modal generik untuk mencatat pembayaran satu tagihan (SPP / Iuran Kegiatan).
+// Mendukung pembayaran bertahap/cicilan — setiap kali dicatat, jumlahnya
+// ditambahkan ke riwayat tagihan tersebut, tidak menimpa nilai sebelumnya.
+function openCatatPembayaranModal(bill, onSaved){
+  const sisa = Math.max(0, Number(bill.nominal||0) - Number(bill.terbayar||0));
+  openModal(`Catat Pembayaran`, `
     <form id="bayarForm">
-      ${preselected ? `
-        <div class="form-group">
-          <label>Santri</label>
-          <input value="${escapeHTML(preselected.nama)}" disabled>
-          <input type="hidden" id="bayarSantri" value="${preselected.id}">
-        </div>` : `
-        <div class="form-group">
-          <label>Santri</label>
-          <select id="bayarSantri" required>
-            <option value="">Pilih santri</option>
-            ${santriList.map(s=>`<option value="${s.id}">${escapeHTML(s.nama)}</option>`).join("")}
-          </select>
-        </div>`}
-      <div class="form-group">
-        <label>Tagihan</label>
-        <select id="bayarTagihan" required>
-          <option value="">Pilih tagihan</option>
-          ${tagihanList.map(t=>`<option value="${t.id}" data-nominal="${t.nominal||0}">${escapeHTML(t.nama)} (${formatRupiah(t.nominal||0)})</option>`).join("")}
-        </select>
+      <div class="notice">
+        <b>${escapeHTML(bill.santriNama)}</b><br>
+        ${escapeHTML(bill.judul)}<br>
+        Nominal: ${formatRupiah(bill.nominal||0)} · Sudah dibayar: ${formatRupiah(bill.terbayar||0)}<br>
+        <b>Sisa tagihan: ${formatRupiah(sisa)}</b>
       </div>
-      <div class="form-group"><label>Jumlah Terbayar</label><input id="bayarNominal" type="number" min="0" required></div>
+      <div class="form-group"><label>Jumlah Dibayar Sekarang</label><input id="bayarJumlah" type="number" min="1" value="${sisa>0?sisa:''}" required></div>
       <div class="form-group">
         <label>Metode Pembayaran</label>
         <select id="bayarMetode">
@@ -1876,47 +2186,69 @@ async function openCatatPembayaranModal(preselectedSantriId, santriListArg=null,
           <option value="Transfer">Transfer</option>
         </select>
       </div>
-      <div class="form-group"><label>Keterangan</label><textarea id="bayarKeterangan" rows="3"></textarea></div>
+      <div class="form-group"><label>Keterangan (opsional)</label><textarea id="bayarKeterangan" rows="2" placeholder="Contoh: cicilan ke-1"></textarea></div>
       <button class="btn btn-full" type="submit" id="bayarSaveBtn">Simpan Pembayaran</button>
     </form>`);
-
-  $("bayarTagihan").addEventListener("change", e => {
-    const opt = e.target.options[e.target.selectedIndex];
-    if(opt?.dataset.nominal) $("bayarNominal").value = opt.dataset.nominal;
-  });
 
   $("bayarForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("bayarSaveBtn");
-    const santriId = $("bayarSantri").value;
-    const tagihanSelect = $("bayarTagihan");
-    const tagihanId = tagihanSelect.value;
-    const tagihan = tagihanList.find(t=>t.id===tagihanId);
-    if(!santriId || !tagihan){ alert("Pilih santri dan tagihan terlebih dahulu."); return; }
-
-    const existing = keuangan.find(x=>x.santriId===santriId && x.tagihanId===tagihanId);
-    const payload = {
-      santriId, tagihanId, tagihanNama: tagihan.nama,
-      nominalTagihan: Number(tagihan.nominal || 0),
-      terbayar: Number($("bayarNominal").value),
-      metode: $("bayarMetode").value,
-      keterangan: $("bayarKeterangan").value.trim(),
-      dicatatOleh: currentProfile.uid,
-      dicatatOlehNama: currentProfile.nama || "",
-      tanggal: serverTimestamp()
-    };
+    const jumlah = Number($("bayarJumlah").value||0);
+    if(jumlah <= 0){ alert("Jumlah harus lebih dari 0."); return; }
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        if(existing){
-          await updateCollectionData("keuangan", existing.id, payload);
-          logAudit("UPDATE","keuangan",existing.id);
-        }else{
-          const created = await addCollectionData("keuangan", payload);
-          logAudit("CREATE","keuangan",created.id);
-        }
+        await catatPembayaranTagihan(bill.id, {
+          jumlah, metode: $("bayarMetode").value, keterangan: $("bayarKeterangan").value.trim()
+        });
         closeModal();
-        showToast("Pembayaran berhasil disimpan.");
-        if(currentProfile.role === "admin") renderKeuanganAdmin();
+        showToast("Pembayaran berhasil dicatat.");
+        onSaved?.();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
+
+// Modal untuk mencatat tabungan (sukarela, bebas kapan saja & berapa saja).
+function openCatatTabunganModal(santriList, onSaved){
+  openModal("Catat Tabungan", `
+    <form id="tabunganForm">
+      <div class="form-group">
+        <label>Santri</label>
+        <select id="tabunganSantri" required>
+          <option value="">Pilih santri</option>
+          ${santriList.map(s=>`<option value="${s.id}" data-nama="${escapeAttr(s.nama)}">${escapeHTML(s.nama)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Jenis Transaksi</label>
+        <select id="tabunganJenis">
+          <option value="setor">Setor (Menabung)</option>
+          <option value="tarik">Tarik (Pengambilan)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Jumlah</label><input id="tabunganJumlah" type="number" min="1" required></div>
+      <div class="form-group"><label>Keterangan (opsional)</label><textarea id="tabunganKeterangan" rows="2"></textarea></div>
+      <button class="btn btn-full" type="submit" id="tabunganSaveBtn">Simpan Transaksi</button>
+    </form>`);
+
+  $("tabunganForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("tabunganSaveBtn");
+    const select = $("tabunganSantri");
+    const santriId = select.value;
+    const santriNama = select.options[select.selectedIndex]?.dataset.nama || "-";
+    if(!santriId){ alert("Pilih santri terlebih dahulu."); return; }
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await catatTabungan({
+          santriId, santriNama,
+          jenis: $("tabunganJenis").value,
+          jumlah: Number($("tabunganJumlah").value||0),
+          keterangan: $("tabunganKeterangan").value.trim()
+        });
+        closeModal();
+        showToast("Transaksi tabungan berhasil dicatat.");
+        onSaved?.();
       }catch(error){ alert(error.message); }
     })();
   });
@@ -2001,6 +2333,7 @@ async function getSantriUstadzah(){
 
 async function renderDaftarSantriUstadzah(){
   if(!requireRole("ustadzah")) return;
+  await ensureSppBulanIniUntukSemuaSantri();
   const santri = await getSantriUstadzah();
 
   $("page").innerHTML = `
@@ -2033,38 +2366,73 @@ async function renderDaftarSantriUstadzah(){
 async function renderKeuanganSantriUstadzah(santriId){
   const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
   if(!santri){ alert("Santri tidak ditemukan."); return; }
-  const [tagihan, keuangan] = await Promise.all([
-    getCollectionData("tagihan"), getCollectionData("keuangan")
+  const [appSettings, tagihanSantriList, tabunganList] = await Promise.all([
+    getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
   ]);
-  const aktif = tagihan.filter(x=>x.aktif!==false);
+  const sppTanggalPeringatan = Number(appSettings.sppTanggalPeringatan||10);
+  const bills = tagihanSantriList.filter(x=>x.santriId===santriId);
+  const sppBills = bills.filter(x=>x.jenis==="SPP").sort((a,b)=>(b.periode||"").localeCompare(a.periode||""));
+  const iuranBills = bills.filter(x=>x.jenis==="Iuran Kegiatan");
+  const tabunganSantri = tabunganList.filter(x=>x.santriId===santriId).sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  const saldoTabungan = hitungSaldoTabungan(tabunganList, santriId);
+
+  function renderBillRows(list){
+    if(!list.length) return `<tr><td colspan="6" class="empty">Belum ada tagihan.</td></tr>`;
+    return list.map((item,index)=>{
+      const menunggak = isSppMenunggak(item, sppTanggalPeringatan);
+      return `<tr>
+        <td>${index+1}</td><td>${escapeHTML(item.judul||"-")}</td>
+        <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+        <td>${badgeStatusTagihan(item.status)}${menunggak?` <span class="badge badge-red">Menunggak</span>`:""}</td>
+        <td><button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button></td>
+      </tr>`;
+    }).join("");
+  }
 
   $("page").innerHTML = `
     <div class="toolbar"><button class="btn btn-sm" id="btnKembaliDaftar">← Kembali</button></div>
     <div class="card">
       <h2 style="margin-top:0">💰 Keuangan Santri</h2>
       <p class="muted">${escapeHTML(santri.nama)}</p>
-      <div class="table-container" style="margin-top:15px">
-        <table>
-          <thead><tr><th>No.</th><th>Tagihan</th><th>Jenis</th><th>Nilai</th><th>Terbayar</th><th>Metode</th><th>Aksi</th></tr></thead>
+
+      <h3 style="margin-top:18px">💵 SPP</h3>
+      <div class="table-container" style="margin-top:8px">
+        <table><thead><tr><th>No.</th><th>Bulan</th><th>Nominal</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>${renderBillRows(sppBills)}</tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:18px">🎉 Iuran Kegiatan</h3>
+      <div class="table-container" style="margin-top:8px">
+        <table><thead><tr><th>No.</th><th>Kegiatan</th><th>Nominal</th><th>Terbayar</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>${renderBillRows(iuranBills)}</tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:18px">🐷 Tabungan (Saldo: ${formatRupiah(saldoTabungan)})</h3>
+      <div class="table-container" style="margin-top:8px">
+        <table><thead><tr><th>No.</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th></tr></thead>
           <tbody>
-            ${aktif.length ? aktif.map((item,index)=>{
-              const pembayaran = keuangan.find(x=>x.santriId===santriId && x.tagihanId===item.id);
-              return `<tr>
-                <td>${index+1}</td><td>${escapeHTML(item.nama)}</td><td>${escapeHTML(item.jenis)}</td>
-                <td>${formatRupiah(item.nominal)}</td><td>${formatRupiah(pembayaran?.terbayar||0)}</td>
-                <td>${escapeHTML(pembayaran?.metode || "-")}</td>
-                <td><button class="btn btn-sm" data-catat="${item.id}">Catat</button></td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan aktif.</td></tr>`}
+            ${tabunganSantri.length ? tabunganSantri.map((item,index)=>`
+              <tr><td>${index+1}</td>
+                <td>${item.jenis==="tarik"?`<span class="badge badge-red">Tarik</span>`:`<span class="badge badge-green">Setor</span>`}</td>
+                <td>${formatRupiah(item.jumlah||0)}</td><td>${escapeHTML(item.keterangan||"-")}</td>
+                <td>${formatTanggal(item.tanggal)}</td>
+              </tr>`).join("") : `<tr><td colspan="5" class="empty">Belum ada transaksi tabungan.</td></tr>`}
           </tbody>
         </table>
       </div>
+      <button class="btn btn-sm" id="btnCatatTabunganSantri" style="margin-top:10px">+ Catat Tabungan</button>
     </div>`;
 
   $("btnKembaliDaftar").addEventListener("click", renderDaftarSantriUstadzah);
-  $("page").querySelectorAll("[data-catat]").forEach(btn => btn.addEventListener("click", () => {
-    openCatatPembayaranModal(santriId, [santri], aktif);
+  $("page").querySelectorAll("[data-bayar]").forEach(btn => btn.addEventListener("click", () => {
+    const bill = bills.find(x=>x.id===btn.dataset.bayar);
+    if(bill) openCatatPembayaranModal(bill, ()=>renderKeuanganSantriUstadzah(santriId));
   }));
+  $("btnCatatTabunganSantri").addEventListener("click", () => {
+    openCatatTabunganModal([santri], ()=>renderKeuanganSantriUstadzah(santriId));
+  });
 }
 
 /* ============================================================
@@ -2132,10 +2500,26 @@ async function renderPembelajaranWaliView(santri){
       </div>
     </div>
     <div class="card" style="margin-top:18px">
-      <h3>💰 Riwayat Keuangan</h3>
+      <h3>💵 Riwayat SPP</h3>
       <div class="table-container" style="margin-top:12px">
-        <table><thead><tr><th>No.</th><th>Tagihan</th><th>Nilai</th><th>Terbayar</th><th>Metode</th><th>Status</th></tr></thead>
-          <tbody id="riwayatKeuanganWaliBody"></tbody>
+        <table><thead><tr><th>No.</th><th>Bulan</th><th>Nominal</th><th>Terbayar</th><th>Status</th></tr></thead>
+          <tbody id="riwayatSppWaliBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>🎉 Riwayat Iuran Kegiatan</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table><thead><tr><th>No.</th><th>Kegiatan</th><th>Nominal</th><th>Terbayar</th><th>Status</th></tr></thead>
+          <tbody id="riwayatIuranWaliBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3 id="riwayatTabunganWaliTitle">🐷 Riwayat Tabungan</h3>
+      <div class="table-container" style="margin-top:12px">
+        <table><thead><tr><th>No.</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th></tr></thead>
+          <tbody id="riwayatTabunganWaliBody"></tbody>
         </table>
       </div>
       <button class="btn btn-sm" id="btnLihatQris" style="margin-top:12px">📱 Lihat QRIS Pembayaran</button>
@@ -2211,28 +2595,50 @@ async function renderRiwayatWaliRows(santri, jilid){
 }
 
 async function renderRiwayatKeuanganWaliRows(santriId){
-  const data = await getCollectionData("keuangan");
-  const rows = data.filter(x=>x.santriId===santriId)
-    .sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  const [appSettings, tagihanSantriList, tabunganList] = await Promise.all([
+    getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
+  ]);
+  const sppTanggalPeringatan = Number(appSettings.sppTanggalPeringatan||10);
+  const bills = tagihanSantriList.filter(x=>x.santriId===santriId);
+  const sppBills = bills.filter(x=>x.jenis==="SPP").sort((a,b)=>(b.periode||"").localeCompare(a.periode||""));
+  const iuranBills = bills.filter(x=>x.jenis==="Iuran Kegiatan");
+  const tabunganSantri = tabunganList.filter(x=>x.santriId===santriId).sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  const saldoTabungan = hitungSaldoTabungan(tabunganList, santriId);
 
-  const body = $("riwayatKeuanganWaliBody");
-  if(!body) return;
-
-  if(!rows.length){
-    body.innerHTML = `<tr><td colspan="6" class="empty">Belum ada riwayat keuangan.</td></tr>`;
-    return;
+  const sppBody = $("riwayatSppWaliBody");
+  if(sppBody){
+    sppBody.innerHTML = sppBills.length ? sppBills.map((item,index)=>{
+      const menunggak = isSppMenunggak(item, sppTanggalPeringatan);
+      return `<tr>
+        <td>${index+1}</td><td>${formatPeriodeLabel(item.periode)}</td>
+        <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+        <td>${badgeStatusTagihan(item.status)}${menunggak?` <span class="badge badge-red">Menunggak</span>`:""}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="5" class="empty">Belum ada tagihan SPP.</td></tr>`;
   }
-  body.innerHTML = rows.map((item,index) => {
-    const nominal = Number(item.nominalTagihan||0);
-    const terbayar = Number(item.terbayar||0);
-    const lunas = terbayar >= nominal;
-    return `<tr>
-      <td>${index+1}</td><td>${escapeHTML(item.tagihanNama||"-")}</td>
-      <td>${formatRupiah(nominal)}</td><td>${formatRupiah(terbayar)}</td>
-      <td>${item.metode==="QRIS" ? "📱 QRIS" : escapeHTML(item.metode||"-")}</td>
-      <td>${lunas ? `<span class="badge badge-green">Lunas</span>` : `<span class="badge badge-yellow">Belum Lunas</span>`}</td>
-    </tr>`;
-  }).join("");
+
+  const iuranBody = $("riwayatIuranWaliBody");
+  if(iuranBody){
+    iuranBody.innerHTML = iuranBills.length ? iuranBills.map((item,index)=>`
+      <tr>
+        <td>${index+1}</td><td>${escapeHTML(item.judul||"-")}</td>
+        <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
+        <td>${badgeStatusTagihan(item.status)}</td>
+      </tr>`).join("") : `<tr><td colspan="5" class="empty">Belum ada iuran kegiatan.</td></tr>`;
+  }
+
+  const tabunganTitle = $("riwayatTabunganWaliTitle");
+  if(tabunganTitle) tabunganTitle.textContent = `🐷 Riwayat Tabungan (Saldo: ${formatRupiah(saldoTabungan)})`;
+  const tabunganBody = $("riwayatTabunganWaliBody");
+  if(tabunganBody){
+    tabunganBody.innerHTML = tabunganSantri.length ? tabunganSantri.map((item,index)=>`
+      <tr>
+        <td>${index+1}</td>
+        <td>${item.jenis==="tarik"?`<span class="badge badge-red">Tarik</span>`:`<span class="badge badge-green">Setor</span>`}</td>
+        <td>${formatRupiah(item.jumlah||0)}</td><td>${escapeHTML(item.keterangan||"-")}</td>
+        <td>${formatTanggal(item.tanggal)}</td>
+      </tr>`).join("") : `<tr><td colspan="5" class="empty">Belum ada transaksi tabungan.</td></tr>`;
+  }
 }
 
 async function waliTampilkanQRIS(){
