@@ -267,7 +267,8 @@ const APP_CONFIG = {
   batasIzinJam: 15,
   batasAlphaJam: 18,
   batasAlphaHari: 2,
-  izinDefaultRentangHari: 1
+  izinDefaultRentangHari: 1,
+  jumlahHariRekap: 7
 };
 
 /* ============================================================
@@ -778,13 +779,19 @@ function hitungKehadiranSantri({ santriId, tanggal, izinList, progressList }){
   return { status: "alpha", izin: null, progress: null };
 }
 
-function hitungRekapKehadiran({ santriList, izinList, progressList, jumlahHari = 7 }){
+function hitungRekapKehadiran({ santriList, izinList, progressList, appSettings }){
+  const jumlahHari = Number(appSettings?.jumlahHariRekap || APP_CONFIG.jumlahHariRekap);
+  const mulaiStr = appSettings?.mulaiPembelajaran || null;
+
   const today = nowWIB();
   const tanggalList = [];
   for(let i = 0; i < jumlahHari; i++){
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    tanggalList.push(dateKey(d));
+    const key = dateKey(d);
+    // Lewati tanggal sebelum mulai pembelajaran
+    if(mulaiStr && key < mulaiStr) continue;
+    tanggalList.push(key);
   }
 
   return santriList.map(s => {
@@ -798,6 +805,69 @@ function hitungRekapKehadiran({ santriList, izinList, progressList, jumlahHari =
       else if(r.status === "alpha") alpha++;
     });
     return { santri: s, hadir, izin, alpha, total: hadir + izin + alpha };
+  }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
+}
+// ============================================================
+// KEHADIRAN USTADZAH (individu)
+// ============================================================
+
+// Cari izin ustadzah di tanggal tertentu (jenis: "ustadzah")
+function cariIzinUstadzah(izinList, ustadzahId, tanggal){
+  return izinList.find(z =>
+    z.jenis === "ustadzah" &&
+    z.ustadzahId === ustadzahId &&
+    z.aktif !== false &&
+    isIzinAktifDiTanggal(z, tanggal)
+  ) || null;
+}
+
+// Hitung status kehadiran ustadzah di tanggal tertentu
+function hitungKehadiranUstadzah({ ustadzahId, tanggal, izinList, progressList }){
+  const izin = cariIzinUstadzah(izinList, ustadzahId, tanggal);
+  if(izin) return { status: "izin", izin };
+
+  // Ustadzah dianggap hadir kalau ada progress yang ia input pada tanggal itu
+  const progressHariItu = progressList.filter(p => {
+    if(p.ustadzahUid !== ustadzahId) return false;
+    const ts = p.updatedAt?.toDate?.() || p.updatedAt;
+    if(!ts) return false;
+    return dateKey(ts) === tanggal;
+  });
+  if(progressHariItu.length > 0) return { status: "hadir" };
+
+  const today = dateKey(nowWIB());
+  if(tanggal === today && !isLewatBatasAlpha()){
+    return { status: "belum" };
+  }
+  return { status: "alpha" };
+}
+
+// Rekap kehadiran ustadzah selama periode
+function hitungRekapKehadiranUstadzah({ ustadzahList, izinList, progressList, appSettings }){
+  const jumlahHari = Number(appSettings?.jumlahHariRekap || APP_CONFIG.jumlahHariRekap);
+  const mulaiStr = appSettings?.mulaiPembelajaran || null;
+  const today = nowWIB();
+
+  const tanggalList = [];
+  for(let i = 0; i < jumlahHari; i++){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = dateKey(d);
+    if(mulaiStr && key < mulaiStr) continue;
+    tanggalList.push(key);
+  }
+
+  return ustadzahList.map(u => {
+    let hadir = 0, izin = 0, alpha = 0;
+    tanggalList.forEach(t => {
+      const r = hitungKehadiranUstadzah({
+        ustadzahId: u.id, tanggal: t, izinList, progressList
+      });
+      if(r.status === "hadir") hadir++;
+      else if(r.status === "izin") izin++;
+      else if(r.status === "alpha") alpha++;
+    });
+    return { ustadzah: u, hadir, izin, alpha, total: hadir + izin + alpha };
   }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
 }
 /* ============================================================
@@ -1270,6 +1340,17 @@ async function renderDashboardAdmin(){
     getCollectionData("ustadzah"),
     getCollectionData("jilid")
   ]);
+
+  const izinList = await getCollectionData("izin", { forceRefresh:true });
+  const progressList = await getCollectionData("progress", { forceRefresh:true });
+  const appSettings = await getAppSettings();
+
+  // Rekap kehadiran USTADZAH untuk admin
+  const rekapUstadzah = hitungRekapKehadiranUstadzah({
+    ustadzahList: ustadzah.filter(u => u.aktif !== false),
+    izinList, progressList, appSettings
+  });
+
   $("page").innerHTML = `
     <h2 class="section-title">Dashboard Admin</h2>
     <p class="muted">Selamat datang, ${escapeHTML(currentProfile.nama)}.</p>
@@ -1279,12 +1360,40 @@ async function renderDashboardAdmin(){
       ${statCard("👨‍👩‍👧","Wali Aktif", wali.filter(x=>x.aktif!==false).length)}
       ${statCard("📚","Kelas / Jilid", jilid.filter(x=>x.aktif!==false).length)}
     </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>📊 Rekap Kehadiran Ustadzah</h3>
+      <p class="muted" style="font-size:13px">
+        ${appSettings.mulaiPembelajaran ? `Sejak ${appSettings.mulaiPembelajaran}` : "Seluruh periode"}
+        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir
+      </p>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Peringkat</th><th>Ustadzah</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            ${rekapUstadzah.length ? rekapUstadzah.map((r,index)=>`
+              <tr>
+                <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
+                <td><b>${escapeHTML(r.ustadzah.nama || "-")}</b></td>
+                <td><span class="badge badge-green">${r.hadir}</span></td>
+                <td><span class="badge badge-yellow">${r.izin}</span></td>
+                <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
+                      ? `<span class="badge badge-red">${r.alpha}</span>`
+                      : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
+                <td>${r.total}</td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card" style="margin-top:18px">
       <h3>Ringkasan Sistem</h3>
       <p class="muted">Gunakan menu di samping untuk mengelola data santri, wali, ustadzah, kelas/jilid, pengumuman, tagihan dan keuangan.</p>
     </div>`;
 }
-
 async function renderDashboardUstadzah(){
   await ensureSppBulanIniUntukSemuaSantri();
   const santri = await getSantriUstadzah();
@@ -1294,12 +1403,21 @@ async function renderDashboardUstadzah(){
 
   const izinList = await getCollectionData("izin", { forceRefresh:true });
   const progressList = await getCollectionData("progress", { forceRefresh:true });
+  const appSettings = await getAppSettings();
 
-  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, jumlahHari: 7 });
-  const peringatan = rekap.filter(r => r.alpha >= APP_CONFIG.batasAlphaHari);
-
+  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, appSettings });
+  const peringatan = rekap.filter(r => r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari));
+  // === KEHADIRAN USTADZAH SENDIRI ===
+  const rekapUstadzah = hitungRekapKehadiranUstadzah({
+    ustadzahList: [{ id: currentProfile.uid, nama: currentProfile.nama || "Ustadzah" }],
+    izinList, progressList, appSettings
+  });
+  const statUstadzah = rekapUstadzah[0] || { hadir: 0, izin: 0, alpha: 0, total: 0 };
+  const peringatanUstadzah = statUstadzah.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari);
+  // Riwayat izin: izin santri kelasnya + izin ustadzah sendiri
+  const santriIds = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList
-    .filter(z => santri.some(s => s.id === z.santriId))
+    .filter(z => santriIds.has(z.santriId) || z.ustadzahId === currentProfile.uid)
     .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
     .slice(0, 10);
 
@@ -1331,16 +1449,24 @@ async function renderDashboardUstadzah(){
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
         <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
         <p class="muted" style="color:#7f1d1d;margin-bottom:6px">
-          Santri berikut tidak masuk <b>${APP_CONFIG.batasAlphaHari} hari atau lebih</b> dalam 7 hari terakhir:
+          Santri kelas Anda tidak masuk <b>${Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)} hari atau lebih</b>:
         </p>
         <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">
           ${peringatan.map(r => `<li><b>${escapeHTML(r.santri.nama)}</b> — ${r.alpha} hari alpha</li>`).join("")}
         </ul>
       </div>` : ""}
+      ${peringatanUstadzah ? `
+      <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
+        <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran Anda</h3>
+        <p class="muted" style="color:#7f1d1d;margin-bottom:0">
+          Anda tercatat <b>alpha ${statUstadzah.alpha} hari</b> dalam ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir.
+          Mohon aktif input hasil belajar atau ajukan izin bila berhalangan.
+        </p>
+      </div>` : ""}
 
-    <!-- ============ FORM IZIN ============ -->
+    <!-- ============ FORM IZIN USTADZAH ============ -->
     <div class="card" style="margin-top:18px">
-      <h3>📝 Ajukan Izin Tidak Masuk</h3>
+      <h3>📝 Izin Ustadzah Tidak Masuk</h3>
       ${lewatBatas ? `
         <div class="notice notice-warn" style="margin-top:10px">
           ⏰ Sudah lewat jam <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>. Anda tetap bisa mengajukan izin untuk <b>besok</b>.
@@ -1348,54 +1474,49 @@ async function renderDashboardUstadzah(){
         <div class="notice" style="margin-top:10px">
           ⏰ Batas pengajuan izin untuk hari ini: <b>${APP_CONFIG.batasIzinJam}.00 WIB</b>.
         </div>`}
-
-      ${santri.length ? `
-        <form id="izinForm" style="margin-top:12px">
+      <div class="notice" style="margin-top:10px">
+        Mengajukan izin atas nama: <b>${escapeHTML(currentProfile.nama || "Ustadzah")}</b>
+      </div>
+      <form id="izinForm" style="margin-top:12px">
+        <input type="hidden" id="izinSantri" value="" data-nama="" data-jilid="">
+        <div class="row">
           <div class="form-group">
-            <label>Santri</label>
-            <select id="izinSantri" required>
-              <option value="">Pilih santri</option>
-              ${santri.map(s => `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-jilid="${escapeAttr(s.jilidId||"")}">${escapeHTML(s.nama)}</option>`).join("")}
-            </select>
-          </div>
-          <div class="row">
-            <div class="form-group">
-              <label>Tanggal Mulai</label>
-              <input id="izinMulai" type="date" value="${dateKey(nowWIB())}" required>
-            </div>
-            <div class="form-group">
-              <label>Tanggal Selesai</label>
-              <input id="izinSelesai" type="date" value="${dateKey(nowWIB())}" required>
-            </div>
+            <label>Tanggal Mulai</label>
+            <input id="izinMulai" type="date" value="${dateKey(nowWIB())}" required>
           </div>
           <div class="form-group">
-            <label>Alasan</label>
-            <select id="izinAlasan" required>
-              <option value="">Pilih alasan</option>
-              <option value="sakit">🤒 Sakit</option>
-              <option value="kegiatan">📅 Kegiatan tidak bisa ditinggal</option>
-              <option value="lainnya">📌 Lainnya</option>
-            </select>
+            <label>Tanggal Selesai</label>
+            <input id="izinSelesai" type="date" value="${dateKey(nowWIB())}" required>
           </div>
-          <div class="form-group hidden" id="izinKegiatanWrap">
-            <label>Nama Kegiatan</label>
-            <input id="izinNamaKegiatan" placeholder="Contoh: Lomba MTQ tingkat kabupaten">
+        </div>
+        <div class="form-group">
+          <label>Alasan</label>
+          <select id="izinAlasan" required>
+            <option value="">Pilih alasan</option>
+            <option value="sakit">🤒 Sakit</option>
+            <option value="kegiatan">📅 Kegiatan tidak bisa ditinggal</option>
+            <option value="lainnya">📌 Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="izinKegiatanWrap">
+          <label>Nama Kegiatan</label>
+          <input id="izinNamaKegiatan" placeholder="Contoh: Rapat MWC NU">
+        </div>
+        <div class="form-group hidden" id="izinKeteranganWrap">
+          <label>Keterangan Tambahan (opsional)</label>
+          <textarea id="izinKeterangan" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Klaimkan Kelas ke Ustadzah Lain (opsional)</label>
+          <select id="izinKlaimUstadzah">
+            <option value="">Tidak perlu diklaimkan</option>
+          </select>
+          <div class="muted" style="font-size:12px;margin-top:4px">
+            Jika diisi, kelas Anda otomatis diklaim ustadzah tersebut untuk tanggal izin.
           </div>
-          <div class="form-group hidden" id="izinKeteranganWrap">
-            <label>Keterangan Tambahan (opsional)</label>
-            <textarea id="izinKeterangan" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Klaimkan Kelas ke Ustadzah Lain (opsional)</label>
-            <select id="izinKlaimUstadzah">
-              <option value="">Tidak perlu diklaimkan</option>
-            </select>
-            <div class="muted" style="font-size:12px;margin-top:4px">
-              Jika diisi, kelas Anda akan otomatis diklaim ustadzah tersebut untuk tanggal izin.
-            </div>
-          </div>
-          <button class="btn btn-full" type="submit" id="izinSaveBtn">Ajukan Izin</button>
-        </form>` : `<p class="muted">Belum ada santri di kelas Anda.</p>`}
+        </div>
+        <button class="btn btn-full" type="submit" id="izinSaveBtn">Ajukan Izin</button>
+      </form>
     </div>
 
     <!-- ============ RIWAYAT IZIN ============ -->
@@ -1403,17 +1524,18 @@ async function renderDashboardUstadzah(){
       <h3>📋 Riwayat Izin</h3>
       <div class="table-container" style="margin-top:12px">
         <table>
-          <thead><tr><th>No.</th><th>Santri</th><th>Tanggal</th><th>Alasan</th><th>Status</th><th>Pengaju</th></tr></thead>
+          <thead><tr><th>No.</th><th>Untuk</th><th>Tanggal</th><th>Alasan</th><th>Status</th></tr></thead>
           <tbody>
-            ${riwayatIzin.length ? riwayatIzin.map((z,index)=>`
-              <tr>
+            ${riwayatIzin.length ? riwayatIzin.map((z,index)=>{
+              const untuk = z.ustadzahId === currentProfile.uid ? `👩‍🏫 ${escapeHTML(z.santriNama || currentProfile.nama)}` : `👨‍🎓 ${escapeHTML(z.santriNama)}`;
+              return `<tr>
                 <td>${index+1}</td>
-                <td><b>${escapeHTML(z.santriNama)}</b></td>
+                <td>${untuk}</td>
                 <td>${z.tanggalMulai === z.tanggalSelesai ? z.tanggalMulai : `${z.tanggalMulai} s/d ${z.tanggalSelesai}`}</td>
                 <td>${badgeAlasan(z.alasan)} ${z.alasan==="kegiatan" && z.namaKegiatan ? `— ${escapeHTML(z.namaKegiatan)}` : ""}</td>
                 <td>${z.aktif === false ? `<span class="badge badge-gray">Dibatalkan</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
-                <td>${escapeHTML(z.diajukanOlehNama || "-")}</td>
-              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada riwayat izin.</td></tr>`}
+              </tr>`;
+            }).join("") : `<tr><td colspan="5" class="empty">Belum ada riwayat izin.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -1421,8 +1543,11 @@ async function renderDashboardUstadzah(){
 
     <!-- ============ REKAP KEHADIRAN ============ -->
     <div class="card" style="margin-top:18px">
-      <h3>📊 Rekap Kehadiran (7 Hari Terakhir)</h3>
-      <p class="muted" style="font-size:13px">Diurutkan dari kehadiran tertinggi.</p>
+      <h3>📊 Rekap Kehadiran Santri Kelas</h3>
+      <p class="muted" style="font-size:13px">
+        ${appSettings.mulaiPembelajaran ? `Sejak ${appSettings.mulaiPembelajaran}` : "Seluruh periode"}
+        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir · diurutkan dari kehadiran tertinggi
+      </p>
       <div class="table-container" style="margin-top:12px">
         <table>
           <thead>
@@ -1435,7 +1560,7 @@ async function renderDashboardUstadzah(){
                 <td><b>${escapeHTML(r.santri.nama)}</b></td>
                 <td><span class="badge badge-green">${r.hadir}</span></td>
                 <td><span class="badge badge-yellow">${r.izin}</span></td>
-                <td>${r.alpha >= APP_CONFIG.batasAlphaHari
+                <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
                       ? `<span class="badge badge-red">${r.alpha}</span>`
                       : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
                 <td>${r.total}</td>
@@ -1443,26 +1568,42 @@ async function renderDashboardUstadzah(){
           </tbody>
         </table>
       </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>📊 Rekap Kehadiran Anda (Ustadzah)</h3>
+      <p class="muted" style="font-size:13px">
+        ${appSettings.mulaiPembelajaran ? `Sejak ${appSettings.mulaiPembelajaran}` : "Seluruh periode"}
+        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir
+      </p>
+      <div class="grid" style="margin-top:12px">
+        ${statCard("✅","Hadir", statUstadzah.hadir)}
+        ${statCard("🟡","Izin", statUstadzah.izin)}
+        ${statCard("🔴","Alpha", statUstadzah.alpha)}
+        ${statCard("📊","Total Hari", statUstadzah.total)}
+      </div>
     </div>`;
 
   $("btnKeKlaim").addEventListener("click", ()=>navigate("daftarSantri"));
 
-  if(santri.length) pasangFormIzin({ santriList: santri, isUstadzah: true });
+  pasangFormIzin({ santriList: santri, isUstadzah: true });
 }
 async function renderDashboardWali(){
-  const santri = await getSantriWali();
+  const santri = await getSantriWali();  // hanya santri yang terdistribusi ke wali ini
   const pengumuman = await getCollectionData("pengumuman");
   const pengumumanAktif = pengumuman.filter(x=>x.aktif!==false)
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
   const izinList = await getCollectionData("izin", { forceRefresh:true });
   const progressList = await getCollectionData("progress", { forceRefresh:true });
+  const appSettings = await getAppSettings();
 
-  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, jumlahHari: 7 });
-  const peringatan = rekap.filter(r => r.alpha >= APP_CONFIG.batasAlphaHari);
+  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, appSettings });
+  const peringatan = rekap.filter(r => r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari));
 
+  // Riwayat izin HANYA untuk santri milik wali ini
+  const santriIds = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList
-    .filter(z => santri.some(s => s.id === z.santriId))
+    .filter(z => santriIds.has(z.santriId))
     .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0))
     .slice(0, 10);
 
@@ -1489,7 +1630,7 @@ async function renderDashboardWali(){
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
         <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
         <p class="muted" style="color:#7f1d1d;margin-bottom:6px">
-          Santri berikut tidak masuk <b>${APP_CONFIG.batasAlphaHari} hari atau lebih</b> dalam 7 hari terakhir tanpa keterangan:
+          Santri Anda tidak masuk <b>${Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)} hari atau lebih</b> dalam periode pembelajaran:
         </p>
         <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">
           ${peringatan.map(r => `<li><b>${escapeHTML(r.santri.nama)}</b> — ${r.alpha} hari alpha</li>`).join("")}
@@ -1522,13 +1663,18 @@ async function renderDashboardWali(){
 
       ${santri.length ? `
         <form id="izinForm" style="margin-top:12px">
-          <div class="form-group">
-            <label>Santri</label>
-            <select id="izinSantri" required>
-              <option value="">Pilih santri</option>
-              ${santri.map(s => `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-jilid="${escapeAttr(s.jilidId||"")}">${escapeHTML(s.nama)}</option>`).join("")}
-            </select>
-          </div>
+          ${santri.length > 1 ? `
+            <div class="form-group">
+              <label>Santri</label>
+              <select id="izinSantri" required>
+                <option value="">Pilih santri</option>
+                ${santri.map(s => `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-jilid="${escapeAttr(s.jilidId||"")}">${escapeHTML(s.nama)}</option>`).join("")}
+              </select>
+            </div>` : `
+            <input type="hidden" id="izinSantri" value="${santri[0].id}" data-nama="${escapeAttr(santri[0].nama)}" data-jilid="${escapeAttr(santri[0].jilidId||"")}">
+            <div class="notice">
+              Mengajukan izin atas nama: <b>${escapeHTML(santri[0].nama)}</b>
+            </div>`}
           <div class="row">
             <div class="form-group">
               <label>Tanggal Mulai</label>
@@ -1583,8 +1729,11 @@ async function renderDashboardWali(){
 
     <!-- ============ REKAP KEHADIRAN ============ -->
     <div class="card" style="margin-top:18px">
-      <h3>📊 Rekap Kehadiran (7 Hari Terakhir)</h3>
-      <p class="muted" style="font-size:13px">Diurutkan dari kehadiran tertinggi.</p>
+      <h3>📊 Rekap Kehadiran</h3>
+      <p class="muted" style="font-size:13px">
+        ${appSettings.mulaiPembelajaran ? `Sejak ${appSettings.mulaiPembelajaran}` : "Seluruh periode"}
+        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir · diurutkan dari kehadiran tertinggi
+      </p>
       <div class="table-container" style="margin-top:12px">
         <table>
           <thead>
@@ -1597,7 +1746,7 @@ async function renderDashboardWali(){
                 <td><b>${escapeHTML(r.santri.nama)}</b></td>
                 <td><span class="badge badge-green">${r.hadir}</span></td>
                 <td><span class="badge badge-yellow">${r.izin}</span></td>
-                <td>${r.alpha >= APP_CONFIG.batasAlphaHari
+                <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
                       ? `<span class="badge badge-red">${r.alpha}</span>`
                       : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
                 <td>${r.total}</td>
@@ -1620,13 +1769,11 @@ async function renderDashboardWali(){
       </div>
     </div>`;
 
-  // Event lihat santri
   $("page").querySelectorAll('[data-action="lihat-santri"]').forEach(btn=>{
     btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.santriId));
   });
 
-  // Pasang form izin
-  if(santri.length) pasangFormIzin({ santriList: santri, isUstadzah: false });
+  pasangFormIzin({ santriList: santri, isUstadzah: false });
 }
 /* ============================================================
    14B. FORM IZIN (dipakai di dashboard wali & ustadzah)
@@ -1656,7 +1803,6 @@ async function pasangFormIzin({ santriList, isUstadzah }){
     `;
   }
 
-  // Set min tanggal = hari ini
   const today = dateKey(nowWIB());
   $("izinMulai").min = today;
   $("izinSelesai").min = today;
@@ -1664,12 +1810,6 @@ async function pasangFormIzin({ santriList, isUstadzah }){
   $("izinForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("izinSaveBtn");
-    const santriSelect = $("izinSantri");
-    const santriId = santriSelect.value;
-    const santriNama = santriSelect.options[santriSelect.selectedIndex]?.dataset.nama || "-";
-    const santriJilidId = santriSelect.options[santriSelect.selectedIndex]?.dataset.jilid || null;
-
-    if(!santriId){ showToast("Pilih santri terlebih dahulu.", true); return; }
 
     const alasan = $("izinAlasan").value;
     if(!alasan){ showToast("Pilih alasan izin.", true); return; }
@@ -1693,31 +1833,41 @@ async function pasangFormIzin({ santriList, isUstadzah }){
       return;
     }
 
-    const existingIzin = izinList.find(z =>
-      z.santriId === santriId && z.aktif !== false &&
-      rentangTanggal(tanggalMulai, tanggalSelesai).some(t => isIzinAktifDiTanggal(z, t))
-    );
-    if(existingIzin){
-      if(!confirm(`Sudah ada izin untuk tanggal tersebut (${existingIzin.tanggalMulai} s/d ${existingIzin.tanggalSelesai}). Lanjutkan?`)) return;
-    }
-
     await withButtonLoading(btn, "Mengirim...", async () => {
       try{
-        const payload = {
-          santriId, santriNama, santriJilidId,
-          tanggalMulai, tanggalSelesai,
-          alasan, namaKegiatan,
-          keterangan: $("izinKeterangan")?.value.trim() || "",
-          diajukanOleh: currentProfile.uid,
-          diajukanOlehNama: currentProfile.nama || "",
-          diajukanOlehRole: currentProfile.role,
-          ustadzahId: isUstadzah ? currentProfile.uid : null,
-          aktif: true
-        };
-        const ref = await addCollectionData("izin", payload);
+        // ==========================================
+        // MODE USTADZAH: izin atas nama sendiri
+        // ==========================================
+        if(isUstadzah){
+          // Cek tabrakan dengan izin ustadzah sendiri
+          const existing = izinList.find(z =>
+            z.jenis === "ustadzah" &&
+            z.ustadzahId === currentProfile.uid &&
+            z.aktif !== false &&
+            rentangTanggal(tanggalMulai, tanggalSelesai).some(t => isIzinAktifDiTanggal(z, t))
+          );
+          if(existing){
+            if(!confirm(`Anda sudah punya izin untuk tanggal tersebut (${existing.tanggalMulai} s/d ${existing.tanggalSelesai}). Lanjutkan?`)) return;
+          }
 
-        // Kalau ustadzah & pilih pengganti → klaim kelas untuk rentang tanggal
-        if(isUstadzah && santriJilidId){
+          const payload = {
+            jenis: "ustadzah",
+            santriId: null,
+            santriNama: currentProfile.nama || "Ustadzah",
+            santriJilidId: null,
+            tanggalMulai, tanggalSelesai,
+            alasan, namaKegiatan,
+            keterangan: $("izinKeterangan")?.value.trim() || "",
+            diajukanOleh: currentProfile.uid,
+            diajukanOlehNama: currentProfile.nama || "",
+            diajukanOlehRole: "ustadzah",
+            ustadzahId: currentProfile.uid,
+            aktif: true
+          };
+
+          const ref = await addCollectionData("izin", payload);
+
+          // Klaim kelas kalau pilih pengganti
           const penggantiUid = $("izinKlaimUstadzah")?.value;
           if(penggantiUid){
             const penggantiNama = $("izinKlaimUstadzah").options[$("izinKlaimUstadzah").selectedIndex]?.dataset.nama || "";
@@ -1733,14 +1883,62 @@ async function pasangFormIzin({ santriList, isUstadzah }){
               logAudit("UPDATE","jilid",j.id,{ klaimOleh: penggantiUid, viaIzin: ref.id });
             }
           }
+
+          logAudit("CREATE","izin",ref.id,{
+            ustadzahId: currentProfile.uid, alasan, tanggalMulai, tanggalSelesai
+          });
+          showToast(pesanSuksesIzin(alasan));
+          renderDashboardUstadzah();
+          return;
         }
 
-        logAudit("CREATE","izin",ref.id,{ santriId, alasan, tanggalMulai, tanggalSelesai });
-        showToast(pesanSuksesIzin(alasan));
+        // ==========================================
+        // MODE WALI: izin atas nama santri
+        // ==========================================
+        const santriSelect = $("izinSantri");
+        if(!santriSelect || !santriSelect.value){
+          showToast("Tidak ada santri terpilih.", true); return;
+        }
 
-        // Refresh dashboard agar riwayat terbaru muncul
-        if(currentProfile.role === "wali") renderDashboardWali();
-        else renderDashboardUstadzah();
+        const santriId = santriSelect.value;
+        const isHidden = santriSelect.tagName === "INPUT";
+        const santriNama = isHidden
+          ? santriSelect.dataset.nama
+          : santriSelect.options[santriSelect.selectedIndex]?.dataset?.nama;
+        const santriJilidId = isHidden
+          ? santriSelect.dataset.jilid
+          : santriSelect.options[santriSelect.selectedIndex]?.dataset?.jilid;
+
+        // Cek tabrakan
+        const existing = izinList.find(z =>
+          z.jenis !== "ustadzah" &&
+          z.santriId === santriId &&
+          z.aktif !== false &&
+          rentangTanggal(tanggalMulai, tanggalSelesai).some(t => isIzinAktifDiTanggal(z, t))
+        );
+        if(existing){
+          if(!confirm(`Sudah ada izin untuk tanggal tersebut (${existing.tanggalMulai} s/d ${existing.tanggalSelesai}). Lanjutkan?`)) return;
+        }
+
+        const payload = {
+          jenis: "santri",
+          santriId, santriNama, santriJilidId,
+          tanggalMulai, tanggalSelesai,
+          alasan, namaKegiatan,
+          keterangan: $("izinKeterangan")?.value.trim() || "",
+          diajukanOleh: currentProfile.uid,
+          diajukanOlehNama: currentProfile.nama || "",
+          diajukanOlehRole: "wali",
+          ustadzahId: null,
+          aktif: true
+        };
+
+        const ref = await addCollectionData("izin", payload);
+        logAudit("CREATE","izin",ref.id,{
+          santriId, alasan, tanggalMulai, tanggalSelesai
+        });
+        showToast(pesanSuksesIzin(alasan));
+        renderDashboardWali();
       }catch(error){
         console.error(error);
         alert("Gagal mengirim izin: " + error.message);
@@ -3258,6 +3456,43 @@ async function renderSettingsAdmin(){
       <label>Batas Hari Alpha untuk Peringatan</label>
       <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? 2)}" required>
       <div class="muted" style="font-size:12px;margin-top:4px">Peringatan muncul jika santri alpha ≥ N hari dalam 7 hari terakhir.</div>
+    </div>
+    <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
+  </form>
+</div>
+<div class="card" style="margin-top:18px">
+  <h3>📝 Konfigurasi Izin & Kehadiran</h3>
+  <form id="izinConfigForm" style="margin-top:12px">
+    <div class="form-group">
+      <label>Tanggal Mulai Pembelajaran</label>
+      <input id="cfgMulaiPembelajaran" type="date" value="${escapeAttr(appSettings.mulaiPembelajaran || '')}" required>
+      <div class="muted" style="font-size:12px;margin-top:4px">
+        Titik awal perhitungan rekap & peringatan. Hari sebelum tanggal ini tidak dihitung dalam rekap.
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Batas Jam Input Izin (WIB)</label>
+        <input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? APP_CONFIG.batasIzinJam)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, izin untuk hari ini ditolak.</div>
+      </div>
+      <div class="form-group">
+        <label>Batas Jam Status Alpha (WIB)</label>
+        <input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? APP_CONFIG.batasAlphaJam)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, siswa tanpa izin & tanpa progress = Alpha.</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Batas Hari Alpha untuk Peringatan</label>
+        <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? APP_CONFIG.batasAlphaHari)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Peringatan muncul jika alpha ≥ N hari dalam periode rekap.</div>
+      </div>
+      <div class="form-group">
+        <label>Jumlah Hari Rekap</label>
+        <input id="cfgJumlahHariRekap" type="number" min="1" max="30" value="${Number(appSettings.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap)}" required>
+        <div class="muted" style="font-size:12px;margin-top:4px">Default 7 hari terakhir.</div>
+      </div>
     </div>
     <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
   </form>
