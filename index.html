@@ -606,8 +606,13 @@ async function buatIuranKegiatan({ nama, nominal, tanggalMulai, tanggalSelesai, 
     `Berlaku untuk: ${targetNama || "Semua Santri"}\n` +
     (penerima ? `Pembayaran ditujukan kepada: ${penerima}\n` : "") +
     `\nSilakan lakukan pembayaran sesuai batas waktu di atas.`;
-  await addCollectionData("pengumuman", { judul: `📢 Iuran Kegiatan: ${nama}`, isi: isiPengumuman, aktif: true });
-
+await addCollectionData("pengumuman", {
+  judul: `📢 Iuran Kegiatan: ${nama}`,
+  isi: isiPengumuman,
+  aktif: true,
+  berlakuSampai: tanggalSelesai ? new Date(tanggalSelesai + "T23:59:59").toISOString() : null
+});
+  
   return kegiatanId;
 }
 
@@ -869,6 +874,49 @@ function hitungRekapKehadiranUstadzah({ ustadzahList, izinList, progressList, ap
     });
     return { ustadzah: u, hadir, izin, alpha, total: hadir + izin + alpha };
   }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
+}
+/* ============================================================
+   6E. HELPER PENGUMUMAN
+============================================================ */
+
+// Cek apakah pengumuman sudah kadaluarsa berdasarkan tanggal & jam
+function isPengumumanKadaluarsa(item){
+  if(!item?.berlakuSampai) return false;
+  try{
+    const batas = new Date(item.berlakuSampai);
+    if(isNaN(batas.getTime())) return false;
+    return batas.getTime() < Date.now();
+  }catch{ return false; }
+}
+
+// Cek apakah pengumuman boleh ditampilkan ke wali/ustadzah
+function isPengumumanTampil(item){
+  if(!item) return false;
+  if(item.aktif === false) return false;
+  if(item.manualHidden === true) return false;
+  if(isPengumumanKadaluarsa(item)) return false;
+  return true;
+}
+
+// Label status pengumuman untuk admin
+function badgeStatusPengumuman(item){
+  if(item.aktif === false)          return `<span class="badge badge-gray">Nonaktif</span>`;
+  if(item.manualHidden === true)    return `<span class="badge badge-gray">Disembunyikan</span>`;
+  if(isPengumumanKadaluarsa(item))  return `<span class="badge badge-red">Kadaluarsa</span>`;
+  return `<span class="badge badge-green">Aktif</span>`;
+}
+
+// Format waktu lengkap untuk tampilan
+function formatTanggalJam(value){
+  if(!value) return "-";
+  try{
+    const d = new Date(value);
+    if(isNaN(d.getTime())) return "-";
+    return new Intl.DateTimeFormat("id-ID", {
+      day:"2-digit", month:"short", year:"numeric",
+      hour:"2-digit", minute:"2-digit"
+    }).format(d);
+  }catch{ return "-"; }
 }
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
@@ -1631,7 +1679,7 @@ async function renderDashboardUstadzah(){
 async function renderDashboardWali(){
   const santri = await getSantriWali();  // hanya santri yang terdistribusi ke wali ini
   const pengumuman = await getCollectionData("pengumuman");
-  const pengumumanAktif = pengumuman.filter(x=>x.aktif!==false)
+  const pengumumanAktif = pengumuman.filter(isPengumumanTampil)
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
   const izinList = await getCollectionData("izin", { forceRefresh:true });
@@ -2975,42 +3023,68 @@ async function openJilidForm(item=null){
 ============================================================ */
 async function renderPengumuman(){
   const isAdmin = currentProfile.role === "admin";
-  const data = (await getCollectionData("pengumuman"))
-    .filter(x => isAdmin || x.aktif !== false)
+  const all = await getCollectionData("pengumuman", { forceRefresh:true });
+
+  // Admin: lihat semua. Non-admin: hanya yang tampil (belum kadaluarsa & belum disembunyikan).
+  const data = (isAdmin ? all : all.filter(isPengumumanTampil))
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
   $("page").innerHTML = `
     <div class="toolbar">
-      <div><h2 class="section-title">Pengumuman</h2><p class="muted">${isAdmin ? "Informasi yang akan tampil di portal wali dan ustadzah." : "Informasi terbaru dari admin TPQ."}</p></div>
+      <div>
+        <h2 class="section-title">Pengumuman</h2>
+        <p class="muted">
+          ${isAdmin
+            ? "Semua pengumuman termasuk yang sudah kadaluarsa. Pengumuman kadaluarsa otomatis disembunyikan dari wali & ustadzah."
+            : "Informasi terbaru dari admin TPQ."}
+        </p>
+      </div>
       ${isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat Pengumuman</button>` : ""}
     </div>
     <div class="grid">
-      ${data.length ? data.map(item=>`
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;gap:10px">
-            <div>
-              <h3 style="margin:0">${escapeHTML(item.judul || "-")}</h3>
-              <div class="muted" style="margin-top:5px;font-size:12px">${formatTanggal(item.createdAt)}</div>
+      ${data.length ? data.map(item=>{
+        const kadaluarsa = isPengumumanKadaluarsa(item);
+        const hiddenManual = item.manualHidden === true;
+        const statusBadge = badgeStatusPengumuman(item);
+        const cardStyle = (kadaluarsa || hiddenManual) ? `opacity:.7;background:#f8fafc` : "";
+        return `
+          <div class="card" style="${cardStyle}">
+            <div style="display:flex;justify-content:space-between;gap:10px">
+              <div>
+                <h3 style="margin:0">${escapeHTML(item.judul || "-")}</h3>
+                <div class="muted" style="margin-top:5px;font-size:12px">
+                  Dibuat: ${formatTanggal(item.createdAt)}
+                </div>
+                ${item.berlakuSampai ? `
+                  <div class="muted" style="font-size:12px">
+                    Berlaku sampai: <b>${formatTanggalJam(item.berlakuSampai)}</b>
+                  </div>` : ""}
+              </div>
+              ${isAdmin ? statusBadge : ""}
             </div>
-            ${isAdmin ? (item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`) : ""}
-          </div>
-          <p style="white-space:pre-wrap;line-height:1.6">${escapeHTML(item.isi || "")}</p>
-          ${isAdmin ? `<div class="actions">
-            <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
-            <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
-          </div>` : ""}
-        </div>`).join("") : `<div class="card empty">Belum ada pengumuman.</div>`}
+            <p style="white-space:pre-wrap;line-height:1.6">${escapeHTML(item.isi || "")}</p>
+            ${isAdmin ? `<div class="actions" style="flex-wrap:wrap">
+              <button class="btn btn-sm" data-edit="${item.id}">Edit</button>
+              ${hiddenManual || item.aktif === false || kadaluarsa
+                ? `<button class="btn btn-sm btn-success" data-tampilkan="${item.id}">👁 Tampilkan Lagi</button>`
+                : `<button class="btn btn-sm btn-warning" data-sembunyikan="${item.id}">🙈 Sembunyikan</button>`}
+              <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+            </div>` : ""}
+          </div>`;
+      }).join("") : `<div class="card empty">Belum ada pengumuman.</div>`}
     </div>`;
 
   if(!isAdmin) return;
 
   $("btnTambahPengumuman").addEventListener("click", ()=>openPengumumanForm());
+
   $("page").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
     const item = data.find(x=>x.id===btn.dataset.edit);
     if(item) openPengumumanForm(item);
   }));
+
   $("page").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
-    if(!confirm("Hapus pengumuman ini?")) return;
+    if(!confirm("Hapus pengumuman ini permanen?")) return;
     try{
       await deleteCollectionData("pengumuman", btn.dataset.remove);
       logAudit("DELETE","pengumuman",btn.dataset.remove);
@@ -3018,31 +3092,112 @@ async function renderPengumuman(){
       renderPengumuman();
     }catch(error){ showToast(error.message, true); }
   }));
-}
 
+  // Sembunyikan manual
+  $("page").querySelectorAll("[data-sembunyikan]").forEach(btn => btn.addEventListener("click", async () => {
+    if(!confirm("Sembunyikan pengumuman ini dari wali & ustadzah? Anda bisa menampilkan lagi nanti.")) return;
+    try{
+      await updateCollectionData("pengumuman", btn.dataset.sembunyikan, {
+        manualHidden: true,
+        hiddenAt: new Date().toISOString(),
+        hiddenBy: currentProfile.nama || ""
+      });
+      logAudit("UPDATE","pengumuman",btn.dataset.sembunyikan,{ manualHidden: true });
+      showToast("Pengumuman disembunyikan.");
+      renderPengumuman();
+    }catch(error){ showToast(error.message, true); }
+  }));
+
+  // Tampilkan lagi
+  $("page").querySelectorAll("[data-tampilkan]").forEach(btn => btn.addEventListener("click", async () => {
+    try{
+      const updates = {
+        manualHidden: false,
+        aktif: true
+      };
+      // Kalau kadaluarsa, hapus batas tanggal supaya muncul kembali
+      const item = all.find(x=>x.id===btn.dataset.tampilkan);
+      if(item && isPengumumanKadaluarsa(item)){
+        updates.berlakuSampai = null;
+      }
+      await updateCollectionData("pengumuman", btn.dataset.tampilkan, updates);
+      logAudit("UPDATE","pengumuman",btn.dataset.tampilkan,{ ditampilkanLagi:true });
+      showToast("Pengumuman ditampilkan kembali.");
+      renderPengumuman();
+    }catch(error){ showToast(error.message, true); }
+  }));
+}
 function openPengumumanForm(item=null){
+  // Konversi isoString → format datetime-local (YYYY-MM-DDTHH:mm)
+  function toLocalDatetime(iso){
+    if(!iso) return "";
+    try{
+      const d = new Date(iso);
+      if(isNaN(d.getTime())) return "";
+      const pad = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }catch{ return ""; }
+  }
+
   openModal(item ? "Edit Pengumuman" : "Buat Pengumuman", `
     <form id="pengumumanForm">
-      <div class="form-group"><label>Judul</label><input id="pengumumanJudul" value="${escapeHTML(item?.judul || "")}" required></div>
-      <div class="form-group"><label>Isi Pengumuman</label><textarea id="pengumumanIsi" rows="7" required>${escapeHTML(item?.isi || "")}</textarea></div>
+      <div class="form-group">
+        <label>Judul</label>
+        <input id="pengumumanJudul" value="${escapeHTML(item?.judul || "")}" required>
+      </div>
+
+      <div class="form-group">
+        <label>Isi Pengumuman</label>
+        <textarea id="pengumumanIsi" rows="7" required>${escapeHTML(item?.isi || "")}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>⏰ Berlaku Sampai (opsional)</label>
+        <input id="pengumumanBerlakuSampai" type="datetime-local"
+               value="${toLocalDatetime(item?.berlakuSampai)}">
+        <div class="muted" style="font-size:12px;margin-top:4px">
+          Setelah tanggal & jam ini lewat, pengumuman otomatis disembunyikan dari wali & ustadzah.
+          <br>Kosongkan kalau pengumuman tidak perlu kadaluarsa.
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Status</label>
         <select id="pengumumanAktif">
-          <option value="true" ${item?.aktif!==false?"selected":""}>Tampilkan</option>
-          <option value="false" ${item?.aktif===false?"selected":""}>Sembunyikan</option>
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
         </select>
       </div>
+
+      ${item?.berlakuSampai ? `
+        <div class="notice">
+          Saat ini disetel berlaku sampai: <b>${formatTanggalJam(item.berlakuSampai)}</b>
+          ${isPengumumanKadaluarsa(item) ? ` <span class="badge badge-red">Sudah kadaluarsa</span>` : ""}
+        </div>` : ""}
+
       <button class="btn btn-full" type="submit" id="pengumumanSaveBtn">Simpan Pengumuman</button>
     </form>`);
 
   $("pengumumanForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("pengumumanSaveBtn");
+
+    const berlakuSampaiRaw = $("pengumumanBerlakuSampai").value;
+    // Ubah ke ISO string untuk disimpan
+    const berlakuSampai = berlakuSampaiRaw ? new Date(berlakuSampaiRaw).toISOString() : null;
+
     const payload = {
       judul: $("pengumumanJudul").value.trim(),
       isi: $("pengumumanIsi").value.trim(),
-      aktif: $("pengumumanAktif").value === "true"
+      aktif: $("pengumumanAktif").value === "true",
+      berlakuSampai: berlakuSampai
     };
+
+    // Kalau admin menyimpan dan sebelumnya manualHidden, kita reset supaya konsisten
+    if(item && item.manualHidden === true && payload.aktif !== false){
+      payload.manualHidden = false;
+    }
+
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
         if(item){
@@ -3059,7 +3214,6 @@ function openPengumumanForm(item=null){
     })();
   });
 }
-
 /* ============================================================
    21. ADMIN: MASTER TAGIHAN (Pengaturan SPP + Iuran Kegiatan)
 ============================================================ */
