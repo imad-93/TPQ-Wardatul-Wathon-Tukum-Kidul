@@ -665,6 +665,20 @@ async function getEffectiveJilidNamesForUstadzah(profile){
   const jilidList = await getCollectionData("jilid");
   return jilidList.filter(j => ids.includes(j.id)).map(j => j.nama);
 }
+// Ambil nama-nama ustadzah dari array ustadzahIds, dengan fallback ke ustadzahNames
+// yang sudah tersimpan. Jadi walau salah satu field kosong, nama tetap muncul.
+async function getJilidUstadzahNames(jilid){
+  const ids = getJilidUstadzahIds(jilid);
+  const stored = Array.isArray(jilid?.ustadzahNames) ? jilid.ustadzahNames.filter(Boolean) : [];
+
+  // Kalau ada id tapi nama tersimpan kosong / tidak sinkron, resolve dari koleksi ustadzah
+  if(ids.length && stored.length !== ids.length){
+    const ustadzahList = await getCollectionData("ustadzah");
+    const map = new Map(ustadzahList.map(u=>[u.id, u.nama || u.email || ""]));
+    return ids.map(id => map.get(id) || "Ustadzah").filter(Boolean);
+  }
+  return stored;
+}
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
 ============================================================ */
@@ -2784,7 +2798,10 @@ async function renderDaftarSantriUstadzah(){
     getSantriUstadzah(),
     getCollectionData("jilid", { forceRefresh:true })
   ]);
-
+  // Lengkapi nama pengampu di setiap jilid (fallback kalau ustadzahNames kosong)
+await Promise.all(jilidList.map(async j => {
+  j._pengampuNames = await getJilidUstadzahNames(j);
+}));
   const today = todayStr();
 
   const klaimAktif = jilidList.filter(j =>
@@ -2826,7 +2843,7 @@ async function renderDaftarSantriUstadzah(){
               ${klaimAktif.map(j=>`
                 <tr>
                   <td><b>${escapeHTML(j.nama)}</b></td>
-                  <td>${escapeHTML((j.ustadzahNames||[]).join(", ") || "-")}</td>
+                  <td>${escapeHTML(j._pengampuNames?.join(", ") || "-")}</td>
                   <td>${escapeHTML(j.substituteAlasan || "-")}</td>
                   <td><button class="btn btn-sm btn-danger" data-lepas="${j.id}">Lepas Klaim</button></td>
                 </tr>`).join("")}
@@ -2904,7 +2921,7 @@ function openKlaimKelasModal(bisaKlaim){
     <div class="form-group">
       <label>Pilih Kelas</label>
       <select id="klaimJilid">
-        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML((j.ustadzahNames||[]).join(", ") || "belum ditentukan")}</option>`).join("")}
+        ${bisaKlaim.map(j=>`<option value="${j.id}">${escapeHTML(j.nama)} — pengampu: ${escapeHTML(j._pengampuNames?.join(", ") || "belum ditentukan")}</option>`).join("")}
       </select>
     </div>
     <div class="form-group">
