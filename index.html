@@ -29,7 +29,6 @@ button{cursor:pointer}
 .small{font-size:12px}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
-/* ---------- Login ---------- */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#166534 0%,#0f3d22 60%,#052e16 100%)}
 .login-card{width:100%;max-width:400px;background:#fff;border-radius:20px;padding:32px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
 .login-logo{width:64px;height:64px;margin:0 auto 16px;border-radius:18px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px}
@@ -38,7 +37,6 @@ button{cursor:pointer}
 .login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:12px}
 .link-btn{border:0;background:none;color:var(--primary);font-weight:600;padding:6px}
 
-/* ---------- Forms ---------- */
 .form-group{margin-bottom:14px}
 .form-group>label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
@@ -49,7 +47,6 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .check-grid label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;margin:0}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* ---------- Buttons ---------- */
 .btn{border:0;border-radius:10px;padding:9px 14px;background:var(--primary);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:background .15s,opacity .15s}
 .btn:hover{background:var(--primary-dark)}
 .btn:disabled{opacity:.6;cursor:not-allowed}
@@ -61,7 +58,6 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .btn-success{background:var(--success)} .btn-success:hover{background:#15803d}
 .btn-light{background:#eef2f0;color:var(--text)} .btn-light:hover{background:#dde4e0}
 
-/* ---------- Layout ---------- */
 .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:18px 12px;overflow-y:auto;transition:transform .2s}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px}
 .brand-icon{width:40px;height:40px;border-radius:11px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
@@ -86,14 +82,12 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .search-box{max-width:260px}
 .stack>*+*{margin-top:18px}
 
-/* ---------- Tabs ---------- */
 .tabs{display:flex;gap:4px;background:#fff;padding:5px;border-radius:12px;border:1px solid var(--border);overflow-x:auto;margin-bottom:18px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{border:0;background:transparent;color:var(--muted);padding:9px 15px;border-radius:9px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s,color .15s}
 .tabs button:hover{background:#f1f5f3;color:var(--text)}
 .tabs button.active{background:var(--primary);color:#fff}
 
-/* ---------- Cards ---------- */
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .grid-3{grid-template-columns:repeat(3,1fr)}
 .grid-2{grid-template-columns:repeat(2,1fr)}
@@ -109,7 +103,6 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 .balance{background:var(--primary);color:#fff;border:0;margin-bottom:18px}
 
-/* ---------- Tables ---------- */
 .table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
 table{width:100%;border-collapse:collapse;min-width:680px}
 th,td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13.5px;text-align:left;vertical-align:middle}
@@ -118,7 +111,6 @@ tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#fafcfb}
 .empty{text-align:center;padding:32px;color:var(--muted)}
 
-/* ---------- Badges & notices ---------- */
 .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
 .badge-green{background:#dcfce7;color:#166534}
 .badge-yellow{background:#fef3c7;color:#92400e}
@@ -129,7 +121,6 @@ tbody tr:hover{background:#fafcfb}
 .notice-warn{border-left-color:var(--warning);background:#fffbeb}
 .notice p:last-child{margin-bottom:0}
 
-/* ---------- Modal, toast ---------- */
 .modal{position:fixed;inset:0;z-index:500;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:14px}
 .modal-box{width:100%;max-width:700px;max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:22px}
 .modal-header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
@@ -142,7 +133,6 @@ tbody tr:hover{background:#fafcfb}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:40px;justify-content:center}
 
-/* ---------- PDF ---------- */
 .pdf-upload-box{border:1.5px dashed #cbd5e1;border-radius:12px;padding:16px;background:#f8faf9}
 .pdf-upload-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
 .pdf-file-info{margin-top:10px;padding:9px 12px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:12.5px}
@@ -162,7 +152,6 @@ tbody tr:hover{background:#fafcfb}
 .pdf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,33,36,.9);color:#fff;z-index:2}
 .pdf-info-bar{padding:9px 14px;background:#111827;color:#cbd5e1;font-size:12px}
 
-/* ---------- Responsive ---------- */
 @media(max-width:1000px){.grid,.summary-strip{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:800px){
   .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
@@ -178,7 +167,6 @@ tbody tr:hover{background:#fafcfb}
 </head>
 <body>
 
-<!-- LOGIN -->
 <section id="loginScreen">
   <div class="login-card">
     <div class="login-logo">📖</div>
@@ -200,7 +188,6 @@ tbody tr:hover{background:#fafcfb}
   </div>
 </section>
 
-<!-- APP -->
 <section id="app" class="hidden">
   <aside id="sidebar" class="sidebar">
     <div class="brand">
@@ -239,13 +226,6 @@ tbody tr:hover{background:#fafcfb}
 <script type="module">
 /* ============================================================
    TPQ WARDATUL WATHON — aplikasi satu file
-   Daftar isi:
-   1 Konfigurasi · 2 Firebase · 3 Utilitas · 4 Toast/Modal
-   5 Layanan data · 6 Waktu & pengaturan · 7 Libur · 8 Izin & kehadiran
-   9 Jilid/ustadzah · 10 Keuangan · 11 Pengumuman · 12 Pembelajaran
-   13 PDF halaman · 14 Akun · 15 Auth · 16 Navigasi
-   17 Dashboard · 18 Data User · 19 Ruang Ngaji · 20 Keuangan admin
-   21 Pengaturan · 22 Pengumuman · 23 Ustadzah · 24 Pembelajaran · 25 Profil
 ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
@@ -330,7 +310,6 @@ function debounce(fn, wait=200){
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
 }
-// Menonaktifkan tombol selama proses berjalan.
 async function busy(btn, text, fn){
   if(!btn) return fn();
   const oldText = btn.textContent, oldDisabled = btn.disabled;
@@ -365,7 +344,6 @@ function firebaseError(error){
   return messages[error?.code] || error?.message || "Terjadi kesalahan.";
 }
 
-/* ---- Potongan HTML yang dipakai berulang ---- */
 const badge = (text, color="gray") => `<span class="badge badge-${color}">${esc(text)}</span>`;
 const badgeAktif = item => item?.aktif === false ? badge("Nonaktif","red") : badge("Aktif","green");
 const statCard = (icon, label, value) => `
@@ -386,7 +364,7 @@ function bindTabs(tabsEl, onSwitch){
   const buttons = tabsEl.querySelectorAll("button");
   buttons.forEach(b => b.addEventListener("click", () => {
     buttons.forEach(x => x.classList.toggle("active", x === b));
-    onSwitch(b.dataset.tab);
+    onSwitch(b.dataset.tab || b.dataset.f);
   }));
 }
 const byCreatedDesc = (a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0);
@@ -417,7 +395,6 @@ function closeModal(){
   $("modal").classList.add("hidden");
   $("modalContent").innerHTML = "";
 }
-// Modal berisi satu form. onSubmit boleh mengembalikan false agar modal tetap terbuka.
 function openFormModal({ title, body, submit="Simpan", submitClass="", onSubmit }){
   openModal(title, `<form id="modalForm">${body}<button type="submit" class="btn btn-full ${submitClass}" id="modalSubmit">${esc(submit)}</button></form>`);
   $("modalForm").addEventListener("submit", async e => {
@@ -483,7 +460,6 @@ function dateKey(d){
   return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 }
 const todayStr = () => dateKey(nowWIB());
-// Tanggal (WIB) dari timestamp Firestore / ISO string.
 function tsKey(value){
   const d = toDate(value);
   return d ? dateKey(toWIB(d)) : null;
@@ -564,7 +540,6 @@ function badgeStatusHarian(st){
 }
 const periodeRekapText = s => `${s.mulaiPembelajaran ? `Sejak ${s.mulaiPembelajaran}` : "Seluruh periode"} · ${jumlahHariRekap(s)} hari terakhir`;
 
-// Memuat semua data yang dibutuhkan untuk menghitung kehadiran.
 async function loadKehadiranContext(){
   const [izinList, riwayat, progress, settings] = await Promise.all([
     fresh("izin"), fresh("riwayat"), fresh("progress"), getAppSettings()
@@ -635,7 +610,6 @@ function peringatanCard(rekap, settings, teks){
     <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">${list.map(r => `<li><b>${esc(r.item.nama)}</b>: ${r.alpha} hari alpha</li>`).join("")}</ul></div>`;
 }
 
-/* ---- Form izin (dipakai wali & ustadzah) ---- */
 function izinFormCard({ isUstadzah, santriList, settings }){
   const today = todayStr();
   const batas = batasIzinJam(settings);
@@ -769,14 +743,13 @@ const namaPengampu = (jilid, ustadzahList) => {
   const map = new Map(ustadzahList.map(u => [u.id, u.nama || u.email || "Ustadzah"]));
   return getJilidUstadzahIds(jilid).map(id => map.get(id) || "Ustadzah");
 };
-// Kelas efektif ustadzah = kelas yang diampu + kelas yang sedang digantikan.
 async function getEffectiveJilidIds(profile){
   const jilidList = await getCollectionData("jilid");
   const ids = new Set();
   jilidList.forEach(j => {
     const pengampu = getJilidUstadzahIds(j);
     if(pengampu.includes(profile.uid)) ids.add(j.id);
-    if(!pengampu.length && (profile.jilidIds || [profile.jilidId]).includes(j.id)) ids.add(j.id); // data lama
+    if(!pengampu.length && (profile.jilidIds || [profile.jilidId]).includes(j.id)) ids.add(j.id);
     if(isSubstituteActive(j) && j.substituteUid === profile.uid) ids.add(j.id);
   });
   return [...ids];
@@ -789,7 +762,6 @@ async function getSantriUstadzah(){
 async function getSantriWali(){
   return (await getCollectionData("santri")).filter(s => s.waliUid === currentProfile.uid && s.aktif !== false);
 }
-
 /* ============ 10. KEUANGAN ============ */
 function getPeriodeSekarang(){
   const now = nowWIB();
@@ -833,7 +805,6 @@ function hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList }){
   return { sppTerbayar, iuranTerbayar, infaqMasuk, pengeluaran, tabunganSantri, saldoKas, totalUangDiKas: saldoKas + tabunganSantri };
 }
 
-// SPP bulan berjalan dibuat otomatis untuk semua santri aktif (sekali per periode per sesi).
 let sppEnsuredPeriode = null;
 async function ensureSppBulanIni(){
   const { key: periode } = getPeriodeSekarang();
@@ -923,7 +894,6 @@ async function simpanDonatur(data, id=null){
 const badgeJenisDonatur = j => j === "wali" ? badge("Wali","blue") : j === "donatur" ? badge("Donatur","green") : badge("Umum","gray");
 const badgeKategori = k => badge(k || "-", { "Honor Ustadzah":"blue","ATK & Cetak":"green","Konsumsi Kegiatan":"yellow","Bantuan Sosial":"red" }[k] || "gray");
 
-// Tabel keuangan satu santri (dipakai wali: hanya lihat, ustadzah: bisa catat).
 function keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable }){
   const tgl = num(settings.sppTanggalPeringatan || 10);
   const sppBills = bills.filter(b => b.jenis === "SPP").sort((a,b) => (b.periode||"").localeCompare(a.periode||""));
@@ -944,7 +914,6 @@ function keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable 
       ${editable ? `<button class="btn btn-sm" id="btnCatatTabunganSantri" style="margin-top:10px">+ Catat tabungan</button>` : ""}</div>`;
 }
 
-/* ---- Modal keuangan ---- */
 function openCatatPembayaranModal(bill, onSaved){
   const sisa = Math.max(0, num(bill.nominal) - num(bill.terbayar));
   openFormModal({
@@ -1217,7 +1186,6 @@ function pdfUploadBlock(type, label){
       <div class="pdf-progress-text" id="pdfText_${type}"></div></div>
     <div id="pdfCurrent_${type}"></div></div>`;
 }
-// Mengembalikan { getTotal } agar form jilid bisa membaca jumlah halaman terakhir.
 function bindPdfUploader(type, jilidId, initialTotal, persist){
   let total = num(initialTotal);
   const label = type === "baca" ? "Buku Baca" : "Buku Hafalan";
@@ -1286,7 +1254,6 @@ function requireRole(role){
   showToast("Akses ditolak untuk peran ini.", true);
   return false;
 }
-// Membuat akun lewat app sekunder agar sesi admin tidak berganti.
 async function createManagedAccount({ email, password, role, profile }){
   const adminUid = auth.currentUser?.uid;
   if(!adminUid) throw new Error("Anda harus login sebagai admin.");
@@ -1447,16 +1414,35 @@ function renderDashboard(){
 
 async function renderDashboardAdmin(){
   await ensureSppBulanIni();
-  const [santri, wali, ustadzah, jilid, ctx] = await Promise.all([
-    getCollectionData("santri"), getCollectionData("wali"), getCollectionData("ustadzah"), getCollectionData("jilid"), loadKehadiranContext()
+  const [santri, wali, ustadzah, jilid, ctx, tagihan, infaqList, pengeluaranList, tabunganList] = await Promise.all([
+    getCollectionData("santri"), getCollectionData("wali"), getCollectionData("ustadzah"), getCollectionData("jilid"),
+    loadKehadiranContext(), getCollectionData("tagihanSantri"), getCollectionData("infaq"), getCollectionData("pengeluaran"), getCollectionData("tabungan")
   ]);
   const aktif = list => list.filter(x => x.aktif !== false);
   const rekap = hitungRekap(aktif(ustadzah), "ustadzah", ctx);
+
+  const saldo = hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList });
+  const sppBulanIni = tagihan.filter(t => t.jenis === "SPP" && t.periode === getPeriodeSekarang().key);
+  const totalSppTertagih = sppBulanIni.reduce((s,x) => s + num(x.nominal), 0);
+  const totalSppTerbayar = sppBulanIni.reduce((s,x) => s + num(x.terbayar), 0);
+
   $("page").innerHTML = `
     ${pageHead("Dashboard admin", `Selamat datang, ${esc(currentProfile.nama)}.`)}
     <div class="grid">
       ${statCard("👨‍🎓","Santri aktif", aktif(santri).length)}${statCard("👩‍🏫","Ustadzah aktif", aktif(ustadzah).length)}
       ${statCard("👨‍👩‍👧","Wali aktif", aktif(wali).length)}${statCard("📚","Kelas / jilid", aktif(jilid).length)}
+    </div>
+    <div class="card balance" style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+        <div><div style="font-size:13px;opacity:.85">Saldo kas TPQ</div>
+          <div style="font-size:28px;font-weight:700;margin-top:4px">${formatRupiah(saldo.saldoKas)}</div>
+          <div style="font-size:12px;opacity:.8;margin-top:4px">Termasuk tabungan santri ${formatRupiah(saldo.tabunganSantri)}.</div></div>
+        <div style="text-align:right;font-size:13px;line-height:1.7">
+          <div>💵 SPP bulan ini: <b>${formatRupiah(totalSppTerbayar)}</b> / ${formatRupiah(totalSppTertagih)}</div>
+          <div>🙏 Infaq total: <b>${formatRupiah(saldo.infaqMasuk)}</b></div>
+          <div>📤 Pengeluaran: <b>${formatRupiah(saldo.pengeluaran)}</b></div>
+        </div>
+      </div>
     </div>
     ${pesanDashboard(ctx.settings)}
     <div class="stack" style="margin-top:18px">
@@ -1485,7 +1471,12 @@ async function renderDashboardUstadzah(){
       ? (z.ustadzahId === currentProfile.uid || ustadzahKlaim.has(z.ustadzahId))
       : santriIds.has(z.santriId))
     .sort(byCreatedDesc).slice(0, 10);
-  const izinHariIni = izinList.filter(z => z.jenis !== "ustadzah" && santriIds.has(z.santriId) && izinCocok(z, today));
+
+  // PENGAYAAN: info izin santri kelas yang saya ampu (termasuk yang diklaim)
+  const santriKelasIds = new Set(santri.map(s => s.id));
+  const izinHariIni = izinList.filter(z => 
+    z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today)
+  );
 
   $("page").innerHTML = `
     ${pageHead("Dashboard ustadzah", `Selamat datang, ${esc(currentProfile.nama || "Ustadzah")}.`)}
@@ -1499,7 +1490,7 @@ async function renderDashboardUstadzah(){
         ${jilidNames.length ? `<p>${jilidNames.map(esc).join(", ")}</p>` : `<p class="muted">Belum ada kelas.</p>`}
         ${klaimAktif.length ? `<div class="notice"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}`).join("<br>")}</div>` : ""}
         <button class="btn btn-sm" id="btnKeKlaim">🤝 Kelola klaim kelas</button></div>
-      ${izinHariIni.length ? `<div class="card warn"><h3 style="color:#92400e">📝 Santri izin hari ini</h3><div style="margin-top:10px">
+      ${izinHariIni.length ? `<div class="card warn"><h3 style="color:#92400e">📝 Santri izin hari ini (kelas Anda)</h3><div style="margin-top:10px">
         ${dataTable("", ["Santri","Alasan","Tanggal","Pengaju"], izinHariIni.map(z => `<tr>
           <td><b style="color:#dc2626">${esc(z.santriNama)}</b></td>
           <td>${badgeAlasan(z.alasan)}${z.alasan === "kegiatan" && z.namaKegiatan ? ` ${esc(z.namaKegiatan)}` : ""}</td>
@@ -1528,8 +1519,14 @@ async function renderDashboardWali(){
   const rekap = hitungRekap(santri, "santri", ctx);
   const ids = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList.filter(z => ids.has(z.santriId)).sort(byCreatedDesc).slice(0, 10);
-  const jilidAnak = jilidList.find(j => j.id === santri[0]?.jilidId);
-  const pendamping = jilidAnak ? namaPengampu(jilidAnak, ustadzahList).join(", ") : "";
+
+  // PENGAYAAN: pendamping dari semua santri wali
+  const pendampingSet = new Set();
+  santri.forEach(s => {
+    const j = jilidList.find(x => x.id === s.jilidId);
+    if(j) namaPengampu(j, ustadzahList).forEach(n => pendampingSet.add(n));
+  });
+  const pendamping = [...pendampingSet].join(", ");
 
   $("page").innerHTML = `
     ${pageHead("Dashboard wali", `Selamat datang, ${esc(currentProfile.nama || "Wali Santri")}.`)}
@@ -1601,6 +1598,7 @@ async function renderDataUserAdmin(){
       if(!confirm("Hapus data santri ini?")) return;
       try{
         await deleteCollectionData("santri", id); logAudit("DELETE","santri",id);
+        sppEnsuredPeriode = null;
         showToast("Data santri dihapus."); renderTabSantri();
       }catch(err){ showToast(firebaseError(err), true); }
     });
@@ -1642,7 +1640,6 @@ async function renderDataUserAdmin(){
   }
 }
 
-// Form akun wali / ustadzah (satu fungsi untuk keduanya).
 function openAkunForm(role, item, onSaved, jilidList=[]){
   const isUstadzah = role === "ustadzah";
   const label = isUstadzah ? "ustadzah" : "wali";
@@ -1671,7 +1668,7 @@ function openAkunForm(role, item, onSaved, jilidList=[]){
       if(item) await updateManagedAccount(uid, role, profile);
       else uid = await createManagedAccount({ email: $("akunEmail").value.trim(), password: $("akunPassword").value, role, profile });
 
-      if(isUstadzah){ // sinkronkan penugasan ke dokumen jilid (sumber utama pengampu)
+      if(isUstadzah){
         for(const j of jilidList){
           const ids = getJilidUstadzahIds(j), punya = ids.includes(uid), mau = terpilih.includes(j.id);
           if(punya === mau) continue;
@@ -1716,7 +1713,6 @@ async function openSantriForm(item, onSaved){
   });
 }
 
-/* ---- Import & template santri ---- */
 function downloadTemplateSantri(){
   const rows = [
     ["Nama Santri","Jenis Kelamin","Kelas / Jilid","Email Wali","Nama Wali (Tampilan)","Password Wali (opsional)","Status (Aktif/Nonaktif)"],
@@ -1757,7 +1753,7 @@ function openImportSantriModal(existingSantri, onDone){
         <li>Baris dengan nama santri dan kelas yang sama dengan data lama dilewati.</li></ol></div>
       ${fg("File CSV / Excel (.csv, .xls, .xlsx)", `<input id="importFile" type="file" accept=".csv,.xls,.xlsx" required>`)}
       ${fg("Password default untuk wali baru (minimal 6 karakter)", `<input id="importPassword" type="text" minlength="6" value="wali123456" required>
-        <div class="muted small" style="margin-top:4px">Dipakai bila kolom password di file kosong. Wali dapat menggantinya lewat menu Profil.</div>`)}
+        <div class="muted small" style="margin-top:4px">Dipakai bila kolom password di file kosong.</div>`)}
       <div id="importPreview"></div>
       <button type="submit" class="btn btn-full" id="importSubmit" style="margin-top:14px">Import sekarang</button>
     </form>`);
@@ -1841,9 +1837,8 @@ function openImportSantriModal(existingSantri, onDone){
           <div class="notice">✅ <b>${berhasil}</b> santri ditambahkan.<br>👤 <b>${waliBaru.length}</b> akun wali baru dibuat.<br>
             ⏭ <b>${dilewati}</b> baris dilewati (nama kosong / duplikat).<br>❌ <b>${gagal.length}</b> gagal disimpan.</div>
           ${waliBaru.length ? `<div class="notice" style="margin-top:10px"><b>Akun wali baru:</b><br><span class="small">${list(waliBaru)}</span>
-            <div class="muted small" style="margin-top:6px">Password awal: <b>${esc(defaultPassword)}</b> (atau dari kolom password). Infokan ke wali dan sarankan mengganti lewat menu Profil.</div></div>` : ""}
-          ${tanpaJilid.length ? `<div class="notice notice-warn" style="margin-top:10px"><b>Jilid tidak ditemukan (${tanpaJilid.length}):</b><br><span class="small">${list(tanpaJilid)}</span>
-            <div class="muted small" style="margin-top:6px">Santri tetap dibuat tanpa jilid. Buat jilidnya di Ruang Ngaji, lalu edit santri.</div></div>` : ""}
+            <div class="muted small" style="margin-top:6px">Password awal: <b>${esc(defaultPassword)}</b> (atau dari kolom password).</div></div>` : ""}
+          ${tanpaJilid.length ? `<div class="notice notice-warn" style="margin-top:10px"><b>Jilid tidak ditemukan (${tanpaJilid.length}):</b><br><span class="small">${list(tanpaJilid)}</span></div>` : ""}
           ${gagal.length ? `<div class="notice notice-warn" style="margin-top:10px"><b>Gagal:</b><br><span class="small">${list(gagal)}</span></div>` : ""}
           <button class="btn btn-full" id="importDone" style="margin-top:14px">Selesai</button>`);
         $("importDone").addEventListener("click", () => { closeModal(); onDone?.(); });
@@ -1858,10 +1853,15 @@ function openImportSantriModal(existingSantri, onDone){
 /* ============ 19. ADMIN: RUANG NGAJI ============ */
 async function renderRuangNgajiAdmin(){
   if(!requireRole("admin")) return;
-  $("page").innerHTML = `${pageHead("📚 Ruang Ngaji", "Kelola kelas/jilid dan pantau hasil pembelajaran santri.")}
-    <div class="tabs" id="tabRuangNgaji"><button data-tab="jilid" class="active">📖 Jilid / Kelas</button><button data-tab="hasil">📊 Hasil belajar</button></div>
+  $("page").innerHTML = `${pageHead("📚 Ruang Ngaji", "Kelola kelas/jilid, pantau pembelajaran, dan kehadiran harian.")}
+    <div class="tabs" id="tabRuangNgaji"><button data-tab="jilid" class="active">📖 Jilid / Kelas</button>
+      <button data-tab="hasil">📊 Hasil belajar</button><button data-tab="harian">📅 Kehadiran harian</button></div>
     <div id="ruangNgajiContent"></div>`;
-  bindTabs($("tabRuangNgaji"), t => t === "jilid" ? renderTabJilid() : renderTabHasil());
+  bindTabs($("tabRuangNgaji"), t => {
+    if(t === "jilid") renderTabJilid();
+    else if(t === "hasil") renderTabHasil();
+    else renderTabHarian();
+  });
   renderTabJilid();
 
   async function renderTabJilid(){
@@ -1919,6 +1919,70 @@ async function renderRuangNgajiAdmin(){
       $("hasilBelajarBody").querySelectorAll("[data-riwayat]").forEach(b => b.addEventListener("click", () => renderRiwayatPembelajaranSantri(b.dataset.riwayat, "ruangNgaji")));
     }
     $("filterJilidHasil").addEventListener("change", renderKonten);
+    renderKonten();
+  }
+
+  // PENGAYAAN: tab kehadiran harian per tanggal
+  async function renderTabHarian(){
+    const [jilidList, santriList, ctx] = await Promise.all([fresh("jilid"), fresh("santri"), loadKehadiranContext()]);
+    const today = todayStr();
+    const kelasAktif = jilidList.filter(j => j.aktif !== false);
+
+    $("ruangNgajiContent").innerHTML = `
+      <div class="card">
+        <div class="row">
+          ${fg("Tanggal", `<input id="rekapTanggal" type="date" value="${today}" max="${today}">`)}
+          ${fg("Kelas / jilid", `<select id="rekapJilid">
+            <option value="">Semua kelas</option>
+            ${kelasAktif.map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}
+          </select>`)}
+        </div>
+      </div>
+      <div id="rekapHarianBody" style="margin-top:18px"></div>`;
+
+    function renderKonten(){
+      const tanggal = $("rekapTanggal").value || today;
+      const jid = $("rekapJilid").value;
+      const santri = santriList.filter(s => s.aktif !== false && (!jid || s.jilidId === jid));
+      if(!santri.length){ $("rekapHarianBody").innerHTML = `<div class="card empty">Belum ada santri.</div>`; return; }
+
+      const rows = santri.map(s => ({ santri: s, st: statusSantri(s.id, tanggal, ctx) }));
+      const count = { hadir:0, izin:0, alpha:0, libur:0, belum:0 };
+      rows.forEach(r => { count[r.st.status] = (count[r.st.status] || 0) + 1; });
+
+      const liburInfo = isHariLibur(tanggal, ctx.settings)
+        ? `<div class="card info"><b style="color:#1e40af">🏖️ ${esc(labelLibur(tanggal, ctx.settings))}</b>
+            <div class="muted small" style="margin-top:4px">Tanggal ini libur, tidak ada perhitungan alpha.</div></div>`
+        : "";
+
+      $("rekapHarianBody").innerHTML = `
+        ${liburInfo}
+        <div class="grid" style="margin-top:14px">
+          ${statCard("✅","Hadir", count.hadir || 0)}
+          ${statCard("🟡","Izin", count.izin || 0)}
+          ${statCard("🔴","Alpha", count.alpha || 0)}
+          ${statCard("⏳","Belum", count.belum || 0)}
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Detail kehadiran ${esc(tanggal)}</h3>
+          <div style="margin-top:10px">
+            ${dataTable("", ["No","Santri","Kelas","Status","Keterangan"],
+              rows.map((r, i) => {
+                const ket = r.st.status === "izin" && r.st.izin
+                  ? `${labelAlasan(r.st.izin.alasan)}${r.st.izin.namaKegiatan ? " — " + esc(r.st.izin.namaKegiatan) : ""}`
+                  : "-";
+                return `<tr><td>${i+1}</td>
+                  <td><b style="${r.st.status === "izin" ? "color:#dc2626" : ""}">${esc(r.santri.nama)}</b></td>
+                  <td>${esc(r.santri.jilidNama || "-")}</td>
+                  <td>${badgeStatusHarian(r.st)}</td>
+                  <td>${ket}</td></tr>`;
+              }), "Belum ada santri.")}
+          </div>
+        </div>`;
+    }
+
+    $("rekapTanggal").addEventListener("change", renderKonten);
+    $("rekapJilid").addEventListener("change", renderKonten);
     renderKonten();
   }
 }
@@ -1994,6 +2058,7 @@ async function renderKeuanganAdmin(){
         <td>${i+1}</td><td>${esc(b.santriNama)}</td><td>${esc(b.judul || "-")}</td><td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
         <td>${badgeStatusTagihan(b.status)}</td><td>${billActions(b.id)}</td></tr>`), "Belum ada iuran kegiatan."),
     tabungan: `<div class="toolbar">${search("searchTabungan","Cari nama santri...")}<div class="actions">
+        <button class="btn btn-info" id="btnRekapTabungan">📊 Rekap per santri</button>
         <button class="btn btn-success" id="btnSetor">+ Setor tabungan</button><button class="btn btn-warning" id="btnTarik">− Ambil tabungan</button></div></div>` +
       dataTable("tableTabungan", ["No","Santri","Jenis","Jumlah","Keterangan","Tanggal","Aksi"], tabunganSorted.map((t,i) => `<tr data-row>
         <td>${i+1}</td><td>${esc(t.santriNama)}</td><td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td><td>${formatRupiah(t.jumlah)}</td>
@@ -2051,6 +2116,25 @@ async function renderKeuanganAdmin(){
   $("btnSetor").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"setor", onSaved: reload }));
   $("btnTarik").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"tarik", onSaved: reload }));
 
+  // PENGAYAAN: rekap tabungan per santri
+  $("btnRekapTabungan").addEventListener("click", () => {
+    const rekap = santriAktif.map(s => ({
+      santri: s,
+      saldo: hitungSaldoTabungan(tabunganList, s.id),
+      setor: tabunganList.filter(t => t.santriId === s.id && t.jenis === "setor").reduce((a,b) => a + num(b.jumlah), 0),
+      tarik: tabunganList.filter(t => t.santriId === s.id && t.jenis === "tarik").reduce((a,b) => a + num(b.jumlah), 0)
+    })).sort((a,b) => b.saldo - a.saldo);
+
+    const totalSaldo = rekap.reduce((s,r) => s + r.saldo, 0);
+    openModal("📊 Rekap tabungan santri", `
+      <div class="notice"><b>Total saldo tabungan semua santri: ${formatRupiah(totalSaldo)}</b></div>
+      ${dataTable("", ["No","Santri","Setor","Tarik","Saldo"],
+        rekap.map((r,i) => `<tr><td>${i+1}</td><td><b>${esc(r.santri.nama)}</b></td>
+          <td>${formatRupiah(r.setor)}</td><td>${formatRupiah(r.tarik)}</td>
+          <td><b style="color:${r.saldo >= 0 ? '#166534' : '#dc2626'}">${formatRupiah(r.saldo)}</b></td></tr>`),
+        "Belum ada data.")}`);
+  });
+
   $("btnCatatInfaq").addEventListener("click", () => openInfaqModal(donaturList, reload));
   onClick("[data-hapus-infaq]", "hapusInfaq", id => {
     const x = infaqList.find(i => i.id === id);
@@ -2085,7 +2169,6 @@ async function renderPengaturanAdmin(){
   bindTabs($("tabPengaturan"), t => tabs[t]());
   tabs.umum();
 
-  // Pasang handler submit: simpan dengan tombol loading + toast.
   const onSave = (formId, btnId, fn, okMsg, after) => $(formId).addEventListener("submit", async e => {
     e.preventDefault();
     await busy($(btnId), "Menyimpan...", async () => {
@@ -2228,16 +2311,33 @@ async function renderPengaturanAdmin(){
     }));
   }
 
-  function renderTabAkun(){
+  async function renderTabAkun(){
     $("pengaturanContent").innerHTML = `
       <div class="card"><h3>👤 Akun Anda</h3><div class="row" style="margin-top:12px">
         ${fg("Nama", `<input value="${esc(currentProfile.nama)}" disabled>`)}${fg("Email", `<input value="${esc(currentProfile.email || currentUser.email)}" disabled>`)}
         ${fg("Role", `<input value="${esc(roleLabel(currentProfile.role))}" disabled>`)}${fg("Status", `<input value="${currentProfile.aktif === false ? "Nonaktif" : "Aktif"}" disabled>`)}</div>
         <button class="btn" id="btnResetPassword">📧 Kirim email reset password</button></div>
       <div class="card"><h3>🛠 Tools admin</h3><p class="muted small">Migrasi struktur data lama ke format multi-ustadzah. Jalankan sekali saja setelah pembaruan besar.</p>
-        <button class="btn btn-light" id="btnMigrasiData">🔄 Migrasi multi-ustadzah</button></div>`;
+        <div class="actions">
+          <button class="btn btn-light" id="btnMigrasiData">🔄 Migrasi multi-ustadzah</button>
+          <button class="btn btn-light" id="btnLihatAudit">📜 Lihat log audit</button>
+        </div></div>`;
     $("btnResetPassword").addEventListener("click", () => kirimResetPassword($("btnResetPassword")));
     $("btnMigrasiData").addEventListener("click", jalankanMigrasiMultiUstadzah);
+
+    // PENGAYAAN: lihat log audit
+    $("btnLihatAudit").addEventListener("click", async () => {
+      const audit = (await fresh("audit")).sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 100);
+      openModal("📜 Log audit (100 terbaru)", `
+        ${dataTable("", ["Waktu","User","Aksi","Entitas","ID"],
+          audit.map(a => `<tr>
+            <td class="small">${esc(a.timestamp ? new Date(a.timestamp).toLocaleString("id-ID") : "-")}</td>
+            <td>${esc(a.userNama || "-")} <span class="muted small">(${esc(a.userRole || "-")})</span></td>
+            <td>${badge(a.action || "-", "blue")}</td>
+            <td>${esc(a.entity || "-")}</td>
+            <td class="small">${esc(a.entityId || "-")}</td></tr>`),
+          "Belum ada log.")}`);
+    });
   }
 }
 
@@ -2317,7 +2417,6 @@ function openKegiatanForm(jilidList, onSaved){
   });
 }
 
-// Migrasi data lama (satu ustadzah per jilid) ke format multi-ustadzah.
 async function jalankanMigrasiMultiUstadzah(){
   if(!confirm("Jalankan migrasi struktur data? Jalankan hanya sekali setelah pembaruan.")) return;
   try{
@@ -2341,11 +2440,20 @@ window.jalankanMigrasiMultiUstadzah = jalankanMigrasiMultiUstadzah;
 async function renderPengumuman(){
   const isAdmin = currentProfile.role === "admin";
   const all = await fresh("pengumuman");
-  const data = (isAdmin ? all : all.filter(isPengumumanTampil)).sort(byCreatedDesc);
-  $("page").innerHTML = `
-    ${pageHead("📢 Pengumuman", isAdmin ? "Semua pengumuman, termasuk yang kadaluarsa. Pengumuman kadaluarsa otomatis disembunyikan dari wali dan ustadzah." : "Informasi terbaru dari admin TPQ.",
-      isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat pengumuman</button>` : "")}
-    <div class="grid grid-2">${data.length ? data.map(p => {
+  let filterStatus = "semua";
+
+  const terapkanFilter = list => {
+    if(!isAdmin) return list.filter(isPengumumanTampil);
+    if(filterStatus === "semua") return list;
+    if(filterStatus === "aktif") return list.filter(p => p.aktif !== false && p.manualHidden !== true && !isPengumumanKadaluarsa(p));
+    if(filterStatus === "kadaluarsa") return list.filter(p => isPengumumanKadaluarsa(p));
+    if(filterStatus === "disembunyikan") return list.filter(p => p.manualHidden === true || p.aktif === false);
+    return list;
+  };
+
+  function renderKonten(){
+    const data = terapkanFilter(all).sort(byCreatedDesc);
+    $("listPengumuman").innerHTML = data.length ? data.map(p => {
       const redup = isPengumumanKadaluarsa(p) || p.manualHidden === true;
       const tersembunyi = redup || p.aktif === false;
       return `<div class="card ${redup ? "soft" : ""}" style="${redup ? "opacity:.75" : ""}">
@@ -2356,27 +2464,58 @@ async function renderPengumuman(){
         ${isAdmin ? `<div class="actions"><button class="btn btn-sm" data-edit="${esc(p.id)}">Edit</button>
           ${tersembunyi ? `<button class="btn btn-sm btn-success" data-tampilkan="${esc(p.id)}">👁 Tampilkan lagi</button>` : `<button class="btn btn-sm btn-warning" data-sembunyikan="${esc(p.id)}">🙈 Sembunyikan</button>`}
           <button class="btn btn-sm btn-danger" data-remove="${esc(p.id)}">Hapus</button></div>` : ""}</div>`;
-    }).join("") : `<div class="card empty">Belum ada pengumuman.</div>`}</div>`;
-  if(!isAdmin) return;
+    }).join("") : `<div class="card empty">Belum ada pengumuman.</div>`;
+    bindActions();
+  }
 
-  const act = async (fn, okMsg) => { try{ await fn(); showToast(okMsg); renderPengumuman(); }catch(err){ showToast(firebaseError(err), true); } };
-  const onClick = (sel, attr, handler) => $("page").querySelectorAll(sel).forEach(b => b.addEventListener("click", () => handler(b.dataset[attr])));
-  $("btnTambahPengumuman").addEventListener("click", () => openPengumumanForm(null));
-  onClick("[data-edit]", "edit", id => openPengumumanForm(data.find(x => x.id === id)));
-  onClick("[data-remove]", "remove", id => confirm("Hapus pengumuman ini permanen?") &&
-    act(async () => { await deleteCollectionData("pengumuman", id); logAudit("DELETE","pengumuman",id); }, "Pengumuman dihapus."));
-  onClick("[data-sembunyikan]", "sembunyikan", id => confirm("Sembunyikan pengumuman ini dari wali dan ustadzah? Anda bisa menampilkannya lagi nanti.") &&
-    act(async () => {
-      await updateCollectionData("pengumuman", id, { manualHidden:true, hiddenAt: new Date().toISOString(), hiddenBy: currentProfile.nama || "" });
-      logAudit("UPDATE","pengumuman",id,{ manualHidden:true });
-    }, "Pengumuman disembunyikan."));
-  onClick("[data-tampilkan]", "tampilkan", id => act(async () => {
-    const item = all.find(x => x.id === id);
-    const updates = { manualHidden:false, aktif:true };
-    if(item && isPengumumanKadaluarsa(item)) updates.berlakuSampai = null;
-    await updateCollectionData("pengumuman", id, updates);
-    logAudit("UPDATE","pengumuman",id,{ ditampilkanLagi:true });
-  }, "Pengumuman ditampilkan kembali."));
+  function bindActions(){
+    if(!isAdmin) return;
+    const act = async (fn, okMsg) => { try{ await fn(); showToast(okMsg); renderPengumuman(); }catch(err){ showToast(firebaseError(err), true); } };
+    const onClick = (sel, attr, handler) => $("listPengumuman").querySelectorAll(sel).forEach(b => b.addEventListener("click", () => handler(b.dataset[attr])));
+    onClick("[data-edit]", "edit", id => openPengumumanForm(all.find(x => x.id === id)));
+    onClick("[data-remove]", "remove", id => confirm("Hapus pengumuman ini permanen?") &&
+      act(async () => { await deleteCollectionData("pengumuman", id); logAudit("DELETE","pengumuman",id); }, "Pengumuman dihapus."));
+    onClick("[data-sembunyikan]", "sembunyikan", id => confirm("Sembunyikan pengumuman ini dari wali dan ustadzah? Anda bisa menampilkannya lagi nanti.") &&
+      act(async () => {
+        await updateCollectionData("pengumuman", id, { manualHidden:true, hiddenAt: new Date().toISOString(), hiddenBy: currentProfile.nama || "" });
+        logAudit("UPDATE","pengumuman",id,{ manualHidden:true });
+      }, "Pengumuman disembunyikan."));
+    onClick("[data-tampilkan]", "tampilkan", id => act(async () => {
+      const item = all.find(x => x.id === id);
+      const updates = { manualHidden:false, aktif:true };
+      if(item && isPengumumanKadaluarsa(item)) updates.berlakuSampai = null;
+      await updateCollectionData("pengumuman", id, updates);
+      logAudit("UPDATE","pengumuman",id,{ ditampilkanLagi:true });
+    }, "Pengumuman ditampilkan kembali."));
+  }
+
+  const hitung = {
+    semua: all.length,
+    aktif: all.filter(p => p.aktif !== false && p.manualHidden !== true && !isPengumumanKadaluarsa(p)).length,
+    kadaluarsa: all.filter(isPengumumanKadaluarsa).length,
+    disembunyikan: all.filter(p => p.manualHidden === true || p.aktif === false).length
+  };
+
+  $("page").innerHTML = `
+    ${pageHead("📢 Pengumuman", isAdmin ? "Semua pengumuman, termasuk yang kadaluarsa." : "Informasi terbaru dari admin TPQ.",
+      isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat pengumuman</button>` : "")}
+    ${isAdmin ? `<div class="tabs" id="filterPengumuman" style="margin-bottom:14px">
+      <button data-f="semua" class="active">Semua (${hitung.semua})</button>
+      <button data-f="aktif">Aktif (${hitung.aktif})</button>
+      <button data-f="kadaluarsa">Kadaluarsa (${hitung.kadaluarsa})</button>
+      <button data-f="disembunyikan">Disembunyikan (${hitung.disembunyikan})</button>
+    </div>` : ""}
+    <div class="grid grid-2" id="listPengumuman"></div>`;
+
+  if(isAdmin){
+    $("btnTambahPengumuman").addEventListener("click", () => openPengumumanForm(null));
+    $("filterPengumuman").querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+      filterStatus = b.dataset.f;
+      $("filterPengumuman").querySelectorAll("[data-f]").forEach(x => x.classList.toggle("active", x === b));
+      renderKonten();
+    }));
+  }
+  renderKonten();
 }
 function openPengumumanForm(item){
   const toLocal = value => {
@@ -2534,7 +2673,7 @@ async function openPembelajaranEditor(santri, jilid, tipe){
         <img id="pageImage" style="max-width:100%;display:block;border-radius:4px" alt="Halaman buku"></div>
       <div class="card soft" style="margin-top:14px"><h3>Hasil pembelajaran</h3>
         <div class="actions" style="margin-top:8px"><button class="btn btn-success" id="btnNaik">↑ Naik</button><button class="btn btn-warning" id="btnMengulang">↻ Mengulang</button></div>
-        ${fg("Pesan ustadzah", `<textarea id="pesanPembelajaran" rows="4" placeholder="Tuliskan catatan untuk wali...">${esc(progress?.pesan)}</textarea>`, "").replace('class="form-group "', 'class="form-group" style="margin-top:14px"')}
+        ${fg("Pesan ustadzah", `<textarea id="pesanPembelajaran" rows="4" placeholder="Tuliskan catatan untuk wali...">${esc(progress?.pesan)}</textarea>`, "", "pesanWrap")}
         <button class="btn btn-info" id="btnSimpanPesan">💾 Simpan pesan</button></div></div>`;
 
   $("btnKembali").addEventListener("click", renderDaftarSantriUstadzah);
@@ -2583,7 +2722,6 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan }){
   }
 }
 
-/* ---- Wali: lihat pembelajaran & keuangan anak ---- */
 async function renderPembelajaranWali(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Data santri tidak ditemukan.", true);
@@ -2634,7 +2772,6 @@ async function renderPembelajaranWali(santriId){
   bindHalamanButtons($("page"));
 }
 
-/* ---- Riwayat & rekap pembelajaran satu santri ---- */
 async function renderRiwayatPembelajaranSantri(santriId, kembali="daftarSantri"){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2691,7 +2828,6 @@ async function renderRiwayatPembelajaranSantri(santriId, kembali="daftarSantri")
   bindHalamanButtons($("page"));
 }
 
-/* ---- Viewer halaman buku ---- */
 function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Buku" }){
   if(!jilidId || !tipe) return showToast("Buku belum tersedia.", true);
   let page = Math.max(1, num(halaman) || 1), zoom = 100;
@@ -2738,6 +2874,7 @@ function renderProfil(){
       <button class="btn" id="btnResetPassword">Kirim email reset password</button></div>`;
   $("btnResetPassword").addEventListener("click", () => kirimResetPassword($("btnResetPassword")));
 }
+
 </script>
 </body>
 </html>
