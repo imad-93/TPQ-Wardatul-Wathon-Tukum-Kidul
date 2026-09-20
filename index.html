@@ -1203,6 +1203,82 @@ async function hapusPengeluaran(id){
   await deleteCollectionData("pengeluaran", id);
   logAudit("DELETE", "pengeluaran", id, { judul: item.judul, jumlah: item.jumlah });
 }
+/* ============================================================
+   6K. HELPER REKAP PEMBELAJARAN
+============================================================ */
+
+// Hitung rekap pembelajaran satu santri dari daftar riwayat
+function hitungRekapPembelajaran(riwayatSantri){
+  const total = riwayatSantri.length;
+  const naik = riwayatSantri.filter(r => r.status === "naik").length;
+  const mengulang = riwayatSantri.filter(r => r.status === "mengulang").length;
+  const baca = riwayatSantri.filter(r => r.tipe === "baca").length;
+  const hafalan = riwayatSantri.filter(r => r.tipe === "hafalan").length;
+
+  // Progress terakhir per tipe
+  const sorted = riwayatSantri.slice().sort((a,b) =>
+    (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0)
+  );
+  const terakhirBaca = sorted.find(r => r.tipe === "baca") || null;
+  const terakhirHafalan = sorted.find(r => r.tipe === "hafalan") || null;
+
+  // Tren 7 hari terakhir: berapa kali naik per hari
+  const tren = [];
+  const today = nowWIB();
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = dateKey(d);
+    const hariItu = riwayatSantri.filter(r => {
+      const ts = r.createdAt?.toDate?.() || r.createdAt;
+      if(!ts) return false;
+      return dateKey(new Date(ts)) === key;
+    });
+    tren.push({
+      tanggal: key,
+      label: `${d.getDate()}/${d.getMonth()+1}`,
+      naik: hariItu.filter(r => r.status === "naik").length,
+      mengulang: hariItu.filter(r => r.status === "mengulang").length,
+      total: hariItu.length
+    });
+  }
+
+  const persenNaik = total > 0 ? Math.round((naik / total) * 100) : 0;
+
+  return { total, naik, mengulang, baca, hafalan, terakhirBaca, terakhirHafalan, tren, persenNaik };
+}
+
+// Warna badge untuk status pembelajaran
+function badgePembelajaran(status){
+  return status === "naik"
+    ? `<span class="badge badge-green">Naik</span>`
+    : `<span class="badge badge-yellow">Mengulang</span>`;
+}
+
+// Chart batang sederhana (CSS only) untuk tren 7 hari
+function chartTrenPembelajaran(tren){
+  const maxVal = Math.max(1, ...tren.map(t => t.total));
+  return `
+    <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding:10px 0;border-bottom:1px solid var(--border)">
+      ${tren.map(t => {
+        const tinggiNaik = t.naik / maxVal * 100;
+        const tinggiMengulang = t.mengulang / maxVal * 100;
+        return `
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px">
+            <div style="font-size:10px;color:var(--muted)">${t.total||""}</div>
+            <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:80px">
+              ${t.naik ? `<div style="height:${tinggiNaik}%;background:#22c55e;border-radius:3px 3px 0 0" title="Naik: ${t.naik}"></div>` : ""}
+              ${t.mengulang ? `<div style="height:${tinggiMengulang}%;background:#f59e0b;border-radius:0 0 3px 3px" title="Mengulang: ${t.mengulang}"></div>` : ""}
+            </div>
+            <div style="font-size:10px;color:var(--muted)">${t.label}</div>
+          </div>`;
+      }).join("")}
+    </div>
+    <div style="display:flex;gap:12px;font-size:11px;margin-top:6px">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#22c55e;border-radius:2px;margin-right:4px"></span>Naik</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:4px"></span>Mengulang</span>
+    </div>`;
+}
 
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
@@ -1368,6 +1444,7 @@ const MENUS = {
     { page:"wali",        icon:"👨‍👩‍👧", label:"Data Wali" },
     { page:"ustadzah",    icon:"👩‍🏫", label:"Data Ustadzah" },
     { page:"jilid",       icon:"📚", label:"Jilid / Kelas" },
+    { page:"hasilBelajar", icon:"📊", label:"Hasil Belajar" },
     { page:"pengumuman",  icon:"📢", label:"Pengumuman" },
     { page:"tagihan",     icon:"🧾", label:"Master Tagihan" },
     { page:"keuangan",    icon:"💰", label:"Keuangan" },
@@ -1389,7 +1466,7 @@ const MENUS = {
 
 const PAGE_TITLES = {
   dashboard:"Dashboard", santri:"Data Santri", wali:"Data Wali", ustadzah:"Data Ustadzah",
-  jilid:"Jilid / Kelas", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
+  jilid:"Jilid / Kelas", hasilBelajar: "Hasil Belajar", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
   settings:"Pengaturan", profil:"Profil", daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
 };
 
@@ -1399,6 +1476,7 @@ const HANDLERS = {
   wali:          renderWaliAdmin,
   ustadzah:      renderUstadzahAdmin,
   jilid:         renderJilidAdmin,
+  hasilBelajar: renderHasilBelajarAdmin,
   pengumuman:    renderPengumuman,
   tagihan:       renderTagihanAdmin,
   keuangan:      renderKeuanganAdmin,
@@ -4803,10 +4881,11 @@ else statusBadge = `<span class="badge badge-gray">Belum</span>`;
               <td><span style="${namaStyle}">${escapeHTML(item.nama || "-")}</span></td>
               <td>${statusBadge}</td>
               <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
-              <td><div class="actions" style="flex-wrap:wrap">
-                <button class="btn btn-sm" data-view="${item.id}">📖 Baca &amp; Hafalan</button>
-                <button class="btn btn-sm btn-info" data-keuangan="${item.id}">💰 Keuangan</button>
-              </div></td>
+<td><div class="actions" style="flex-wrap:wrap">
+  <button class="btn btn-sm" data-view="${item.id}">📖 Baca &amp; Hafalan</button>
+  <button class="btn btn-sm btn-info" data-keuangan="${item.id}">💰 Keuangan</button>
+  <button class="btn btn-sm btn-success" data-riwayat="${item.id}">📊 Riwayat</button>
+</div></td>
             </tr>`;
           }).join("") : `<tr><td colspan="5" class="empty">Belum ada santri di kelas Anda. ${!currentProfile.jilidId && !(currentProfile.jilidIds||[]).length ? "Hubungi admin untuk penugasan kelas." : ""}</td></tr>`}
         </tbody>
@@ -4816,7 +4895,7 @@ else statusBadge = `<span class="badge badge-gray">Belum</span>`;
   attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
   $("page").querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", ()=>renderPembelajaranWaliOrUstadzah(btn.dataset.view)));
   $("page").querySelectorAll("[data-keuangan]").forEach(btn => btn.addEventListener("click", ()=>renderKeuanganSantriUstadzah(btn.dataset.keuangan)));
-
+  $("page").querySelectorAll("[data-riwayat]").forEach(btn => btn.addEventListener("click", ()=>renderRiwayatPembelajaranSantri(btn.dataset.riwayat, "daftarSantri")));
   $("btnBukaKlaim")?.addEventListener("click", ()=>openKlaimKelasModal(bisaKlaim, izinUstadzahList));
 
   $("page").querySelectorAll("[data-lepas]").forEach(btn => btn.addEventListener("click", async () => {
@@ -5018,8 +5097,11 @@ async function renderPembelajaranWaliView(santri){
   const hafalan = progress.find(x=>x.santriId===santri.id && x.tipe==="hafalan");
 
   $("page").innerHTML = `
-    <div class="toolbar"><button class="btn btn-sm" id="btnKembaliWali">← Kembali</button></div>
-    <div class="card">
+<div class="toolbar">
+  <button class="btn btn-sm" id="btnKembaliWali">← Kembali</button>
+  <button class="btn btn-sm btn-success" id="btnRiwayatLengkapWali">📊 Riwayat &amp; Rekap Lengkap</button>
+</div>
+<div class="card">
       <h2 style="margin-top:0">${escapeHTML(santri.nama || "-")}</h2>
       <p class="muted">Kelas/Jilid: <b>${escapeHTML(jilid?.nama || santri.jilidNama || "-")}</b></p>
       <p class="muted">Ustadzah Pendamping: <b>${escapeHTML(ustadzah?.nama || "Belum ditentukan")}</b></p>
@@ -5064,7 +5146,7 @@ async function renderPembelajaranWaliView(santri){
 
   $("btnKembaliWali").addEventListener("click", renderDashboardWali);
   $("btnLihatQris").addEventListener("click", waliTampilkanQRIS);
-
+  $("btnRiwayatLengkapWali").addEventListener("click", ()=>renderRiwayatPembelajaranSantri(santri.id, "waliDashboard"));
   // Render tabel riwayat dengan data yang sudah ada (tidak query ulang)
   await renderRiwayatWaliRows(santri, jilid);
   await renderRiwayatKeuanganWaliRows(santri.id);
@@ -5322,7 +5404,288 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan }){
     alert("Gagal menyimpan pembelajaran: " + error.message);
   }
 }
+/* ============================================================
+   25B. RIWAYAT & REKAP PEMBELAJARAN PER SANTRI
+============================================================ */
 
+async function renderRiwayatPembelajaranSantri(santriId, opsiKembali = "daftarSantri"){
+  const santri = (await getCollectionData("santri")).find(x=>x.id===santriId);
+  if(!santri){ alert("Santri tidak ditemukan."); return; }
+
+  const [riwayatList, jilidList, ustadzahList] = await Promise.all([
+    getCollectionData("riwayat", { forceRefresh:true }),
+    getCollectionData("jilid"),
+    getCollectionData("ustadzah")
+  ]);
+
+  const jilid = jilidList.find(j => j.id === santri.jilidId) || null;
+  const riwayatSantri = riwayatList
+    .filter(r => r.santriId === santriId)
+    .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+
+  const rekap = hitungRekapPembelajaran(riwayatSantri);
+
+  let filterTipe = "semua";
+  function renderRiwayatRows(){
+    const data = filterTipe === "semua"
+      ? riwayatSantri
+      : riwayatSantri.filter(r => r.tipe === filterTipe);
+    if(!data.length){
+      return `<tr><td colspan="6" class="empty">Belum ada riwayat pembelajaran.</td></tr>`;
+    }
+    const totalHal = (tipe) => tipe === "hafalan"
+      ? Number(jilid?.totalHalamanHafalan || 0)
+      : Number(jilid?.totalHalamanBaca || 0);
+    return data.map((item, index) => {
+      const ustadzah = ustadzahList.find(u => u.id === item.ustadzahUid);
+      return `
+        <tr>
+          <td>${index+1}</td>
+          <td>${item.tipe==="hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
+          <td>
+            <b>Halaman ${Number(item.halaman||1)}</b>
+            ${totalHal(item.tipe) ? ` dari ${totalHal(item.tipe)}` : ""}
+            <br>
+            <button class="btn btn-sm" style="margin-top:5px"
+              data-open-halaman
+              data-jilid="${escapeAttr(jilid?.id||"")}"
+              data-tipe="${item.tipe}"
+              data-page="${Number(item.halaman||1)}"
+              data-total="${totalHal(item.tipe)}"
+              data-label="${escapeAttr(item.tipe==="hafalan"?"Buku Hafalan":"Buku Baca")}">
+              👁 Lihat Halaman
+            </button>
+          </td>
+          <td>${badgePembelajaran(item.status)}</td>
+          <td>${escapeHTML(item.pesan || "-")}</td>
+          <td>${escapeHTML(item.ustadzahNama || ustadzah?.nama || "-")}<br><span class="muted" style="font-size:11px">${formatTanggal(item.createdAt)}</span></td>
+        </tr>`;
+    }).join("");
+  }
+
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <button class="btn btn-sm" id="btnKembaliRiwayat">← Kembali</button>
+      <div class="muted" style="font-size:13px">Riwayat & rekap pembelajaran</div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <h2 style="margin:0">${escapeHTML(santri.nama)}</h2>
+          <p class="muted" style="margin:4px 0 0 0">
+            Kelas/Jilid: <b>${escapeHTML(jilid?.nama || santri.jilidNama || "-")}</b>
+          </p>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">Persentase Naik</div>
+          <div style="font-size:28px;font-weight:800;color:#166534">${rekap.persenNaik}%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      ${statCard("📚","Total Catatan", rekap.total)}
+      ${statCard("📖","Baca", rekap.baca)}
+      ${statCard("🧠","Hafalan", rekap.hafalan)}
+      ${statCard("⬆️","Naik", rekap.naik)}
+      ${statCard("🔄","Mengulang", rekap.mengulang)}
+      ${statCard("🎯","Persentase Naik", rekap.persenNaik + "%")}
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>📈 Tren 7 Hari Terakhir</h3>
+      ${chartTrenPembelajaran(rekap.tren)}
+    </div>
+
+    <div class="grid" style="margin-top:18px">
+      <div class="card">
+        <h3>📖 Buku Baca — Terakhir</h3>
+        ${rekap.terakhirBaca ? `
+          <p>Halaman: <b>${rekap.terakhirBaca.halaman}/${jilid?.totalHalamanBaca||"?"}</b></p>
+          <p>${badgePembelajaran(rekap.terakhirBaca.status)}</p>
+          ${rekap.terakhirBaca.pesan ? `<div class="notice"><b>Pesan:</b><p style="margin:4px 0 0 0;white-space:pre-wrap">${escapeHTML(rekap.terakhirBaca.pesan)}</p></div>` : ""}
+          <div class="muted" style="font-size:12px;margin-top:6px">${formatTanggal(rekap.terakhirBaca.createdAt)}</div>
+        ` : `<p class="muted">Belum ada catatan baca.</p>`}
+      </div>
+      <div class="card">
+        <h3>🧠 Buku Hafalan — Terakhir</h3>
+        ${rekap.terakhirHafalan ? `
+          <p>Halaman: <b>${rekap.terakhirHafalan.halaman}/${jilid?.totalHalamanHafalan||"?"}</b></p>
+          <p>${badgePembelajaran(rekap.terakhirHafalan.status)}</p>
+          ${rekap.terakhirHafalan.pesan ? `<div class="notice"><b>Pesan:</b><p style="margin:4px 0 0 0;white-space:pre-wrap">${escapeHTML(rekap.terakhirHafalan.pesan)}</p></div>` : ""}
+          <div class="muted" style="font-size:12px;margin-top:6px">${formatTanggal(rekap.terakhirHafalan.createdAt)}</div>
+        ` : `<p class="muted">Belum ada catatan hafalan.</p>`}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h3 style="margin:0">📋 Riwayat Lengkap</h3>
+        <div class="actions">
+          <button class="btn btn-sm ${filterTipe==='semua'?'':'btn-light'}" data-filter-tipe="semua">Semua</button>
+          <button class="btn btn-sm ${filterTipe==='baca'?'':'btn-light'}" data-filter-tipe="baca">📖 Baca</button>
+          <button class="btn btn-sm ${filterTipe==='hafalan'?'':'btn-light'}" data-filter-tipe="hafalan">🧠 Hafalan</button>
+        </div>
+      </div>
+      <div class="table-container" style="margin-top:12px">
+        <table>
+          <thead><tr><th>No.</th><th>Materi</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Ustadzah / Tanggal</th></tr></thead>
+          <tbody id="riwayatLengkapBody">${renderRiwayatRows()}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  $("btnKembaliRiwayat").addEventListener("click", () => {
+    if(opsiKembali === "hasilBelajar") renderHasilBelajarAdmin();
+    else if(opsiKembali === "waliDashboard") renderDashboardWali();
+    else renderDaftarSantriUstadzah();
+  });
+
+  $("page").querySelectorAll("[data-filter-tipe]").forEach(btn => btn.addEventListener("click", () => {
+    filterTipe = btn.dataset.filterTipe;
+    $("riwayatLengkapBody").innerHTML = renderRiwayatRows();
+    $("page").querySelectorAll("[data-filter-tipe]").forEach(b => {
+      b.className = b.dataset.filterTipe === filterTipe ? "btn btn-sm" : "btn btn-sm btn-light";
+    });
+    bindHalamanButtons();
+  }));
+
+  function bindHalamanButtons(){
+    $("page").querySelectorAll("[data-open-halaman]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const { jilid: jid, tipe: t, page: pageNum, total, label } = btn.dataset;
+        if(!jid || Number(total||0) <= 0){ showToast("Buku belum tersedia.", true); return; }
+        openHalamanViewer({ jilidId: jid, tipe: t, halaman: Number(pageNum||1), totalHalaman: Number(total||0), label });
+      });
+    });
+  }
+  bindHalamanButtons();
+}
+/* ============================================================
+   25C. ADMIN: HASIL BELAJAR (rekap per kelas)
+============================================================ */
+
+async function renderHasilBelajarAdmin(){
+  if(!requireRole("admin")) return;
+
+  const [santriList, jilidList, riwayatList, ustadzahList] = await Promise.all([
+    getCollectionData("santri", { forceRefresh:true }),
+    getCollectionData("jilid", { forceRefresh:true }),
+    getCollectionData("riwayat", { forceRefresh:true }),
+    getCollectionData("ustadzah", { forceRefresh:true })
+  ]);
+
+  const kelasOptions = jilidList.filter(j => j.aktif !== false);
+
+  $("page").innerHTML = `
+    <div class="toolbar">
+      <div>
+        <h2 class="section-title">Hasil Belajar</h2>
+        <p class="muted">Rekap pembelajaran santri per kelas.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Pilih Kelas / Jilid</label>
+        <select id="filterJilidHasil">
+          <option value="">-- Semua Kelas --</option>
+          ${kelasOptions.map(j => `<option value="${j.id}">${escapeHTML(j.nama)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    <div id="hasilBelajarBody" style="margin-top:18px"></div>`;
+
+  function renderKonten(){
+    const jilidId = $("filterJilidHasil").value;
+    const santriFilter = jilidId
+      ? santriList.filter(s => s.jilidId === jilidId && s.aktif !== false)
+      : santriList.filter(s => s.aktif !== false);
+
+    if(!santriFilter.length){
+      $("hasilBelajarBody").innerHTML = `<div class="card empty">Belum ada santri.</div>`;
+      return;
+    }
+
+    // Hitung rekap setiap santri
+    const rekapSantri = santriFilter.map(s => {
+      const riwayatSantri = riwayatList.filter(r => r.santriId === s.id);
+      const rekap = hitungRekapPembelajaran(riwayatSantri);
+      return { santri: s, ...rekap };
+    }).sort((a,b) => b.persenNaik - a.persenNaik || b.total - a.total);
+
+    // Statistik kelas
+    const totalNaik = rekapSantri.reduce((s,r) => s + r.naik, 0);
+    const totalMengulang = rekapSantri.reduce((s,r) => s + r.mengulang, 0);
+    const totalCatatan = rekapSantri.reduce((s,r) => s + r.total, 0);
+    const persenNaikKelas = totalCatatan > 0 ? Math.round((totalNaik / totalCatatan) * 100) : 0;
+
+    // Chart tren kelas (gabungan semua santri)
+    const semuaRiwayat = santriFilter.flatMap(s => riwayatList.filter(r => r.santriId === s.id));
+    const rekapKelas = hitungRekapPembelajaran(semuaRiwayat);
+
+    $("hasilBelajarBody").innerHTML = `
+      <div class="grid">
+        ${statCard("👨‍🎓","Total Santri", santriFilter.length)}
+        ${statCard("📚","Total Catatan", totalCatatan)}
+        ${statCard("⬆️","Total Naik", totalNaik)}
+        ${statCard("🎯","Persentase Naik", persenNaikKelas + "%")}
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>📈 Tren Kelas 7 Hari Terakhir</h3>
+        ${chartTrenPembelajaran(rekapKelas.tren)}
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>🏆 Peringkat Kelas (berdasarkan % naik)</h3>
+        <div class="table-container" style="margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Peringkat</th>
+                <th>Santri</th>
+                <th>Total</th>
+                <th>Baca</th>
+                <th>Hafalan</th>
+                <th>Naik</th>
+                <th>Mengulang</th>
+                <th>% Naik</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rekapSantri.map((r, index) => `
+                <tr>
+                  <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
+                  <td><b>${escapeHTML(r.santri.nama)}</b></td>
+                  <td>${r.total}</td>
+                  <td>${r.baca}</td>
+                  <td>${r.hafalan}</td>
+                  <td><span class="badge badge-green">${r.naik}</span></td>
+                  <td><span class="badge badge-yellow">${r.mengulang}</span></td>
+                  <td>
+                    <span style="font-weight:800;color:${r.persenNaik >= 70 ? '#166534' : (r.persenNaik >= 40 ? '#d97706' : '#dc2626')}">
+                      ${r.persenNaik}%
+                    </span>
+                  </td>
+                  <td><button class="btn btn-sm btn-info" data-riwayat="${r.santri.id}">📊 Detail</button></td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    $("hasilBelajarBody").querySelectorAll("[data-riwayat]").forEach(btn => {
+      btn.addEventListener("click", () => renderRiwayatPembelajaranSantri(btn.dataset.riwayat, "hasilBelajar"));
+    });
+  }
+
+  $("filterJilidHasil").addEventListener("change", renderKonten);
+  renderKonten();
+}
 /* ============================================================
    26. PROFIL
 ============================================================ */
