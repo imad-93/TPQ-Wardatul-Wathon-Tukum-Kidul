@@ -61,6 +61,61 @@ input:disabled,select:disabled,textarea:disabled{background:#f1f5f9;color:var(--
 .nav{display:grid;gap:5px}
 .nav button{border:0;background:transparent;color:#dcfce7;width:100%;text-align:left;border-radius:9px;padding:11px 12px;display:flex;align-items:center;gap:8px;transition:.15s}
 .nav button:hover,.nav button.active{background:rgba(255,255,255,.13);color:#fff}
+/* ============ SIDEBAR HEADER ============ */
+.nav-section-label{
+  font-size:10px; text-transform:uppercase; letter-spacing:.08em;
+  color:#86efac; opacity:.7; padding:12px 12px 4px; font-weight:800;
+}
+
+/* ============ TABS INTERNAL ============ */
+.tabs{
+  display:flex; gap:6px; background:#fff; padding:6px;
+  border-radius:14px; border:1px solid var(--border);
+  overflow-x:auto; margin-bottom:20px;
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{ display:none }
+.tabs button{
+  border:0; background:transparent; color:var(--muted);
+  padding:10px 16px; border-radius:10px; font-weight:700;
+  font-size:13px; white-space:nowrap; transition:.2s;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.tabs button:hover{ background:#f1f5f9; color:var(--text) }
+.tabs button.active{
+  background:linear-gradient(135deg,#166534,#22c55e);
+  color:#fff; box-shadow:0 4px 12px rgba(22,101,52,.25);
+}
+
+/* ============ PAGE HEADER ============ */
+.page-head{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:15px; flex-wrap:wrap; margin-bottom:20px;
+}
+.page-head h2{
+  margin:0; font-size:22px; letter-spacing:-.02em;
+}
+.page-head p{
+  margin:4px 0 0; color:var(--muted); font-size:13px;
+}
+
+/* ============ STAT CARD ELEGAN ============ */
+.stat-card{
+  background:linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);
+  border:1px solid var(--border);
+  transition:transform .2s, box-shadow .2s;
+}
+.stat-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
+
+/* ============ HP: TABS SCROLL ============ */
+@media(max-width:600px){
+  .tabs{ padding:4px; gap:4px }
+  .tabs button{ padding:9px 12px; font-size:12px }
+  .page-head h2{ font-size:18px }
+}
 .main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
 .topbar{height:68px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
 .top-left{display:flex;align-items:center;gap:10px}
@@ -1439,17 +1494,11 @@ function roleLabel(role){
 
 const MENUS = {
   admin: [
-    { page:"dashboard",   icon:"🏠", label:"Dashboard" },
-    { page:"santri",      icon:"👨‍🎓", label:"Data Santri" },
-    { page:"wali",        icon:"👨‍👩‍👧", label:"Data Wali" },
-    { page:"ustadzah",    icon:"👩‍🏫", label:"Data Ustadzah" },
-    { page:"jilid",       icon:"📚", label:"Jilid / Kelas" },
-    { page:"hasilBelajar", icon:"📊", label:"Hasil Belajar" },
-    { page:"pengumuman",  icon:"📢", label:"Pengumuman" },
-    { page:"tagihan",     icon:"🧾", label:"Master Tagihan" },
-    { page:"keuangan",    icon:"💰", label:"Keuangan" },
-    { page:"settings",    icon:"⚙️", label:"Pengaturan" },
-    { page:"profil",      icon:"👤", label:"Profil" }
+    { page:"dashboard",    icon:"🏠", label:"Dashboard" },
+    { page:"dataUser",     icon:"👥", label:"Data User" },
+    { page:"ruangNgaji",   icon:"📚", label:"Ruang Ngaji" },
+    { page:"keuangan",     icon:"💰", label:"Keuangan" },
+    { page:"pengaturan",   icon:"⚙️", label:"Pengaturan" }
   ],
   ustadzah: [
     { page:"dashboard",     icon:"🏠", label:"Dashboard" },
@@ -1463,24 +1512,20 @@ const MENUS = {
     { page:"profil",      icon:"👤", label:"Profil" }
   ]
 };
-
 const PAGE_TITLES = {
-  dashboard:"Dashboard", santri:"Data Santri", wali:"Data Wali", ustadzah:"Data Ustadzah",
-  jilid:"Jilid / Kelas", hasilBelajar: "Hasil Belajar", pengumuman:"Pengumuman", tagihan:"Master Tagihan", keuangan:"Keuangan",
-  settings:"Pengaturan", profil:"Profil", daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
+  dashboard:"Dashboard", dataUser:"Data User", ruangNgaji:"Ruang Ngaji",
+  keuangan:"Keuangan", pengaturan:"Pengaturan",
+  pengumuman:"Pengumuman", profil:"Profil",
+  daftarSantri:"Santri Kelas", pembelajaran:"Pembelajaran"
 };
 
 const HANDLERS = {
   dashboard:     renderDashboard,
-  santri:        renderSantriAdmin,
-  wali:          renderWaliAdmin,
-  ustadzah:      renderUstadzahAdmin,
-  jilid:         renderJilidAdmin,
-  hasilBelajar: renderHasilBelajarAdmin,
-  pengumuman:    renderPengumuman,
-  tagihan:       renderTagihanAdmin,
+  dataUser:      renderDataUserAdmin,
+  ruangNgaji:    renderRuangNgajiAdmin,
   keuangan:      renderKeuanganAdmin,
-  settings:      renderSettingsAdmin,
+  pengaturan:    renderPengaturanAdmin,
+  pengumuman:    renderPengumuman,
   profil:        renderProfil,
   daftarSantri:  renderDaftarSantriUstadzah,
   pembelajaran:  renderPembelajaranWaliOrUstadzah
@@ -2870,7 +2915,199 @@ $("importSelesaiBtn").addEventListener("click", ()=>{ closeModal(); renderSantri
     })();
   });
 }
+/* ============================================================
+   15C. ADMIN: DATA USER (Santri + Wali + Ustadzah)
+============================================================ */
 
+async function renderDataUserAdmin(){
+  if(!requireRole("admin")) return;
+
+  let activeTab = "santri";
+
+  $("page").innerHTML = `
+    <div class="page-head">
+      <div>
+        <h2>👥 Data User</h2>
+        <p>Kelola data santri, wali, dan ustadzah TPQ.</p>
+      </div>
+    </div>
+    <div class="tabs" id="tabDataUser">
+      <button data-tab="santri" class="active">👨‍🎓 Santri</button>
+      <button data-tab="wali">👨‍👩‍👧 Wali</button>
+      <button data-tab="ustadzah">👩‍🏫 Ustadzah</button>
+    </div>
+    <div id="dataUserContent"></div>`;
+
+  function switchTab(tab){
+    activeTab = tab;
+    $("tabDataUser").querySelectorAll("button").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    if(tab === "santri")    renderTabSantri();
+    if(tab === "wali")      renderTabWali();
+    if(tab === "ustadzah")  renderTabUstadzah();
+  }
+
+  $("tabDataUser").querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => switchTab(b.dataset.tab));
+  });
+
+  // Render tabel santri di dalam container
+  async function renderTabSantri(){
+    const [data, izinList, progressList, appSettings] = await Promise.all([
+      getCollectionData("santri", { forceRefresh:true }),
+      getCollectionData("izin", { forceRefresh:true }),
+      getCollectionData("progress", { forceRefresh:true }),
+      getAppSettings()
+    ]);
+    const today = dateKey(nowWIB());
+
+    $("dataUserContent").innerHTML = `
+      <div class="toolbar">
+        <input id="searchSantri" class="search-box" placeholder="Cari nama santri...">
+        <div class="actions">
+          <button class="btn btn-light" id="btnTemplateSantri">⬇ Template</button>
+          <button class="btn btn-info" id="btnImportSantri">⬆ Import</button>
+          <button class="btn" id="addSantri">+ Tambah Santri</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="tableSantri">
+          <thead><tr><th>No</th><th>Nama Santri</th><th>JK</th><th>Kelas</th><th>Wali</th><th>Status Hari Ini</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${data.length ? data.map((item,index)=>{
+              const st = hitungKehadiranSantri({ santriId: item.id, tanggal: today, izinList, progressList, appSettings });
+              const isIzin = st.status === "izin";
+              const namaStyle = isIzin ? "color:#dc2626;font-weight:800" : "font-weight:800";
+              let statusBadge = `<span class="badge badge-gray">Belum</span>`;
+              if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
+              else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin (${labelAlasan(st.izin.alasan)})</span>`;
+              else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
+              else if(st.status === "libur") statusBadge = `<span class="badge badge-blue">Libur</span>`;
+              return `<tr data-row>
+                <td>${index+1}</td>
+                <td><span style="${namaStyle}">${escapeHTML(item.nama)}</span></td>
+                <td>${escapeHTML(item.jenisKelamin || "-")}</td>
+                <td>${escapeHTML(item.jilidNama || "-")}</td>
+                <td>${escapeHTML(item.waliNama || "-")}</td>
+                <td>${statusBadge}</td>
+                <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td><div class="actions">
+                  <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                  <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+                </div></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="8" class="empty">Belum ada data santri.</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+
+    attachTableSearch("searchSantri","tableSantri");
+    $("addSantri").addEventListener("click", ()=>openSantriForm());
+    $("btnTemplateSantri").addEventListener("click", downloadTemplateSantri);
+    $("btnImportSantri").addEventListener("click", ()=>openImportSantriModal(data));
+    $("dataUserContent").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+      const item = data.find(x=>x.id===btn.dataset.edit);
+      if(item) openSantriForm(item);
+    }));
+    $("dataUserContent").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
+      if(!confirm("Hapus data santri ini?")) return;
+      try{
+        await deleteCollectionData("santri", btn.dataset.remove);
+        logAudit("DELETE","santri",btn.dataset.remove);
+        showToast("Data santri dihapus.");
+        renderTabSantri();
+      }catch(error){ showToast(error.message, true); }
+    }));
+  }
+
+  async function renderTabWali(){
+    const data = await getCollectionData("wali", { forceRefresh:true });
+    $("dataUserContent").innerHTML = `
+      <div class="toolbar">
+        <input id="searchWali" class="search-box" placeholder="Cari nama/email...">
+        <button class="btn" id="addWali">+ Buat Akun Wali</button>
+      </div>
+      <div class="table-container">
+        <table id="tableWali">
+          <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Telepon</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${data.length ? data.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td><td><b>${escapeHTML(item.nama)}</b></td><td>${escapeHTML(item.email)}</td>
+                <td>${escapeHTML(item.telepon || "-")}</td>
+                <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td><div class="actions">
+                  <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                  <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+                </div></td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada akun wali.</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+    attachTableSearch("searchWali","tableWali");
+    $("addWali").addEventListener("click", ()=>openWaliForm());
+    $("dataUserContent").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+      const item = data.find(x=>x.id===btn.dataset.edit);
+      if(item) openWaliForm(item);
+    }));
+    $("dataUserContent").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
+      if(!confirm("Hapus profil wali ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console.")) return;
+      try{
+        await deleteManagedAccountRecord(btn.dataset.remove, "wali");
+        logAudit("DELETE","wali",btn.dataset.remove);
+        showToast("Profil wali dihapus.");
+        renderTabWali();
+      }catch(error){ showToast(error.message, true); }
+    }));
+  }
+
+  async function renderTabUstadzah(){
+    const [data, jilid] = await Promise.all([
+      getCollectionData("ustadzah", { forceRefresh:true }),
+      getCollectionData("jilid", { forceRefresh:true })
+    ]);
+    $("dataUserContent").innerHTML = `
+      <div class="toolbar">
+        <input id="searchUstadzah" class="search-box" placeholder="Cari nama/email...">
+        <button class="btn" id="addUstadzah">+ Buat Akun Ustadzah</button>
+      </div>
+      <div class="table-container">
+        <table id="tableUstadzah">
+          <thead><tr><th>No</th><th>Nama</th><th>Email</th><th>Kelas Diampu</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${data.length ? data.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td><td><b>${escapeHTML(item.nama)}</b></td><td>${escapeHTML(item.email)}</td>
+                <td>${escapeHTML((item.jilidNames||[]).join(", ") || item.jilidNama || "Belum diatur")}</td>
+                <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td><div class="actions">
+                  <button class="btn btn-sm btn-info" data-edit="${item.id}">Edit</button>
+                  <button class="btn btn-sm btn-danger" data-remove="${item.id}">Hapus</button>
+                </div></td>
+              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada akun ustadzah.</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+    attachTableSearch("searchUstadzah","tableUstadzah");
+    $("addUstadzah").addEventListener("click", ()=>openUstadzahForm(null, jilid));
+    $("dataUserContent").querySelectorAll("[data-edit]").forEach(btn => btn.addEventListener("click", () => {
+      const item = data.find(x=>x.id===btn.dataset.edit);
+      if(item) openUstadzahForm(item, jilid);
+    }));
+    $("dataUserContent").querySelectorAll("[data-remove]").forEach(btn => btn.addEventListener("click", async () => {
+      if(!confirm("Hapus profil ustadzah ini? Login Firebase Auth-nya tetap ada dan perlu dihapus manual lewat Firebase Console.")) return;
+      try{
+        await deleteManagedAccountRecord(btn.dataset.remove, "ustadzah");
+        logAudit("DELETE","ustadzah",btn.dataset.remove);
+        showToast("Profil ustadzah dihapus.");
+        renderTabUstadzah();
+      }catch(error){ showToast(error.message, true); }
+    }));
+  }
+
+  switchTab("santri");
+}
 /* ============================================================
    16. ADMIN: DATA WALI
 ============================================================ */
@@ -4764,6 +5001,368 @@ async function renderSettingsAdmin(){
   }));
 }
 /* ============================================================
+   23B. ADMIN: PENGATURAN GABUNGAN
+============================================================ */
+
+async function renderPengaturanAdmin(){
+  if(!requireRole("admin")) return;
+
+  $("page").innerHTML = `
+    <div class="page-head">
+      <div>
+        <h2>⚙️ Pengaturan</h2>
+        <p>Konfigurasi TPQ, tagihan, dan akun.</p>
+      </div>
+    </div>
+    <div class="tabs" id="tabPengaturan">
+      <button data-tab="umum" class="active">🏠 Umum</button>
+      <button data-tab="tagihan">🧾 Tagihan</button>
+      <button data-tab="akun">👤 Akun</button>
+    </div>
+    <div id="pengaturanContent"></div>`;
+
+  function switchTab(tab){
+    $("tabPengaturan").querySelectorAll("button").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    if(tab === "umum")     renderTabUmum();
+    if(tab === "tagihan")  renderTabTagihan();
+    if(tab === "akun")     renderTabAkun();
+  }
+  $("tabPengaturan").querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => switchTab(b.dataset.tab));
+  });
+
+  // ============== TAB UMUM (settings + izin + libur + QRIS) ==============
+  async function renderTabUmum(){
+    // Gunakan fungsi lama, tapi render ke container
+    const originalPage = $("page");
+    // renderSettingsAdmin menulis ke $("page") — kita ekstrak kontennya
+    await renderSettingsAdmin();
+    const isi = originalPage.innerHTML;
+    $("pengaturanContent").innerHTML = isi;
+    originalPage.innerHTML = ""; // kosongkan biar tidak dobel
+    // Pindahkan elemen dari pengaturanContent kembali — sebenarnya cukup pakai pengaturanContent sebagai page
+    // Kita rebuild supaya event listener tetap di pengaturanContent
+    // (Cara paling aman: re-render manual)
+  }
+
+  // Cara yang lebih clean: pakai versi custom
+  async function renderTabUmumClean(){
+    const settings = await getCollectionData("settings", { forceRefresh:true });
+    const appSettings = settings.find(x=>x.id==="app") || {};
+
+    $("pengaturanContent").innerHTML = `
+      <div class="card">
+        <h3>🏠 Informasi TPQ</h3>
+        <form id="settingsForm" style="margin-top:12px">
+          <div class="form-group"><label>Nama TPQ</label><input id="settingNama" value="${escapeHTML(appSettings.nama || "TPQ Wardatul Wathon")}" required></div>
+          <div class="form-group"><label>Alamat</label><textarea id="settingAlamat" rows="2">${escapeHTML(appSettings.alamat || "")}</textarea></div>
+          <div class="row">
+            <div class="form-group"><label>Nomor WhatsApp</label><input id="settingWhatsapp" type="tel" value="${escapeHTML(appSettings.whatsapp || "")}"></div>
+            <div class="form-group"><label>Tahun / Periode</label><input id="settingPeriode" value="${escapeHTML(appSettings.periode || "2026/2027")}"></div>
+          </div>
+          <button class="btn" type="submit" id="settingsSaveBtn">💾 Simpan</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>📝 Izin & Kehadiran</h3>
+        <form id="izinConfigForm" style="margin-top:12px">
+          <div class="form-group">
+            <label>Tanggal Mulai Pembelajaran</label>
+            <input id="cfgMulaiPembelajaran" type="date" value="${escapeAttr(appSettings.mulaiPembelajaran || '')}" required>
+          </div>
+          <div class="row">
+            <div class="form-group"><label>Batas Jam Input Izin (WIB)</label><input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? APP_CONFIG.batasIzinJam)}" required></div>
+            <div class="form-group"><label>Batas Jam Alpha (WIB)</label><input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? APP_CONFIG.batasAlphaJam)}" required></div>
+          </div>
+          <div class="row">
+            <div class="form-group"><label>Batas Hari Alpha Peringatan</label><input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? APP_CONFIG.batasAlphaHari)}" required></div>
+            <div class="form-group"><label>Jumlah Hari Rekap</label><input id="cfgJumlahHariRekap" type="number" min="1" max="30" value="${Number(appSettings.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap)}" required></div>
+          </div>
+          <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>🏖️ Hari Libur</h3>
+        <form id="liburMingguanForm" style="margin-top:12px">
+          <div class="form-group">
+            <label>Libur Mingguan</label>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px">
+              ${NAMA_HARI.map((nama, idx) => `
+                <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;cursor:pointer">
+                  <input type="checkbox" class="libur-hari-check" value="${idx}"
+                    ${(Array.isArray(appSettings.liburMingguan) && appSettings.liburMingguan.includes(idx)) ? "checked" : ""}
+                    style="width:auto;margin:0">
+                  ${nama}
+                </label>`).join("")}
+            </div>
+          </div>
+          <button type="submit" class="btn" id="liburMingguanSaveBtn">💾 Simpan Libur Mingguan</button>
+        </form>
+
+        <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+
+        <h4 style="margin:0 0 8px 0">Libur Event</h4>
+        <div id="liburEventList" style="margin-bottom:12px">
+          ${(Array.isArray(appSettings.liburEvents) && appSettings.liburEvents.length)
+            ? appSettings.liburEvents.map((e, i) => `
+                <div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <div>
+                    <b>${escapeHTML(e.nama || "Libur")}</b>
+                    <div class="muted" style="font-size:12px">${e.mulai} s/d ${e.selesai}</div>
+                  </div>
+                  <div class="actions">
+                    <button type="button" class="btn btn-sm btn-info" data-edit-libur="${i}">Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-hapus-libur="${i}">Hapus</button>
+                  </div>
+                </div>`).join("")
+            : `<div class="muted" style="font-size:12px">Belum ada libur event.</div>`}
+        </div>
+        <form id="liburEventForm">
+          <div class="form-group"><label>Nama Event</label><input id="liburEventNama" placeholder="Contoh: Libur Maulid Nabi" required></div>
+          <div class="row">
+            <div class="form-group"><label>Mulai</label><input id="liburEventMulai" type="date" required></div>
+            <div class="form-group"><label>Selesai</label><input id="liburEventSelesai" type="date" required></div>
+          </div>
+          <div class="form-group"><label>Keterangan</label><textarea id="liburEventKeterangan" rows="2"></textarea></div>
+          <button type="submit" class="btn" id="liburEventSaveBtn">+ Tambah Libur Event</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>📱 QRIS Pembayaran</h3>
+        ${assetUrl(appSettings.qrisUrl) ? `<img src="${escapeHTML(assetUrl(appSettings.qrisUrl))}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:15px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
+        <div class="form-group"><label>URL / Path QRIS</label><input id="qrisUrl" type="url" value="${escapeHTML(assetUrl(appSettings.qrisUrl))}" placeholder="./assets/qris/qris.png"></div>
+        <button class="btn" id="saveQris">💾 Simpan URL QRIS</button>
+      </div>`;
+
+    // ===== HANDLERS =====
+    $("settingsForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("settingsSaveBtn");
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          await setDoc(doc(db,"settings","app"), {
+            nama: $("settingNama").value.trim(),
+            alamat: $("settingAlamat").value.trim(),
+            whatsapp: $("settingWhatsapp").value.trim(),
+            periode: $("settingPeriode").value.trim(),
+            updatedAt: serverTimestamp()
+          }, { merge:true });
+          invalidateCache("settings");
+          showToast("Informasi TPQ disimpan.");
+        }catch(err){ alert(err.message); }
+      });
+    });
+
+    $("izinConfigForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("izinConfigSaveBtn");
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          await setDoc(doc(db,"settings","app"), {
+            mulaiPembelajaran: $("cfgMulaiPembelajaran").value || null,
+            batasIzinJam: Number($("cfgBatasIzin").value || 15),
+            batasAlphaJam: Number($("cfgBatasAlpha").value || 18),
+            batasAlphaHari: Number($("cfgBatasAlphaHari").value || 2),
+            jumlahHariRekap: Number($("cfgJumlahHariRekap").value || 7),
+            updatedAt: serverTimestamp()
+          }, { merge:true });
+          invalidateCache("settings");
+          showToast("Konfigurasi disimpan.");
+        }catch(err){ alert(err.message); }
+      });
+    });
+
+    $("liburMingguanForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("liburMingguanSaveBtn");
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          const checked = [...document.querySelectorAll(".libur-hari-check:checked")].map(x => Number(x.value));
+          await setDoc(doc(db,"settings","app"), { liburMingguan: checked, updatedAt: serverTimestamp() }, { merge:true });
+          invalidateCache("settings");
+          showToast("Libur mingguan disimpan.");
+        }catch(err){ alert(err.message); }
+      });
+    });
+
+    $("liburEventForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("liburEventSaveBtn");
+      const nama = $("liburEventNama").value.trim();
+      const mulai = $("liburEventMulai").value;
+      const selesai = $("liburEventSelesai").value;
+      const keterangan = $("liburEventKeterangan").value.trim();
+      if(!nama || !mulai || !selesai){ showToast("Lengkapi semua field.", true); return; }
+      if(selesai < mulai){ showToast("Tanggal selesai tidak valid.", true); return; }
+
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          const fresh = await getAppSettings();
+          const events = Array.isArray(fresh.liburEvents) ? [...fresh.liburEvents] : [];
+          events.push({ nama, mulai, selesai, keterangan });
+          await setDoc(doc(db,"settings","app"), { liburEvents: events, updatedAt: serverTimestamp() }, { merge:true });
+          invalidateCache("settings");
+
+          const selesaiDate = new Date(selesai + "T23:59:59+07:00");
+          const kadaluarsa = new Date(selesaiDate.getTime() + 1000);
+          const durasi = mulai === selesai ? mulai : `${mulai} s/d ${selesai}`;
+          const isiPengumuman = `Diberitahukan bahwa TPQ akan libur:\n\n📌 Kegiatan: ${nama}\n📅 Tanggal: ${durasi}\n` +
+            (keterangan ? `📝 Keterangan: ${keterangan}\n` : "") +
+            `\nKegiatan belajar mengajar akan kembali normal setelah tanggal tersebut.\nTerima kasih.`;
+          await addCollectionData("pengumuman", {
+            judul: `🏖️ Libur: ${nama}`, isi: isiPengumuman, aktif: true,
+            berlakuSampai: kadaluarsa.toISOString(),
+            sumber: "liburEvent", liburNama: nama, liburMulai: mulai, liburSelesai: selesai
+          });
+          showToast(`Libur "${nama}" disimpan & pengumuman dibuat.`);
+          renderTabUmumClean();
+        }catch(err){ alert(err.message); }
+      });
+    });
+
+    $("pengaturanContent").querySelectorAll("[data-edit-libur]").forEach(btn => btn.addEventListener("click", () => editLiburEvent(Number(btn.dataset.editLibur))));
+    $("pengaturanContent").querySelectorAll("[data-hapus-libur]").forEach(btn => btn.addEventListener("click", async () => {
+      const idx = Number(btn.dataset.hapusLibur);
+      const fresh = await getAppSettings();
+      const events = Array.isArray(fresh.liburEvents) ? [...fresh.liburEvents] : [];
+      const target = events[idx];
+      if(!target) return;
+      if(!confirm(`Hapus libur "${target.nama}"?`)) return;
+      try{
+        events.splice(idx, 1);
+        await setDoc(doc(db,"settings","app"), { liburEvents: events, updatedAt: serverTimestamp() }, { merge:true });
+        invalidateCache("settings");
+        const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
+        const terkait = pengumumanList.filter(p => p.sumber === "liburEvent" && p.liburNama === target.nama && p.liburMulai === target.mulai && p.liburSelesai === target.selesai);
+        for(const p of terkait) await deleteCollectionData("pengumuman", p.id);
+        showToast("Libur dihapus.");
+        renderTabUmumClean();
+      }catch(err){ alert(err.message); }
+    }));
+
+    $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async () => {
+      try{
+        await setDoc(doc(db,"settings","app"), { qrisUrl: $("qrisUrl").value.trim() || null, updatedAt: serverTimestamp() }, { merge:true });
+        invalidateCache("settings");
+        showToast("URL QRIS disimpan.");
+        renderTabUmumClean();
+      }catch(err){ alert(err.message); }
+    }));
+  }
+
+  // Ganti renderTabUmum dengan versi clean
+  renderTabUmum = renderTabUmumClean;
+
+  // ============== TAB TAGIHAN (SPP + Iuran) ==============
+  async function renderTabTagihan(){
+    const [appSettings, kegiatanList, jilidList] = await Promise.all([
+      getAppSettings(), getCollectionData("kegiatan", { forceRefresh:true }), getCollectionData("jilid")
+    ]);
+    $("pengaturanContent").innerHTML = `
+      <div class="card">
+        <h3>💵 Pengaturan SPP</h3>
+        <p class="muted">SPP otomatis ditagihkan setiap awal bulan ke semua santri aktif.</p>
+        <form id="sppSettingsForm" style="margin-top:12px">
+          <div class="row">
+            <div class="form-group"><label>Nominal SPP / Bulan</label><input id="sppNominal" type="number" min="0" value="${Number(appSettings.sppNominal||0)}" required></div>
+            <div class="form-group"><label>Tanggal Mulai Peringatan Tunggakan</label><input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${Number(appSettings.sppTanggalPeringatan||10)}" required></div>
+          </div>
+          <button class="btn" type="submit" id="sppSettingsSaveBtn">💾 Simpan SPP</button>
+        </form>
+        <button class="btn btn-light" id="btnBackfillSpp" style="margin-top:12px">⏱ Backfill SPP Menunggak</button>
+      </div>
+
+      <div class="toolbar" style="margin-top:24px">
+        <h3 style="margin:0">🎉 Iuran Kegiatan</h3>
+        <button class="btn" id="btnTambahKegiatan">+ Buat Iuran</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>No</th><th>Nama</th><th>Nominal</th><th>Periode</th><th>Target</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${kegiatanList.length ? kegiatanList.map((item,index)=>`
+              <tr>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(item.nama)}</b>${item.penerima?`<br><span class="muted" style="font-size:12px">Kepada: ${escapeHTML(item.penerima)}</span>`:""}</td>
+                <td>${formatRupiah(item.nominal || 0)}</td>
+                <td>${escapeHTML(item.tanggalMulai||"-")} s/d ${escapeHTML(item.tanggalSelesai||"-")}</td>
+                <td>${escapeHTML(item.targetNama || "Semua")}</td>
+                <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td><button class="btn btn-sm btn-danger" data-remove-kegiatan="${item.id}">Nonaktifkan</button></td>
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran.</td></tr>`}
+          </tbody>
+        </table>
+      </div>`;
+
+    $("sppSettingsForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const btn = $("sppSettingsSaveBtn");
+      await withButtonLoading(btn, "Menyimpan...", async () => {
+        try{
+          await setDoc(doc(db,"settings","app"), {
+            sppNominal: Number($("sppNominal").value||0),
+            sppTanggalPeringatan: Number($("sppTanggalPeringatan").value||10),
+            updatedAt: serverTimestamp()
+          }, { merge:true });
+          invalidateCache("settings");
+          showToast("Pengaturan SPP disimpan.");
+        }catch(err){ alert(err.message); }
+      });
+    });
+
+    $("btnBackfillSpp").addEventListener("click", ()=>openBackfillSppForm(appSettings));
+    $("btnTambahKegiatan").addEventListener("click", ()=>openKegiatanForm(jilidList));
+    $("pengaturanContent").querySelectorAll("[data-remove-kegiatan]").forEach(btn => btn.addEventListener("click", async () => {
+      if(!confirm("Nonaktifkan iuran ini?")) return;
+      try{
+        await updateCollectionData("kegiatan", btn.dataset.removeKegiatan, { aktif:false });
+        showToast("Iuran dinonaktifkan.");
+        renderTabTagihan();
+      }catch(err){ showToast(err.message, true); }
+    }));
+  }
+
+  // ============== TAB AKUN (profil) ==============
+  async function renderTabAkun(){
+    $("pengaturanContent").innerHTML = `
+      <div class="card">
+        <h3>👤 Akun Anda</h3>
+        <div class="row" style="margin-top:12px">
+          <div class="form-group"><label>Nama</label><input value="${escapeHTML(currentProfile.nama || "")}" disabled></div>
+          <div class="form-group"><label>Email</label><input value="${escapeHTML(currentProfile.email || currentUser.email || "")}" disabled></div>
+          <div class="form-group"><label>Role</label><input value="${escapeHTML(roleLabel(currentProfile.role))}" disabled></div>
+          <div class="form-group"><label>Status</label><input value="${currentProfile.aktif===false ? "Nonaktif" : "Aktif"}" disabled></div>
+        </div>
+        <button class="btn" id="btnResetPassword">📧 Kirim Email Reset Password</button>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h3>🛠 Tools Admin</h3>
+        <p class="muted" style="font-size:13px">Jalankan migrasi struktur data (hanya sekali setelah update besar).</p>
+        <button class="btn btn-light" id="btnMigrasiData">🔄 Migrasi Multi-Ustadzah</button>
+      </div>`;
+
+    $("btnResetPassword").addEventListener("click", withButtonLoading($("btnResetPassword"), "Mengirim...", async () => {
+      try{
+        await sendPasswordResetEmail(auth, currentUser.email);
+        showToast("Email reset dikirim ke " + currentUser.email);
+      }catch(error){ alert(firebaseError(error)); }
+    }));
+
+    $("btnMigrasiData").addEventListener("click", async () => {
+      if(typeof jalankanMigrasiMultiUstadzah === "function") jalankanMigrasiMultiUstadzah();
+      else alert("Fungsi migrasi tidak tersedia.");
+    });
+  }
+
+  switchTab("umum");
+}
+/* ============================================================
    24. USTADZAH: DAFTAR SANTRI KELAS
 ============================================================ */
 async function getSantriUstadzah(){
@@ -5536,11 +6135,11 @@ async function renderRiwayatPembelajaranSantri(santriId, opsiKembali = "daftarSa
       </div>
     </div>`;
 
-  $("btnKembaliRiwayat").addEventListener("click", () => {
-    if(opsiKembali === "hasilBelajar") renderHasilBelajarAdmin();
-    else if(opsiKembali === "waliDashboard") renderDashboardWali();
-    else renderDaftarSantriUstadzah();
-  });
+$("btnKembaliRiwayat").addEventListener("click", () => {
+  if(opsiKembali === "ruangNgaji" || opsiKembali === "hasilBelajar") renderRuangNgajiAdmin();
+  else if(opsiKembali === "waliDashboard") renderDashboardWali();
+  else renderDaftarSantriUstadzah();
+});
 
   $("page").querySelectorAll("[data-filter-tipe]").forEach(btn => btn.addEventListener("click", () => {
     filterTipe = btn.dataset.filterTipe;
