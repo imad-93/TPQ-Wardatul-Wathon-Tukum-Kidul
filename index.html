@@ -741,9 +741,9 @@ function badgeKehadiran(status){
   if(status === "hadir")   return `<span class="badge badge-green">Hadir</span>`;
   if(status === "izin")    return `<span class="badge badge-yellow">Izin</span>`;
   if(status === "alpha")   return `<span class="badge badge-red">Alpha</span>`;
+  if(status === "libur")   return `<span class="badge badge-blue">Libur</span>`;
   return `<span class="badge badge-gray">-</span>`;
 }
-
 function pesanSuksesIzin(alasan){
   if(alasan === "sakit"){
     return "Izin anda sedang diajukan, semoga lekas sehat Aaamiin....";
@@ -764,7 +764,12 @@ function cariIzinSantri(izinList, santriId, tanggal){
   return izinList.find(z => z.santriId === santriId && isIzinAktifDiTanggal(z, tanggal)) || null;
 }
 
-function hitungKehadiranSantri({ santriId, tanggal, izinList, progressList }){
+function hitungKehadiranSantri({ santriId, tanggal, izinList, progressList, appSettings }){
+  // Kalau hari libur, tidak dihitung (netral)
+  if(appSettings && isHariLibur(tanggal, appSettings)){
+    return { status: "libur", izin: null, progress: null };
+  }
+
   const izin = cariIzinSantri(izinList, santriId, tanggal);
   if(izin) return { status: "izin", izin, progress: null };
 
@@ -783,7 +788,6 @@ function hitungKehadiranSantri({ santriId, tanggal, izinList, progressList }){
   }
   return { status: "alpha", izin: null, progress: null };
 }
-
 function hitungRekapKehadiran({ santriList, izinList, progressList, appSettings }){
   const jumlahHari = Number(appSettings?.jumlahHariRekap || APP_CONFIG.jumlahHariRekap);
   const mulaiStr = appSettings?.mulaiPembelajaran || null;
@@ -794,22 +798,23 @@ function hitungRekapKehadiran({ santriList, izinList, progressList, appSettings 
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const key = dateKey(d);
-    // Lewati tanggal sebelum mulai pembelajaran
     if(mulaiStr && key < mulaiStr) continue;
     tanggalList.push(key);
   }
 
   return santriList.map(s => {
-    let hadir = 0, izin = 0, alpha = 0;
+    let hadir = 0, izin = 0, alpha = 0, libur = 0;
     tanggalList.forEach(t => {
       const r = hitungKehadiranSantri({
-        santriId: s.id, tanggal: t, izinList, progressList
+        santriId: s.id, tanggal: t, izinList, progressList, appSettings
       });
       if(r.status === "hadir") hadir++;
       else if(r.status === "izin") izin++;
       else if(r.status === "alpha") alpha++;
+      else if(r.status === "libur") libur++;
     });
-    return { santri: s, hadir, izin, alpha, total: hadir + izin + alpha };
+    const total = hadir + izin + alpha; // libur tidak masuk total
+    return { santri: s, hadir, izin, alpha, libur, total };
   }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
 }
 // ============================================================
@@ -827,11 +832,14 @@ function cariIzinUstadzah(izinList, ustadzahId, tanggal){
 }
 
 // Hitung status kehadiran ustadzah di tanggal tertentu
-function hitungKehadiranUstadzah({ ustadzahId, tanggal, izinList, progressList }){
+function hitungKehadiranUstadzah({ ustadzahId, tanggal, izinList, progressList, appSettings }){
+  if(appSettings && isHariLibur(tanggal, appSettings)){
+    return { status: "libur" };
+  }
+
   const izin = cariIzinUstadzah(izinList, ustadzahId, tanggal);
   if(izin) return { status: "izin", izin };
 
-  // Ustadzah dianggap hadir kalau ada progress yang ia input pada tanggal itu
   const progressHariItu = progressList.filter(p => {
     if(p.ustadzahUid !== ustadzahId) return false;
     const ts = p.updatedAt?.toDate?.() || p.updatedAt;
@@ -846,7 +854,6 @@ function hitungKehadiranUstadzah({ ustadzahId, tanggal, izinList, progressList }
   }
   return { status: "alpha" };
 }
-
 // Rekap kehadiran ustadzah selama periode
 function hitungRekapKehadiranUstadzah({ ustadzahList, izinList, progressList, appSettings }){
   const jumlahHari = Number(appSettings?.jumlahHariRekap || APP_CONFIG.jumlahHariRekap);
@@ -863,16 +870,18 @@ function hitungRekapKehadiranUstadzah({ ustadzahList, izinList, progressList, ap
   }
 
   return ustadzahList.map(u => {
-    let hadir = 0, izin = 0, alpha = 0;
+    let hadir = 0, izin = 0, alpha = 0, libur = 0;
     tanggalList.forEach(t => {
       const r = hitungKehadiranUstadzah({
-        ustadzahId: u.id, tanggal: t, izinList, progressList
+        ustadzahId: u.id, tanggal: t, izinList, progressList, appSettings
       });
       if(r.status === "hadir") hadir++;
       else if(r.status === "izin") izin++;
       else if(r.status === "alpha") alpha++;
+      else if(r.status === "libur") libur++;
     });
-    return { ustadzah: u, hadir, izin, alpha, total: hadir + izin + alpha };
+    const total = hadir + izin + alpha;
+    return { ustadzah: u, hadir, izin, alpha, libur, total };
   }).sort((a,b) => b.hadir - a.hadir || b.izin - a.izin || a.alpha - b.alpha);
 }
 /* ============================================================
@@ -917,6 +926,142 @@ function formatTanggalJam(value){
       hour:"2-digit", minute:"2-digit"
     }).format(d);
   }catch{ return "-"; }
+}
+/* ============================================================
+   6F. HELPER HARI LIBUR
+============================================================ */
+
+// Nama hari dalam bahasa Indonesia (0 = Minggu)
+const NAMA_HARI = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+
+// Ambil konfigurasi libur dari app settings
+function getLiburConfig(appSettings){
+  return {
+    mingguan: Array.isArray(appSettings?.liburMingguan) ? appSettings.liburMingguan : [],
+    events: Array.isArray(appSettings?.liburEvents) ? appSettings.liburEvents : []
+  };
+}
+
+// Cek apakah tanggal (YYYY-MM-DD) adalah hari libur mingguan
+function isLiburMingguan(tanggalStr, liburMingguan){
+  if(!tanggalStr || !Array.isArray(liburMingguan) || !liburMingguan.length) return false;
+  const d = new Date(tanggalStr + "T00:00:00");
+  if(isNaN(d.getTime())) return false;
+  return liburMingguan.includes(d.getDay());
+}
+
+// Cek apakah tanggal masuk salah satu event libur (rentang tanggal)
+function isLiburEvent(tanggalStr, liburEvents){
+  if(!tanggalStr || !Array.isArray(liburEvents) || !liburEvents.length) return false;
+  return liburEvents.some(e => {
+    if(!e.mulai || !e.selesai) return false;
+    return tanggalStr >= e.mulai && tanggalStr <= e.selesai;
+  });
+}
+
+// Cek apakah tanggal adalah hari libur (mingguan atau event)
+function isHariLibur(tanggalStr, appSettings){
+  const cfg = getLiburConfig(appSettings);
+  return isLiburMingguan(tanggalStr, cfg.mingguan)
+      || isLiburEvent(tanggalStr, cfg.events);
+}
+
+// Ambil label libur untuk tooltip/tampilan
+function labelLibur(tanggalStr, appSettings){
+  const cfg = getLiburConfig(appSettings);
+  if(isLiburMingguan(tanggalStr, cfg.mingguan)){
+    const d = new Date(tanggalStr + "T00:00:00");
+    return `Libur mingguan (${NAMA_HARI[d.getDay()]})`;
+  }
+  const ev = cfg.events.find(e => tanggalStr >= e.mulai && tanggalStr <= e.selesai);
+  if(ev) return `Libur: ${ev.nama || "Event"}`;
+  return "Libur";
+}
+async function editLiburEvent(idx){
+  const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
+  const target = events[idx];
+  if(!target) return;
+
+  openModal("Edit Libur Event", `
+    <form id="editLiburForm">
+      <div class="form-group">
+        <label>Nama Event</label>
+        <input id="editLiburNama" value="${escapeHTML(target.nama)}" required>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Tanggal Mulai</label>
+          <input id="editLiburMulai" type="date" value="${target.mulai}" required>
+        </div>
+        <div class="form-group">
+          <label>Tanggal Selesai</label>
+          <input id="editLiburSelesai" type="date" value="${target.selesai}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Keterangan</label>
+        <textarea id="editLiburKeterangan" rows="2">${escapeHTML(target.keterangan || "")}</textarea>
+      </div>
+      <button type="submit" class="btn btn-full" id="editLiburSaveBtn">Simpan Perubahan</button>
+    </form>`);
+
+  $("editLiburForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("editLiburSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        // 1) Update data libur
+        events[idx] = {
+          nama: $("editLiburNama").value.trim(),
+          mulai: $("editLiburMulai").value,
+          selesai: $("editLiburSelesai").value,
+          keterangan: $("editLiburKeterangan").value.trim()
+        };
+        await setDoc(doc(db,"settings","app"), {
+          liburEvents: events,
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+        invalidateCache("settings");
+
+        // 2) Update pengumuman terkait
+        const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
+        const terkait = pengumumanList.filter(p =>
+          p.sumber === "liburEvent" &&
+          p.liburNama === target.nama &&
+          p.liburMulai === target.mulai &&
+          p.liburSelesai === target.selesai
+        );
+
+        const baru = events[idx];
+        const selesaiDate = new Date(baru.selesai + "T23:59:59+07:00");
+        const kadaluarsa = new Date(selesaiDate.getTime() + 1000);
+        const durasi = baru.mulai === baru.selesai ? baru.mulai : `${baru.mulai} s/d ${baru.selesai}`;
+        const isiPengumuman =
+          `Diberitahukan bahwa TPQ akan libur:\n\n` +
+          `📌 Kegiatan: ${baru.nama}\n` +
+          `📅 Tanggal: ${durasi}\n` +
+          (baru.keterangan ? `📝 Keterangan: ${baru.keterangan}\n` : "") +
+          `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya setelah tanggal tersebut.\n` +
+          `Terima kasih atas perhatiannya.`;
+
+        for(const p of terkait){
+          await updateCollectionData("pengumuman", p.id, {
+            judul: `🏖️ Libur: ${baru.nama}`,
+            isi: isiPengumuman,
+            berlakuSampai: kadaluarsa.toISOString(),
+            liburNama: baru.nama,
+            liburMulai: baru.mulai,
+            liburSelesai: baru.selesai
+          });
+        }
+
+        logAudit("UPDATE","settings","app",{ editLiburEvent: baru });
+        closeModal();
+        showToast("Libur event diperbarui.");
+        renderSettingsAdmin();
+      }catch(err){ alert(err.message); }
+    })();
+  });
 }
 /* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
@@ -1444,6 +1589,8 @@ async function renderDashboardAdmin(){
 }
 async function renderDashboardUstadzah(){
   await ensureSppBulanIniUntukSemuaSantri();
+  const todayKey = dateKey(nowWIB());
+  const todayLibur = isHariLibur(todayKey, appSettings);
   const santri = await getSantriUstadzah();
   const jilidNames = await getEffectiveJilidNamesForUstadzah(currentProfile);
   const jilidList = await getCollectionData("jilid");
@@ -1533,7 +1680,13 @@ async function renderDashboardUstadzah(){
           </div>
         </div>`;
     })()}
-
+    ${todayLibur ? `
+      <div class="card" style="margin-top:14px;background:#eff6ff;border-color:#bfdbfe">
+        <b style="color:#1e40af">🏖️ Hari Ini Libur</b>
+        <div class="muted" style="font-size:13px;margin-top:4px">
+          ${escapeHTML(labelLibur(todayKey, appSettings))}. Tidak ada perhitungan alpha hari ini.
+        </div>
+      </div>` : ""}
     ${peringatan.length ? `
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
         <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
@@ -1640,21 +1793,22 @@ async function renderDashboardUstadzah(){
       <div class="table-container" style="margin-top:12px">
         <table>
           <thead>
-            <tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Total</th></tr>
-          </thead>
-          <tbody>
-            ${rekap.length ? rekap.map((r,index)=>`
-              <tr>
-                <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
-                <td><b>${escapeHTML(r.santri.nama)}</b></td>
-                <td><span class="badge badge-green">${r.hadir}</span></td>
-                <td><span class="badge badge-yellow">${r.izin}</span></td>
-                <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
-                      ? `<span class="badge badge-red">${r.alpha}</span>`
-                      : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
-                <td>${r.total}</td>
-              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`}
-          </tbody>
+  <tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Libur</th><th>Total</th></tr>
+</thead>
+<tbody>
+  ${rekap.map((r,index)=>`
+    <tr>
+      <td><b>#${index+1}</b> ${index===0?"🥇":index===1?"🥈":index===2?"🥉":""}</td>
+      <td><b>${escapeHTML(r.santri.nama)}</b></td>
+      <td><span class="badge badge-green">${r.hadir}</span></td>
+      <td><span class="badge badge-yellow">${r.izin}</span></td>
+      <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
+            ? `<span class="badge badge-red">${r.alpha}</span>`
+            : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
+      <td><span class="badge badge-blue">${r.libur || 0}</span></td>
+      <td>${r.total}</td>
+    </tr>`).join("")}
+</tbody>
         </table>
       </div>
     </div>
@@ -1677,6 +1831,8 @@ async function renderDashboardUstadzah(){
   pasangFormIzin({ santriList: santri, isUstadzah: true });
 }
 async function renderDashboardWali(){
+  const todayKey = dateKey(nowWIB());
+  const todayLibur = isHariLibur(todayKey, appSettings);
   const santri = await getSantriWali();  // hanya santri yang terdistribusi ke wali ini
   const pengumuman = await getCollectionData("pengumuman");
   const pengumumanAktif = pengumuman.filter(isPengumumanTampil)
@@ -1686,7 +1842,7 @@ async function renderDashboardWali(){
   const progressList = await getCollectionData("progress", { forceRefresh:true });
   const appSettings = await getAppSettings();
 
-  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, appSettings });
+  const st = hitungKehadiranSantri({ santriId: s.id, tanggal: dateKey(nowWIB()), izinList, progressList, appSettings });
   const peringatan = rekap.filter(r => r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari));
 
   // Riwayat izin HANYA untuk santri milik wali ini
@@ -1714,7 +1870,13 @@ async function renderDashboardWali(){
         <div style="font-weight:800;margin-top:6px">${escapeHTML(pendamping?.nama || "Belum ditentukan")}</div>
       </div>
     </div>
-
+    ${todayLibur ? `
+      <div class="card" style="margin-top:14px;background:#eff6ff;border-color:#bfdbfe">
+        <b style="color:#1e40af">🏖️ Hari Ini Libur</b>
+        <div class="muted" style="font-size:13px;margin-top:4px">
+          ${escapeHTML(labelLibur(todayKey, appSettings))}. Tidak ada perhitungan alpha hari ini.
+        </div>
+      </div>` : ""}
     ${peringatan.length ? `
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
         <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
@@ -1733,14 +1895,13 @@ async function renderDashboardWali(){
 ${santri.map(s=>{
   const st = hitungKehadiranSantri({ santriId: s.id, tanggal: dateKey(nowWIB()), izinList, progressList });
   const isIzin = st.status === "izin";
+  const isLibur = st.status === "libur";
   const namaStyle = isIzin ? "color:#dc2626;font-weight:800;margin:0" : "margin:0";
-  const badge = isIzin
-    ? `<span class="badge badge-yellow" style="margin-top:6px;display:inline-block">Izin (${labelAlasan(st.izin.alasan)})</span>`
-    : (st.status === "hadir"
-        ? `<span class="badge badge-green" style="margin-top:6px;display:inline-block">Hadir</span>`
-        : (st.status === "alpha"
-            ? `<span class="badge badge-red" style="margin-top:6px;display:inline-block">Alpha</span>`
-            : ""));
+    let badge = "";
+    if(isIzin)        badge = `<span class="badge badge-yellow" style="margin-top:6px;display:inline-block">Izin (${labelAlasan(st.izin.alasan)})</span>`;
+    else if(isLibur)  badge = `<span class="badge badge-blue" style="margin-top:6px;display:inline-block">Libur</span>`;
+    else if(st.status === "hadir") badge = `<span class="badge badge-green" style="margin-top:6px;display:inline-block">Hadir</span>`;
+    else if(st.status === "alpha") badge = `<span class="badge badge-red" style="margin-top:6px;display:inline-block">Alpha</span>`;
   return `<div class="card" style="background:#f8fafc">
     <h3 style="${namaStyle}">${escapeHTML(s.nama || "-")}</h3>
     <p class="muted" style="margin:4px 0 0 0">${escapeHTML(s.jilidNama || "-")}</p>
@@ -2052,13 +2213,14 @@ async function pasangFormIzin({ santriList, isUstadzah }){
 ============================================================ */
 async function renderSantriAdmin(){
   if(!requireRole("admin")) return;
-  const [data, izinList, progressList] = await Promise.all([
-    getCollectionData("santri"),
-    getCollectionData("izin", { forceRefresh:true }),
-    getCollectionData("progress", { forceRefresh:true })
-  ]);
+const [data, izinList, progressList, appSettings] = await Promise.all([
+  getCollectionData("santri"),
+  getCollectionData("izin", { forceRefresh:true }),
+  getCollectionData("progress", { forceRefresh:true }),
+  getAppSettings()
+]);
 
-  const today = dateKey(nowWIB());
+const today = dateKey(nowWIB());
 
   $("page").innerHTML = `
     <div class="toolbar">
@@ -2078,16 +2240,15 @@ async function renderSantriAdmin(){
         <thead><tr><th>No</th><th>Nama Santri</th><th>JK</th><th>Kelas/Jilid</th><th>Wali</th><th>Status Hari Ini</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody>
           ${data.length ? data.map((item,index)=>{
-            const st = hitungKehadiranSantri({
-              santriId: item.id, tanggal: today, izinList, progressList
-            });
+          const st = hitungKehadiranSantri({santriId: item.id, tanggal: today, izinList, progressList, appSettings});
             const isIzin = st.status === "izin";
             const namaStyle = isIzin ? "color:#dc2626;font-weight:800" : "font-weight:800";
             let statusBadge = `<span class="badge badge-gray">-</span>`;
-            if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
-            else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
-            else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
-            else statusBadge = `<span class="badge badge-gray">Belum</span>`;
+if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
+else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
+else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
+else if(st.status === "libur") statusBadge = `<span class="badge badge-blue">Libur</span>`;
+else statusBadge = `<span class="badge badge-gray">Belum</span>`;
 
             return `<tr data-row>
               <td>${index+1}</td>
@@ -3699,6 +3860,73 @@ async function renderSettingsAdmin(){
     <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
   </form>
 </div>
+<div class="card" style="margin-top:18px">
+  <h3>🏖️ Pengaturan Hari Libur</h3>
+  <p class="muted" style="font-size:13px">
+    Hari libur tidak dihitung sebagai alpha untuk santri maupun ustadzah.
+  </p>
+
+  <form id="liburMingguanForm" style="margin-top:12px">
+    <div class="form-group">
+      <label>Libur Mingguan (berulang tiap pekan)</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px">
+        ${NAMA_HARI.map((nama, idx) => `
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;cursor:pointer">
+            <input type="checkbox" class="libur-hari-check" value="${idx}"
+              ${(Array.isArray(appSettings.liburMingguan) && appSettings.liburMingguan.includes(idx)) ? "checked" : ""}
+              style="width:auto;margin:0">
+            ${nama}
+          </label>`).join("")}
+      </div>
+    </div>
+    <button type="submit" class="btn" id="liburMingguanSaveBtn">💾 Simpan Libur Mingguan</button>
+  </form>
+
+  <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+
+  <h4 style="margin:0 0 8px 0">Libur Event (rentang tanggal)</h4>
+  <div id="liburEventList" style="margin-bottom:12px">
+    ${(Array.isArray(appSettings.liburEvents) && appSettings.liburEvents.length)
+      ? appSettings.liburEvents.map((e, i) => `
+          <div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div>
+              <b>${escapeHTML(e.nama || "Libur")}</b>
+              <div class="muted" style="font-size:12px">${e.mulai} s/d ${e.selesai}</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-info" data-edit-libur="${i}">Edit</button>
+            <button type="button" class="btn btn-sm btn-danger" data-hapus-libur="${i}">Hapus</button>
+          </div>`).join("")
+      : `<div class="muted" style="font-size:12px">Belum ada libur event.</div>`}
+  </div>
+
+  <form id="liburEventForm">
+    <div class="row">
+      <div class="form-group">
+        <label>Nama Event</label>
+        <input id="liburEventNama" placeholder="Contoh: Libur Maulid Nabi" required>
+      </div>
+      <div class="form-group">
+        <label>&nbsp;</label>
+        <div class="muted" style="font-size:12px;padding:10px 0">Rentang tanggal di bawah bersifat inklusif.</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Tanggal Mulai</label>
+        <input id="liburEventMulai" type="date" required>
+      </div>
+      <div class="form-group">
+        <label>Tanggal Selesai</label>
+        <input id="liburEventSelesai" type="date" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Keterangan (opsional)</label>
+        <textarea id="liburEventKeterangan" rows="2" placeholder="Contoh: Dalam rangka peringatan Maulid Nabi"></textarea>
+    </div>
+    <button type="submit" class="btn" id="liburEventSaveBtn">+ Tambah Libur Event</button>
+  </form>
+</div>
     <div class="card" style="margin-top:18px">
       <h3>QRIS Pembayaran</h3>
       <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub.</p>
@@ -3731,7 +3959,127 @@ async function renderSettingsAdmin(){
       }catch(error){ alert(error.message); }
     })();
   });
+  // Simpan libur mingguan
+$("liburMingguanForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("liburMingguanSaveBtn");
+  await withButtonLoading(btn, "Menyimpan...", async () => {
+    try{
+      const checked = [...document.querySelectorAll(".libur-hari-check:checked")].map(x => Number(x.value));
+      await setDoc(doc(db,"settings","app"), {
+        liburMingguan: checked,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+      invalidateCache("settings");
+      logAudit("UPDATE","settings","app",{ liburMingguan: checked });
+      showToast("Libur mingguan disimpan.");
+    }catch(err){ alert(err.message); }
+  });
+});
 
+// Tambah libur event + auto-buat pengumuman
+$("liburEventForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("liburEventSaveBtn");
+  const nama = $("liburEventNama").value.trim();
+  const mulai = $("liburEventMulai").value;
+  const selesai = $("liburEventSelesai").value;
+  const keterangan = $("liburEventKeterangan")?.value.trim() || "";
+
+  if(!nama || !mulai || !selesai){ showToast("Lengkapi semua field.", true); return; }
+  if(selesai < mulai){ showToast("Tanggal selesai tidak boleh sebelum tanggal mulai.", true); return; }
+
+  await withButtonLoading(btn, "Menyimpan...", async () => {
+    try{
+      const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
+      events.push({ nama, mulai, selesai, keterangan });
+      await setDoc(doc(db,"settings","app"), {
+        liburEvents: events,
+        updatedAt: serverTimestamp()
+      }, { merge:true });
+      invalidateCache("settings");
+      logAudit("UPDATE","settings","app",{ tambahLiburEvent: { nama, mulai, selesai } });
+
+      // ===== Buat pengumuman otomatis =====
+      // Kadaluarsa: sehari setelah tanggal selesai, jam 00:00 WIB
+      // Supaya pengumuman masih tampil selama hari terakhir libur,
+      // tapi otomatis hilang begitu hari masuk tiba.
+      const selesaiDate = new Date(selesai + "T23:59:59+07:00");
+      const kadaluarsa = new Date(selesaiDate.getTime() + 1000); // +1 detik = 00:00 hari berikutnya
+
+      const durasi = mulai === selesai
+        ? `${mulai}`
+        : `${mulai} s/d ${selesai}`;
+
+      const isiPengumuman =
+        `Diberitahukan bahwa TPQ akan libur:\n\n` +
+        `📌 Kegiatan: ${nama}\n` +
+        `📅 Tanggal: ${durasi}\n` +
+        (keterangan ? `📝 Keterangan: ${keterangan}\n` : "") +
+        `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya setelah tanggal tersebut.\n` +
+        `Terima kasih atas perhatiannya.`;
+
+      await addCollectionData("pengumuman", {
+        judul: `🏖️ Libur: ${nama}`,
+        isi: isiPengumuman,
+        aktif: true,
+        berlakuSampai: kadaluarsa.toISOString(),
+        sumber: "liburEvent",
+        liburNama: nama,
+        liburMulai: mulai,
+        liburSelesai: selesai
+      });
+
+      logAudit("CREATE","pengumuman","",{ autoLibur: nama, mulai, selesai });
+      showToast(`Libur "${nama}" disimpan & pengumuman otomatis dibuat.`);
+      renderSettingsAdmin();
+    }catch(err){ alert(err.message); }
+  });
+});
+// Hapus libur event
+// Hapus libur event + pengumuman yang terhubung
+$("page").querySelectorAll("[data-edit-libur]").forEach(btn => btn.addEventListener("click", () => {editLiburEvent(Number(btn.dataset.editLibur));}));
+$("page").querySelectorAll("[data-hapus-libur]").forEach(btn => btn.addEventListener("click", async () => {
+  const idx = Number(btn.dataset.hapusLibur);
+  const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
+  const target = events[idx];
+  if(!target) return;
+
+  const jugaHapusPengumuman = confirm(
+    `Hapus libur "${target.nama}" (${target.mulai} s/d ${target.selesai})?\n\n` +
+    `Klik OK untuk menghapus libur + pengumumannya.\n` +
+    `Klik Cancel untuk membatalkan.`
+  );
+  if(!jugaHapusPengumuman) return;
+
+  try{
+    // 1) Hapus dari daftar libur
+    events.splice(idx, 1);
+    await setDoc(doc(db,"settings","app"), {
+      liburEvents: events,
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+    invalidateCache("settings");
+
+    // 2) Cari & hapus pengumuman yang berasal dari libur event ini
+    const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
+    const terkait = pengumumanList.filter(p =>
+      p.sumber === "liburEvent" &&
+      p.liburNama === target.nama &&
+      p.liburMulai === target.mulai &&
+      p.liburSelesai === target.selesai
+    );
+    for(const p of terkait){
+      await deleteCollectionData("pengumuman", p.id);
+      logAudit("DELETE","pengumuman",p.id,{ autoLibur: target.nama });
+    }
+    invalidateCache("pengumuman");
+
+    logAudit("UPDATE","settings","app",{ hapusLiburEvent: target, pengumumanDihapus: terkait.length });
+    showToast(`Libur "${target.nama}" dihapus${terkait.length ? ` + ${terkait.length} pengumuman` : ""}.`);
+    renderSettingsAdmin();
+  }catch(err){ alert(err.message); }
+}));
   $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async () => {
     const qrisUrl = $("qrisUrl").value.trim();
     try{
@@ -3775,7 +4123,7 @@ async function getSantriUstadzah(){
 async function renderDaftarSantriUstadzah(){
   if(!requireRole("ustadzah")) return;
   await ensureSppBulanIniUntukSemuaSantri();
-
+  const appSettings = await getAppSettings();
   const [santri, jilidList, izinList, progressList] = await Promise.all([
     getSantriUstadzah(),
     getCollectionData("jilid", { forceRefresh:true }),
@@ -3811,13 +4159,12 @@ async function renderDaftarSantriUstadzah(){
   const izinUstadzahList = izinList.filter(z => z.jenis === "ustadzah" && z.aktif !== false);
 
   // Bangun status kehadiran per santri hari ini
-  const statusSantri = {};
-  santri.forEach(s => {
-    statusSantri[s.id] = hitungKehadiranSantri({
-      santriId: s.id, tanggal: today, izinList, progressList
-    });
+const statusSantri = {};
+santri.forEach(s => {
+  statusSantri[s.id] = hitungKehadiranSantri({
+    santriId: s.id, tanggal: today, izinList, progressList, appSettings
   });
-
+});
   $("page").innerHTML = `
     <div class="toolbar">
       <div>
@@ -3870,12 +4217,12 @@ async function renderDaftarSantriUstadzah(){
             const st = statusSantri[item.id] || { status: "belum" };
             const isIzin = st.status === "izin";
             const namaStyle = isIzin ? "color:#dc2626;font-weight:800" : "font-weight:800";
-            let statusBadge = `<span class="badge badge-gray">-</span>`;
-            if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
-            else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
-            else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
-            else statusBadge = `<span class="badge badge-gray">Belum</span>`;
-
+let statusBadge = `<span class="badge badge-gray">-</span>`;
+if(st.status === "hadir") statusBadge = `<span class="badge badge-green">Hadir</span>`;
+else if(st.status === "izin") statusBadge = `<span class="badge badge-yellow">Izin ${st.izin ? `(${labelAlasan(st.izin.alasan)})` : ""}</span>`;
+else if(st.status === "alpha") statusBadge = `<span class="badge badge-red">Alpha</span>`;
+else if(st.status === "libur") statusBadge = `<span class="badge badge-blue">Libur</span>`;
+else statusBadge = `<span class="badge badge-gray">Belum</span>`;
             return `<tr data-row>
               <td>${index+1}</td>
               <td><span style="${namaStyle}">${escapeHTML(item.nama || "-")}</span></td>
