@@ -978,24 +978,25 @@ function labelLibur(tanggalStr, appSettings){
   return "Libur";
 }
 async function editLiburEvent(idx){
-  const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
+  const fresh = await getAppSettings();
+  const events = Array.isArray(fresh.liburEvents) ? [...fresh.liburEvents] : [];
   const target = events[idx];
-  if(!target) return;
+  if(!target){ alert("Libur event tidak ditemukan."); return; }
 
   openModal("Edit Libur Event", `
     <form id="editLiburForm">
       <div class="form-group">
         <label>Nama Event</label>
-        <input id="editLiburNama" value="${escapeHTML(target.nama)}" required>
+        <input id="editLiburNama" value="${escapeHTML(target.nama || "")}" required>
       </div>
       <div class="row">
         <div class="form-group">
           <label>Tanggal Mulai</label>
-          <input id="editLiburMulai" type="date" value="${target.mulai}" required>
+          <input id="editLiburMulai" type="date" value="${target.mulai || ""}" required>
         </div>
         <div class="form-group">
           <label>Tanggal Selesai</label>
-          <input id="editLiburSelesai" type="date" value="${target.selesai}" required>
+          <input id="editLiburSelesai" type="date" value="${target.selesai || ""}" required>
         </div>
       </div>
       <div class="form-group">
@@ -1010,20 +1011,25 @@ async function editLiburEvent(idx){
     const btn = $("editLiburSaveBtn");
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        // 1) Update data libur
-        events[idx] = {
+        const baru = {
           nama: $("editLiburNama").value.trim(),
           mulai: $("editLiburMulai").value,
           selesai: $("editLiburSelesai").value,
           keterangan: $("editLiburKeterangan").value.trim()
         };
+        if(baru.selesai < baru.mulai){ alert("Tanggal selesai tidak boleh sebelum tanggal mulai."); return; }
+
+        const fresh2 = await getAppSettings();
+        const events2 = Array.isArray(fresh2.liburEvents) ? [...fresh2.liburEvents] : [];
+        events2[idx] = baru;
+
         await setDoc(doc(db,"settings","app"), {
-          liburEvents: events,
+          liburEvents: events2,
           updatedAt: serverTimestamp()
         }, { merge:true });
         invalidateCache("settings");
 
-        // 2) Update pengumuman terkait
+        // Update pengumuman terkait
         const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
         const terkait = pengumumanList.filter(p =>
           p.sumber === "liburEvent" &&
@@ -1032,7 +1038,6 @@ async function editLiburEvent(idx){
           p.liburSelesai === target.selesai
         );
 
-        const baru = events[idx];
         const selesaiDate = new Date(baru.selesai + "T23:59:59+07:00");
         const kadaluarsa = new Date(selesaiDate.getTime() + 1000);
         const durasi = baru.mulai === baru.selesai ? baru.mulai : `${baru.mulai} s/d ${baru.selesai}`;
@@ -1041,7 +1046,7 @@ async function editLiburEvent(idx){
           `📌 Kegiatan: ${baru.nama}\n` +
           `📅 Tanggal: ${durasi}\n` +
           (baru.keterangan ? `📝 Keterangan: ${baru.keterangan}\n` : "") +
-          `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya setelah tanggal tersebut.\n` +
+          `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya.\n` +
           `Terima kasih atas perhatiannya.`;
 
         for(const p of terkait){
@@ -1054,12 +1059,13 @@ async function editLiburEvent(idx){
             liburSelesai: baru.selesai
           });
         }
+        invalidateCache("pengumuman");
 
         logAudit("UPDATE","settings","app",{ editLiburEvent: baru });
         closeModal();
         showToast("Libur event diperbarui.");
         renderSettingsAdmin();
-      }catch(err){ alert(err.message); }
+      }catch(err){ alert("Gagal menyimpan: " + err.message); }
     })();
   });
 }
@@ -1589,8 +1595,11 @@ async function renderDashboardAdmin(){
 }
 async function renderDashboardUstadzah(){
   await ensureSppBulanIniUntukSemuaSantri();
+
+  const appSettings = await getAppSettings();   // ← PINDAH KE ATAS
   const todayKey = dateKey(nowWIB());
   const todayLibur = isHariLibur(todayKey, appSettings);
+
   const santri = await getSantriUstadzah();
   const jilidNames = await getEffectiveJilidNamesForUstadzah(currentProfile);
   const jilidList = await getCollectionData("jilid");
@@ -1598,23 +1607,21 @@ async function renderDashboardUstadzah(){
 
   const izinList = await getCollectionData("izin", { forceRefresh:true });
   const progressList = await getCollectionData("progress", { forceRefresh:true });
-  const appSettings = await getAppSettings();
 
   const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, appSettings });
   const peringatan = rekap.filter(r => r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari));
-  // === KEHADIRAN USTADZAH SENDIRI ===
+
   const rekapUstadzah = hitungRekapKehadiranUstadzah({
     ustadzahList: [{ id: currentProfile.uid, nama: currentProfile.nama || "Ustadzah" }],
     izinList, progressList, appSettings
   });
   const statUstadzah = rekapUstadzah[0] || { hadir: 0, izin: 0, alpha: 0, total: 0 };
   const peringatanUstadzah = statUstadzah.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari);
-  // Riwayat izin: izin santri kelasnya + izin dirinya + izin ustadzah lain yang kelasnya diklaim
+
   const santriIds = new Set(santri.map(s => s.id));
   const klaimJilidIds = klaimAktif.map(j => j.id);
   const izinUstadzahDariKelasKlaim = izinList.filter(z => {
     if(z.jenis !== "ustadzah" || z.aktif === false) return false;
-    // Cari ustadzah yang mengampu jilid yang sedang saya klaim
     return klaimJilidIds.some(jid => {
       const j = jilidList.find(x => x.id === jid);
       return j && getJilidUstadzahIds(j).includes(z.ustadzahId);
@@ -1831,21 +1838,21 @@ async function renderDashboardUstadzah(){
   pasangFormIzin({ santriList: santri, isUstadzah: true });
 }
 async function renderDashboardWali(){
+  const appSettings = await getAppSettings();
   const todayKey = dateKey(nowWIB());
   const todayLibur = isHariLibur(todayKey, appSettings);
-  const santri = await getSantriWali();  // hanya santri yang terdistribusi ke wali ini
+
+  const santri = await getSantriWali();
   const pengumuman = await getCollectionData("pengumuman");
   const pengumumanAktif = pengumuman.filter(isPengumumanTampil)
     .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
 
   const izinList = await getCollectionData("izin", { forceRefresh:true });
   const progressList = await getCollectionData("progress", { forceRefresh:true });
-  const appSettings = await getAppSettings();
 
-  const st = hitungKehadiranSantri({ santriId: s.id, tanggal: dateKey(nowWIB()), izinList, progressList, appSettings });
+  const rekap = hitungRekapKehadiran({ santriList: santri, izinList, progressList, appSettings });
   const peringatan = rekap.filter(r => r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari));
 
-  // Riwayat izin HANYA untuk santri milik wali ini
   const santriIds = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList
     .filter(z => santriIds.has(z.santriId))
@@ -1870,6 +1877,7 @@ async function renderDashboardWali(){
         <div style="font-weight:800;margin-top:6px">${escapeHTML(pendamping?.nama || "Belum ditentukan")}</div>
       </div>
     </div>
+
     ${todayLibur ? `
       <div class="card" style="margin-top:14px;background:#eff6ff;border-color:#bfdbfe">
         <b style="color:#1e40af">🏖️ Hari Ini Libur</b>
@@ -1877,11 +1885,12 @@ async function renderDashboardWali(){
           ${escapeHTML(labelLibur(todayKey, appSettings))}. Tidak ada perhitungan alpha hari ini.
         </div>
       </div>` : ""}
+
     ${peringatan.length ? `
       <div class="card" style="background:#fef2f2;border-color:#fecaca;margin-top:18px">
         <h3 style="color:#991b1b;margin-top:0">⚠️ Peringatan Kehadiran</h3>
         <p class="muted" style="color:#7f1d1d;margin-bottom:6px">
-          Santri Anda tidak masuk <b>${Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)} hari atau lebih</b> dalam periode pembelajaran:
+          Santri Anda tidak masuk <b>${Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)} hari atau lebih</b>:
         </p>
         <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">
           ${peringatan.map(r => `<li><b>${escapeHTML(r.santri.nama)}</b> — ${r.alpha} hari alpha</li>`).join("")}
@@ -1892,27 +1901,26 @@ async function renderDashboardWali(){
       <div class="card" style="margin-top:18px">
         <h3>Ananda</h3>
         <div class="grid" style="margin-top:12px">
-${santri.map(s=>{
-  const st = hitungKehadiranSantri({ santriId: s.id, tanggal: dateKey(nowWIB()), izinList, progressList });
-  const isIzin = st.status === "izin";
-  const isLibur = st.status === "libur";
-  const namaStyle = isIzin ? "color:#dc2626;font-weight:800;margin:0" : "margin:0";
-    let badge = "";
-    if(isIzin)        badge = `<span class="badge badge-yellow" style="margin-top:6px;display:inline-block">Izin (${labelAlasan(st.izin.alasan)})</span>`;
-    else if(isLibur)  badge = `<span class="badge badge-blue" style="margin-top:6px;display:inline-block">Libur</span>`;
-    else if(st.status === "hadir") badge = `<span class="badge badge-green" style="margin-top:6px;display:inline-block">Hadir</span>`;
-    else if(st.status === "alpha") badge = `<span class="badge badge-red" style="margin-top:6px;display:inline-block">Alpha</span>`;
-  return `<div class="card" style="background:#f8fafc">
-    <h3 style="${namaStyle}">${escapeHTML(s.nama || "-")}</h3>
-    <p class="muted" style="margin:4px 0 0 0">${escapeHTML(s.jilidNama || "-")}</p>
-    ${badge}
-    <button class="btn btn-sm" style="margin-top:10px" data-santri-id="${s.id}" data-action="lihat-santri">Lihat Pembelajaran &amp; Keuangan</button>
-  </div>`;
-}).join("")}
+          ${santri.map(s=>{
+            const st = hitungKehadiranSantri({ santriId: s.id, tanggal: todayKey, izinList, progressList, appSettings });
+            const isIzin = st.status === "izin";
+            const isLibur = st.status === "libur";
+            const namaStyle = isIzin ? "color:#dc2626;font-weight:800;margin:0" : "margin:0";
+            let badge = "";
+            if(isIzin)        badge = `<span class="badge badge-yellow" style="margin-top:6px;display:inline-block">Izin (${labelAlasan(st.izin.alasan)})</span>`;
+            else if(isLibur)  badge = `<span class="badge badge-blue" style="margin-top:6px;display:inline-block">Libur</span>`;
+            else if(st.status === "hadir") badge = `<span class="badge badge-green" style="margin-top:6px;display:inline-block">Hadir</span>`;
+            else if(st.status === "alpha") badge = `<span class="badge badge-red" style="margin-top:6px;display:inline-block">Alpha</span>`;
+            return `<div class="card" style="background:#f8fafc">
+              <h3 style="${namaStyle}">${escapeHTML(s.nama || "-")}</h3>
+              <p class="muted" style="margin:4px 0 0 0">${escapeHTML(s.jilidNama || "-")}</p>
+              ${badge}
+              <button class="btn btn-sm" style="margin-top:10px" data-santri-id="${s.id}" data-action="lihat-santri">Lihat Pembelajaran &amp; Keuangan</button>
+            </div>`;
+          }).join("")}
         </div>
-      </div>` : `<div class="card" style="margin-top:18px"><div class="empty">Belum ada data santri yang terhubung dengan akun wali Anda. Hubungi admin.</div></div>`}
+      </div>` : `<div class="card" style="margin-top:18px"><div class="empty">Belum ada data santri yang terhubung dengan akun wali Anda.</div></div>`}
 
-    <!-- ============ FORM IZIN ============ -->
     <div class="card" style="margin-top:18px">
       <h3>📝 Ajukan Izin Tidak Masuk</h3>
       ${lewatBatas ? `
@@ -1934,17 +1942,15 @@ ${santri.map(s=>{
               </select>
             </div>` : `
             <input type="hidden" id="izinSantri" value="${santri[0].id}" data-nama="${escapeAttr(santri[0].nama)}" data-jilid="${escapeAttr(santri[0].jilidId||"")}">
-            <div class="notice">
-              Mengajukan izin atas nama: <b>${escapeHTML(santri[0].nama)}</b>
-            </div>`}
+            <div class="notice">Mengajukan izin atas nama: <b>${escapeHTML(santri[0].nama)}</b></div>`}
           <div class="row">
             <div class="form-group">
               <label>Tanggal Mulai</label>
-              <input id="izinMulai" type="date" value="${dateKey(nowWIB())}" required>
+              <input id="izinMulai" type="date" value="${todayKey}" required>
             </div>
             <div class="form-group">
               <label>Tanggal Selesai</label>
-              <input id="izinSelesai" type="date" value="${dateKey(nowWIB())}" required>
+              <input id="izinSelesai" type="date" value="${todayKey}" required>
             </div>
           </div>
           <div class="form-group">
@@ -1968,7 +1974,6 @@ ${santri.map(s=>{
         </form>` : `<p class="muted">Belum ada santri terhubung. Hubungi admin.</p>`}
     </div>
 
-    <!-- ============ RIWAYAT IZIN ============ -->
     <div class="card" style="margin-top:18px">
       <h3>📋 Riwayat Izin</h3>
       <div class="table-container" style="margin-top:12px">
@@ -1989,18 +1994,15 @@ ${santri.map(s=>{
       </div>
     </div>
 
-    <!-- ============ REKAP KEHADIRAN ============ -->
     <div class="card" style="margin-top:18px">
       <h3>📊 Rekap Kehadiran</h3>
       <p class="muted" style="font-size:13px">
         ${appSettings.mulaiPembelajaran ? `Sejak ${appSettings.mulaiPembelajaran}` : "Seluruh periode"}
-        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir · diurutkan dari kehadiran tertinggi
+        · ${Number(appSettings.jumlahHariRekap || APP_CONFIG.jumlahHariRekap)} hari terakhir
       </p>
       <div class="table-container" style="margin-top:12px">
         <table>
-          <thead>
-            <tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Total</th></tr>
-          </thead>
+          <thead><tr><th>Peringkat</th><th>Santri</th><th>Hadir</th><th>Izin</th><th>Alpha</th><th>Libur</th><th>Total</th></tr></thead>
           <tbody>
             ${rekap.length ? rekap.map((r,index)=>`
               <tr>
@@ -2011,14 +2013,14 @@ ${santri.map(s=>{
                 <td>${r.alpha >= Number(appSettings.batasAlphaHari || APP_CONFIG.batasAlphaHari)
                       ? `<span class="badge badge-red">${r.alpha}</span>`
                       : `<span class="badge badge-gray">${r.alpha}</span>`}</td>
+                <td><span class="badge badge-blue">${r.libur || 0}</span></td>
                 <td>${r.total}</td>
-              </tr>`).join("") : `<tr><td colspan="6" class="empty">Belum ada data.</td></tr>`}
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada data.</td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ============ PENGUMUMAN ============ -->
     <div class="card" style="margin-top:18px">
       <h3>📢 Pengumuman Terbaru</h3>
       <div style="display:grid;gap:12px;margin-top:12px">
@@ -3806,7 +3808,7 @@ function openCatatTabunganModal(santriList, onSaved){
 ============================================================ */
 async function renderSettingsAdmin(){
   if(!requireRole("admin")) return;
-  const settings = await getCollectionData("settings");
+  const settings = await getCollectionData("settings", { forceRefresh:true });
   const appSettings = settings.find(x=>x.id==="app") || {};
 
   $("page").innerHTML = `
@@ -3823,110 +3825,101 @@ async function renderSettingsAdmin(){
         <button class="btn" type="submit" id="settingsSaveBtn">Simpan Pengaturan</button>
       </form>
     </div>
-<div class="card" style="margin-top:18px">
-  <h3>📝 Konfigurasi Izin & Kehadiran</h3>
-  <form id="izinConfigForm" style="margin-top:12px">
-    <div class="form-group">
-      <label>Tanggal Mulai Pembelajaran</label>
-      <input id="cfgMulaiPembelajaran" type="date" value="${escapeAttr(appSettings.mulaiPembelajaran || '')}" required>
-      <div class="muted" style="font-size:12px;margin-top:4px">
-        Titik awal perhitungan rekap & peringatan. Hari sebelum tanggal ini tidak dihitung dalam rekap.
-      </div>
-    </div>
-    <div class="row">
-      <div class="form-group">
-        <label>Batas Jam Input Izin (WIB)</label>
-        <input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? APP_CONFIG.batasIzinJam)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, izin untuk hari ini ditolak.</div>
-      </div>
-      <div class="form-group">
-        <label>Batas Jam Status Alpha (WIB)</label>
-        <input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? APP_CONFIG.batasAlphaJam)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Setelah jam ini, siswa tanpa izin & tanpa progress = Alpha.</div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="form-group">
-        <label>Batas Hari Alpha untuk Peringatan</label>
-        <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? APP_CONFIG.batasAlphaHari)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Peringatan muncul jika alpha ≥ N hari dalam periode rekap.</div>
-      </div>
-      <div class="form-group">
-        <label>Jumlah Hari Rekap</label>
-        <input id="cfgJumlahHariRekap" type="number" min="1" max="30" value="${Number(appSettings.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap)}" required>
-        <div class="muted" style="font-size:12px;margin-top:4px">Default 7 hari terakhir.</div>
-      </div>
-    </div>
-    <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
-  </form>
-</div>
-<div class="card" style="margin-top:18px">
-  <h3>🏖️ Pengaturan Hari Libur</h3>
-  <p class="muted" style="font-size:13px">
-    Hari libur tidak dihitung sebagai alpha untuk santri maupun ustadzah.
-  </p>
 
-  <form id="liburMingguanForm" style="margin-top:12px">
-    <div class="form-group">
-      <label>Libur Mingguan (berulang tiap pekan)</label>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px">
-        ${NAMA_HARI.map((nama, idx) => `
-          <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;cursor:pointer">
-            <input type="checkbox" class="libur-hari-check" value="${idx}"
-              ${(Array.isArray(appSettings.liburMingguan) && appSettings.liburMingguan.includes(idx)) ? "checked" : ""}
-              style="width:auto;margin:0">
-            ${nama}
-          </label>`).join("")}
-      </div>
+    <div class="card" style="margin-top:18px">
+      <h3>📝 Konfigurasi Izin & Kehadiran</h3>
+      <form id="izinConfigForm" style="margin-top:12px">
+        <div class="form-group">
+          <label>Tanggal Mulai Pembelajaran</label>
+          <input id="cfgMulaiPembelajaran" type="date" value="${escapeAttr(appSettings.mulaiPembelajaran || '')}" required>
+          <div class="muted" style="font-size:12px;margin-top:4px">Titik awal perhitungan rekap & peringatan.</div>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label>Batas Jam Input Izin (WIB)</label>
+            <input id="cfgBatasIzin" type="number" min="0" max="23" value="${Number(appSettings.batasIzinJam ?? APP_CONFIG.batasIzinJam)}" required>
+          </div>
+          <div class="form-group">
+            <label>Batas Jam Status Alpha (WIB)</label>
+            <input id="cfgBatasAlpha" type="number" min="0" max="23" value="${Number(appSettings.batasAlphaJam ?? APP_CONFIG.batasAlphaJam)}" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label>Batas Hari Alpha untuk Peringatan</label>
+            <input id="cfgBatasAlphaHari" type="number" min="1" max="7" value="${Number(appSettings.batasAlphaHari ?? APP_CONFIG.batasAlphaHari)}" required>
+          </div>
+          <div class="form-group">
+            <label>Jumlah Hari Rekap</label>
+            <input id="cfgJumlahHariRekap" type="number" min="1" max="30" value="${Number(appSettings.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap)}" required>
+          </div>
+        </div>
+        <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan Konfigurasi</button>
+      </form>
     </div>
-    <button type="submit" class="btn" id="liburMingguanSaveBtn">💾 Simpan Libur Mingguan</button>
-  </form>
 
-  <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+    <div class="card" style="margin-top:18px">
+      <h3>🏖️ Pengaturan Hari Libur</h3>
+      <p class="muted" style="font-size:13px">Hari libur tidak dihitung sebagai alpha untuk santri maupun ustadzah.</p>
 
-  <h4 style="margin:0 0 8px 0">Libur Event (rentang tanggal)</h4>
-  <div id="liburEventList" style="margin-bottom:12px">
-    ${(Array.isArray(appSettings.liburEvents) && appSettings.liburEvents.length)
-      ? appSettings.liburEvents.map((e, i) => `
-          <div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div>
-              <b>${escapeHTML(e.nama || "Libur")}</b>
-              <div class="muted" style="font-size:12px">${e.mulai} s/d ${e.selesai}</div>
-            </div>
-            <button type="button" class="btn btn-sm btn-info" data-edit-libur="${i}">Edit</button>
-            <button type="button" class="btn btn-sm btn-danger" data-hapus-libur="${i}">Hapus</button>
-          </div>`).join("")
-      : `<div class="muted" style="font-size:12px">Belum ada libur event.</div>`}
-  </div>
+      <form id="liburMingguanForm" style="margin-top:12px">
+        <div class="form-group">
+          <label>Libur Mingguan (berulang tiap pekan)</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border:1px solid var(--border);border-radius:10px;padding:10px">
+            ${NAMA_HARI.map((nama, idx) => `
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;cursor:pointer">
+                <input type="checkbox" class="libur-hari-check" value="${idx}"
+                  ${(Array.isArray(appSettings.liburMingguan) && appSettings.liburMingguan.includes(idx)) ? "checked" : ""}
+                  style="width:auto;margin:0">
+                ${nama}
+              </label>`).join("")}
+          </div>
+        </div>
+        <button type="submit" class="btn" id="liburMingguanSaveBtn">💾 Simpan Libur Mingguan</button>
+      </form>
 
-  <form id="liburEventForm">
-    <div class="row">
-      <div class="form-group">
-        <label>Nama Event</label>
-        <input id="liburEventNama" placeholder="Contoh: Libur Maulid Nabi" required>
+      <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+
+      <h4 style="margin:0 0 8px 0">Libur Event (rentang tanggal)</h4>
+      <div id="liburEventList" style="margin-bottom:12px">
+        ${(Array.isArray(appSettings.liburEvents) && appSettings.liburEvents.length)
+          ? appSettings.liburEvents.map((e, i) => `
+              <div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <div>
+                  <b>${escapeHTML(e.nama || "Libur")}</b>
+                  <div class="muted" style="font-size:12px">${e.mulai} s/d ${e.selesai}</div>
+                </div>
+                <div class="actions">
+                  <button type="button" class="btn btn-sm btn-info" data-edit-libur="${i}">Edit</button>
+                  <button type="button" class="btn btn-sm btn-danger" data-hapus-libur="${i}">Hapus</button>
+                </div>
+              </div>`).join("")
+          : `<div class="muted" style="font-size:12px">Belum ada libur event.</div>`}
       </div>
-      <div class="form-group">
-        <label>&nbsp;</label>
-        <div class="muted" style="font-size:12px;padding:10px 0">Rentang tanggal di bawah bersifat inklusif.</div>
-      </div>
+
+      <form id="liburEventForm">
+        <div class="form-group">
+          <label>Nama Event</label>
+          <input id="liburEventNama" placeholder="Contoh: Libur Maulid Nabi" required>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label>Tanggal Mulai</label>
+            <input id="liburEventMulai" type="date" required>
+          </div>
+          <div class="form-group">
+            <label>Tanggal Selesai</label>
+            <input id="liburEventSelesai" type="date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Keterangan (opsional)</label>
+          <textarea id="liburEventKeterangan" rows="2" placeholder="Contoh: Dalam rangka peringatan Maulid Nabi"></textarea>
+        </div>
+        <button type="submit" class="btn" id="liburEventSaveBtn">+ Tambah Libur Event</button>
+      </form>
     </div>
-    <div class="row">
-      <div class="form-group">
-        <label>Tanggal Mulai</label>
-        <input id="liburEventMulai" type="date" required>
-      </div>
-      <div class="form-group">
-        <label>Tanggal Selesai</label>
-        <input id="liburEventSelesai" type="date" required>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Keterangan (opsional)</label>
-        <textarea id="liburEventKeterangan" rows="2" placeholder="Contoh: Dalam rangka peringatan Maulid Nabi"></textarea>
-    </div>
-    <button type="submit" class="btn" id="liburEventSaveBtn">+ Tambah Libur Event</button>
-  </form>
-</div>
+
     <div class="card" style="margin-top:18px">
       <h3>QRIS Pembayaran</h3>
       <p class="muted">Gunakan file QRIS yang disimpan di repository GitHub.</p>
@@ -3936,9 +3929,9 @@ async function renderSettingsAdmin(){
         <input id="qrisUrl" type="url" value="${escapeHTML(assetUrl(appSettings.qrisUrl))}" placeholder="./assets/qris/qris.png">
       </div>
       <button class="btn" id="saveQris" style="margin-top:4px">Simpan URL QRIS</button>
-      <div class="notice" style="margin-top:12px">Simpan gambar QRIS di <b>assets/qris</b> pada repository GitHub, lalu masukkan path seperti <b>./assets/qris/qris.png</b>.</div>
     </div>`;
 
+  // ====== SIMPAN PENGATURAN UMUM ======
   $("settingsForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("settingsSaveBtn");
@@ -3951,165 +3944,162 @@ async function renderSettingsAdmin(){
     };
     await withButtonLoading(btn, "Menyimpan...", async () => {
       try{
-        await setDoc(doc(db,"settings","app"),
-          { ...payload, updatedAt: serverTimestamp() }, { merge:true });
+        await setDoc(doc(db,"settings","app"), { ...payload, updatedAt: serverTimestamp() }, { merge:true });
         invalidateCache("settings");
         logAudit("UPDATE","settings","app");
         showToast("Pengaturan berhasil disimpan.");
       }catch(error){ alert(error.message); }
     })();
   });
-  // Simpan libur mingguan
-$("liburMingguanForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const btn = $("liburMingguanSaveBtn");
-  await withButtonLoading(btn, "Menyimpan...", async () => {
-    try{
-      const checked = [...document.querySelectorAll(".libur-hari-check:checked")].map(x => Number(x.value));
-      await setDoc(doc(db,"settings","app"), {
-        liburMingguan: checked,
-        updatedAt: serverTimestamp()
-      }, { merge:true });
-      invalidateCache("settings");
-      logAudit("UPDATE","settings","app",{ liburMingguan: checked });
-      showToast("Libur mingguan disimpan.");
-    }catch(err){ alert(err.message); }
+
+  // ====== SIMPAN KONFIG IZIN & KEHADIRAN ======
+  $("izinConfigForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("izinConfigSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await setDoc(doc(db,"settings","app"), {
+          mulaiPembelajaran: $("cfgMulaiPembelajaran").value || null,
+          batasIzinJam: Number($("cfgBatasIzin").value || 15),
+          batasAlphaJam: Number($("cfgBatasAlpha").value || 18),
+          batasAlphaHari: Number($("cfgBatasAlphaHari").value || 2),
+          jumlahHariRekap: Number($("cfgJumlahHariRekap").value || 7),
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+        invalidateCache("settings");
+        logAudit("UPDATE","settings","app",{ izinConfig:true });
+        showToast("Konfigurasi izin & kehadiran disimpan.");
+      }catch(error){ alert(error.message); }
+    })();
   });
-});
 
-// Tambah libur event + auto-buat pengumuman
-$("liburEventForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const btn = $("liburEventSaveBtn");
-  const nama = $("liburEventNama").value.trim();
-  const mulai = $("liburEventMulai").value;
-  const selesai = $("liburEventSelesai").value;
-  const keterangan = $("liburEventKeterangan")?.value.trim() || "";
+  // ====== SIMPAN LIBUR MINGGUAN ======
+  $("liburMingguanForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("liburMingguanSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        const checked = [...document.querySelectorAll(".libur-hari-check:checked")].map(x => Number(x.value));
+        await setDoc(doc(db,"settings","app"), {
+          liburMingguan: checked,
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+        invalidateCache("settings");
+        logAudit("UPDATE","settings","app",{ liburMingguan: checked });
+        showToast("Libur mingguan disimpan.");
+      }catch(err){ alert("Gagal menyimpan libur mingguan: " + err.message); }
+    })();
+  });
 
-  if(!nama || !mulai || !selesai){ showToast("Lengkapi semua field.", true); return; }
-  if(selesai < mulai){ showToast("Tanggal selesai tidak boleh sebelum tanggal mulai.", true); return; }
+  // ====== TAMBAH LIBUR EVENT ======
+  $("liburEventForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("liburEventSaveBtn");
+    const nama = $("liburEventNama").value.trim();
+    const mulai = $("liburEventMulai").value;
+    const selesai = $("liburEventSelesai").value;
+    const keterangan = $("liburEventKeterangan").value.trim();
 
-  await withButtonLoading(btn, "Menyimpan...", async () => {
+    if(!nama || !mulai || !selesai){ showToast("Lengkapi semua field.", true); return; }
+    if(selesai < mulai){ showToast("Tanggal selesai tidak boleh sebelum tanggal mulai.", true); return; }
+
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        const fresh = await getAppSettings();
+        const events = Array.isArray(fresh.liburEvents) ? [...fresh.liburEvents] : [];
+        events.push({ nama, mulai, selesai, keterangan });
+
+        await setDoc(doc(db,"settings","app"), {
+          liburEvents: events,
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+
+        invalidateCache("settings");
+        logAudit("UPDATE","settings","app",{ tambahLiburEvent: { nama, mulai, selesai } });
+
+        const selesaiDate = new Date(selesai + "T23:59:59+07:00");
+        const kadaluarsa = new Date(selesaiDate.getTime() + 1000);
+        const durasi = mulai === selesai ? mulai : `${mulai} s/d ${selesai}`;
+        const isiPengumuman =
+          `Diberitahukan bahwa TPQ akan libur:\n\n` +
+          `📌 Kegiatan: ${nama}\n` +
+          `📅 Tanggal: ${durasi}\n` +
+          (keterangan ? `📝 Keterangan: ${keterangan}\n` : "") +
+          `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya.\n` +
+          `Terima kasih atas perhatiannya.`;
+
+        await addCollectionData("pengumuman", {
+          judul: `🏖️ Libur: ${nama}`,
+          isi: isiPengumuman,
+          aktif: true,
+          berlakuSampai: kadaluarsa.toISOString(),
+          sumber: "liburEvent",
+          liburNama: nama,
+          liburMulai: mulai,
+          liburSelesai: selesai
+        });
+
+        logAudit("CREATE","pengumuman","",{ autoLibur: nama, mulai, selesai });
+        showToast(`Libur "${nama}" disimpan & pengumuman otomatis dibuat.`);
+        renderSettingsAdmin();
+      }catch(err){ alert("Gagal menyimpan libur event: " + err.message); }
+    })();
+  });
+
+  // ====== EDIT LIBUR EVENT ======
+  $("page").querySelectorAll("[data-edit-libur]").forEach(btn => btn.addEventListener("click", () => {
+    editLiburEvent(Number(btn.dataset.editLibur));
+  }));
+
+  // ====== HAPUS LIBUR EVENT + PENGUMUMAN ======
+  $("page").querySelectorAll("[data-hapus-libur]").forEach(btn => btn.addEventListener("click", async () => {
+    const idx = Number(btn.dataset.hapusLibur);
+    const fresh = await getAppSettings();
+    const events = Array.isArray(fresh.liburEvents) ? [...fresh.liburEvents] : [];
+    const target = events[idx];
+    if(!target) return;
+
+    if(!confirm(`Hapus libur "${target.nama}" (${target.mulai} s/d ${target.selesai})?\n\nPengumuman terkait juga akan dihapus.`)) return;
+
     try{
-      const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
-      events.push({ nama, mulai, selesai, keterangan });
+      events.splice(idx, 1);
       await setDoc(doc(db,"settings","app"), {
         liburEvents: events,
         updatedAt: serverTimestamp()
       }, { merge:true });
       invalidateCache("settings");
-      logAudit("UPDATE","settings","app",{ tambahLiburEvent: { nama, mulai, selesai } });
 
-      // ===== Buat pengumuman otomatis =====
-      // Kadaluarsa: sehari setelah tanggal selesai, jam 00:00 WIB
-      // Supaya pengumuman masih tampil selama hari terakhir libur,
-      // tapi otomatis hilang begitu hari masuk tiba.
-      const selesaiDate = new Date(selesai + "T23:59:59+07:00");
-      const kadaluarsa = new Date(selesaiDate.getTime() + 1000); // +1 detik = 00:00 hari berikutnya
+      const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
+      const terkait = pengumumanList.filter(p =>
+        p.sumber === "liburEvent" &&
+        p.liburNama === target.nama &&
+        p.liburMulai === target.mulai &&
+        p.liburSelesai === target.selesai
+      );
+      for(const p of terkait){
+        await deleteCollectionData("pengumuman", p.id);
+        logAudit("DELETE","pengumuman",p.id,{ autoLibur: target.nama });
+      }
+      invalidateCache("pengumuman");
 
-      const durasi = mulai === selesai
-        ? `${mulai}`
-        : `${mulai} s/d ${selesai}`;
-
-      const isiPengumuman =
-        `Diberitahukan bahwa TPQ akan libur:\n\n` +
-        `📌 Kegiatan: ${nama}\n` +
-        `📅 Tanggal: ${durasi}\n` +
-        (keterangan ? `📝 Keterangan: ${keterangan}\n` : "") +
-        `\nKegiatan belajar mengajar akan kembali normal pada hari berikutnya setelah tanggal tersebut.\n` +
-        `Terima kasih atas perhatiannya.`;
-
-      await addCollectionData("pengumuman", {
-        judul: `🏖️ Libur: ${nama}`,
-        isi: isiPengumuman,
-        aktif: true,
-        berlakuSampai: kadaluarsa.toISOString(),
-        sumber: "liburEvent",
-        liburNama: nama,
-        liburMulai: mulai,
-        liburSelesai: selesai
-      });
-
-      logAudit("CREATE","pengumuman","",{ autoLibur: nama, mulai, selesai });
-      showToast(`Libur "${nama}" disimpan & pengumuman otomatis dibuat.`);
+      logAudit("UPDATE","settings","app",{ hapusLiburEvent: target, pengumumanDihapus: terkait.length });
+      showToast(`Libur "${target.nama}" dihapus${terkait.length ? ` + ${terkait.length} pengumuman` : ""}.`);
       renderSettingsAdmin();
-    }catch(err){ alert(err.message); }
-  });
-});
-// Hapus libur event
-// Hapus libur event + pengumuman yang terhubung
-$("page").querySelectorAll("[data-edit-libur]").forEach(btn => btn.addEventListener("click", () => {editLiburEvent(Number(btn.dataset.editLibur));}));
-$("page").querySelectorAll("[data-hapus-libur]").forEach(btn => btn.addEventListener("click", async () => {
-  const idx = Number(btn.dataset.hapusLibur);
-  const events = Array.isArray(appSettings.liburEvents) ? [...appSettings.liburEvents] : [];
-  const target = events[idx];
-  if(!target) return;
+    }catch(err){ alert("Gagal menghapus libur: " + err.message); }
+  }));
 
-  const jugaHapusPengumuman = confirm(
-    `Hapus libur "${target.nama}" (${target.mulai} s/d ${target.selesai})?\n\n` +
-    `Klik OK untuk menghapus libur + pengumumannya.\n` +
-    `Klik Cancel untuk membatalkan.`
-  );
-  if(!jugaHapusPengumuman) return;
-
-  try{
-    // 1) Hapus dari daftar libur
-    events.splice(idx, 1);
-    await setDoc(doc(db,"settings","app"), {
-      liburEvents: events,
-      updatedAt: serverTimestamp()
-    }, { merge:true });
-    invalidateCache("settings");
-
-    // 2) Cari & hapus pengumuman yang berasal dari libur event ini
-    const pengumumanList = await getCollectionData("pengumuman", { forceRefresh:true });
-    const terkait = pengumumanList.filter(p =>
-      p.sumber === "liburEvent" &&
-      p.liburNama === target.nama &&
-      p.liburMulai === target.mulai &&
-      p.liburSelesai === target.selesai
-    );
-    for(const p of terkait){
-      await deleteCollectionData("pengumuman", p.id);
-      logAudit("DELETE","pengumuman",p.id,{ autoLibur: target.nama });
-    }
-    invalidateCache("pengumuman");
-
-    logAudit("UPDATE","settings","app",{ hapusLiburEvent: target, pengumumanDihapus: terkait.length });
-    showToast(`Libur "${target.nama}" dihapus${terkait.length ? ` + ${terkait.length} pengumuman` : ""}.`);
-    renderSettingsAdmin();
-  }catch(err){ alert(err.message); }
-}));
+  // ====== SIMPAN QRIS ======
   $("saveQris").addEventListener("click", withButtonLoading($("saveQris"), "Menyimpan...", async () => {
     const qrisUrl = $("qrisUrl").value.trim();
     try{
-      await setDoc(doc(db,"settings","app"),
-        { qrisUrl: qrisUrl || null, updatedAt: serverTimestamp() }, { merge:true });
+      await setDoc(doc(db,"settings","app"), { qrisUrl: qrisUrl || null, updatedAt: serverTimestamp() }, { merge:true });
       invalidateCache("settings");
       logAudit("UPDATE","settings","app",{ qris: true });
       showToast("URL QRIS berhasil disimpan.");
       renderSettingsAdmin();
     }catch(error){ alert("Gagal menyimpan URL QRIS: " + error.message); }
   }));
-  $("izinConfigForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const btn = $("izinConfigSaveBtn");
-  await withButtonLoading(btn, "Menyimpan...", async () => {
-    try{
-      await setDoc(doc(db,"settings","app"), {
-        batasIzinJam: Number($("cfgBatasIzin").value || 15),
-        batasAlphaJam: Number($("cfgBatasAlpha").value || 18),
-        batasAlphaHari: Number($("cfgBatasAlphaHari").value || 2),
-        updatedAt: serverTimestamp()
-      }, { merge:true });
-      invalidateCache("settings");
-      logAudit("UPDATE","settings","app",{ izinConfig:true });
-      showToast("Konfigurasi izin & kehadiran disimpan.");
-    }catch(error){ alert(error.message); }
-  })();
-});
 }
-
 /* ============================================================
    24. USTADZAH: DAFTAR SANTRI KELAS
 ============================================================ */
