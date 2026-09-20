@@ -4812,24 +4812,6 @@ async function renderSettingsAdmin(){
 /* ============================================================
    23B. ADMIN: PENGATURAN GABUNGAN
 ============================================================ */
-
-async function renderPengaturanAdmin(){
-  if(!requireRole("admin")) return;
-
-  $("page").innerHTML = `
-    <div class="page-head">
-      <div>
-        <h2>⚙️ Pengaturan</h2>
-        <p>Konfigurasi TPQ, tagihan, dan akun.</p>
-      </div>
-    </div>
-    <div class="tabs" id="tabPengaturan">
-      <button data-tab="umum" class="active">🏠 Umum</button>
-      <button data-tab="tagihan">🧾 Tagihan</button>
-      <button data-tab="akun">👤 Akun</button>
-    </div>
-    <div id="pengaturanContent"></div>`;
-
   function switchTab(tab){
     $("tabPengaturan").querySelectorAll("button").forEach(b => {
       b.classList.toggle("active", b.dataset.tab === tab);
