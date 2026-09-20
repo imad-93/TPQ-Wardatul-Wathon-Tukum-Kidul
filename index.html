@@ -1070,6 +1070,141 @@ async function editLiburEvent(idx){
   });
 }
 /* ============================================================
+   6G. HELPER INFAQ, DONATUR, PENGELUARAN
+============================================================ */
+
+// Kategori pengeluaran standar TPQ
+const KATEGORI_PENGELUARAN = [
+  "Honor Ustadzah",
+  "ATK & Cetak",
+  "Konsumsi Kegiatan",
+  "Sewa & Listrik",
+  "Perawatan Gedung",
+  "Bantuan Sosial",
+  "Lainnya"
+];
+
+function labelKategoriPengeluaran(kat){
+  return kat || "Lainnya";
+}
+
+// Badge kategori
+function badgeKategoriPengeluaran(kat){
+  const warna = {
+    "Honor Ustadzah": "badge-blue",
+    "ATK & Cetak": "badge-green",
+    "Konsumsi Kegiatan": "badge-yellow",
+    "Sewa & Listrik": "badge-gray",
+    "Perawatan Gedung": "badge-gray",
+    "Bantuan Sosial": "badge-red",
+    "Lainnya": "badge-gray"
+  }[kat] || "badge-gray";
+  return `<span class="badge ${warna}">${escapeHTML(kat || "-")}</span>`;
+}
+
+// Hitung total saldo kas TPQ dari semua sumber
+function hitungSaldoKas({ sppBills, iuranBills, infaqList, tabunganList, pengeluaranList }){
+  const sppTerbayar = (sppBills || []).reduce((s, x) => s + Number(x.terbayar || 0), 0);
+  const iuranTerbayar = (iuranBills || []).reduce((s, x) => s + Number(x.terbayar || 0), 0);
+  const infaqMasuk = (infaqList || []).reduce((s, x) => s + Number(x.jumlah || 0), 0);
+  const tabunganSetor = (tabunganList || []).filter(t => t.jenis === "setor").reduce((s,t) => s + Number(t.jumlah || 0), 0);
+  const tabunganTarik = (tabunganList || []).filter(t => t.jenis === "tarik").reduce((s,t) => s + Number(t.jumlah || 0), 0);
+  const pengeluaran = (pengeluaranList || []).reduce((s,t) => s + Number(t.jumlah || 0), 0);
+
+  const pemasukan = sppTerbayar + iuranTerbayar + infaqMasuk;
+  const kasKeluar = pengeluaran + tabunganTarik;
+
+  return {
+    sppTerbayar, iuranTerbayar, infaqMasuk,
+    tabunganSetor, tabunganTarik, pengeluaran,
+    pemasukan, kasKeluar,
+    saldoKas: pemasukan - kasKeluar,
+    // Saldo tabungan santri (kewajiban TPQ)
+    saldoTabunganSantri: tabunganSetor - tabunganTarik
+  };
+}
+/* ============================================================
+   6H. CRUD INFAQ
+============================================================ */
+async function catatInfaq({ donaturId, donaturNama, jenisDonatur, jumlah, metode, keterangan, tanggal }){
+  const payload = {
+    donaturId: donaturId || null,
+    donaturNama: donaturNama || "Hamba Allah",
+    jenisDonatur: jenisDonatur || "umum",
+    jumlah: Number(jumlah || 0),
+    metode: metode || "Tunai",
+    keterangan: keterangan || "",
+    tanggal: tanggal || new Date().toISOString(),
+    dicatatOleh: currentProfile?.uid || "",
+    dicatatOlehNama: currentProfile?.nama || ""
+  };
+  const ref = await addCollectionData("infaq", payload);
+  logAudit("CREATE", "infaq", ref.id, { jumlah: payload.jumlah, donaturNama: payload.donaturNama });
+  return ref;
+}
+async function hapusInfaq(id){
+  const item = await getDocument("infaq", id);
+  if(!item) throw new Error("Data infaq tidak ditemukan.");
+  await deleteCollectionData("infaq", id);
+  logAudit("DELETE", "infaq", id, { jumlah: item.jumlah, donaturNama: item.donaturNama });
+}
+
+/* ============================================================
+   6I. CRUD DONATUR
+============================================================ */
+async function simpanDonatur(data, id = null){
+  const payload = {
+    nama: data.nama || "",
+    telepon: data.telepon || "",
+    alamat: data.alamat || "",
+    jenis: data.jenis || "umum",     // wali / donatur / umum
+    catatan: data.catatan || "",
+    aktif: data.aktif !== false
+  };
+  if(id){
+    await updateCollectionData("donatur", id, payload);
+    logAudit("UPDATE", "donatur", id, { nama: payload.nama });
+    return id;
+  } else {
+    const ref = await addCollectionData("donatur", payload);
+    logAudit("CREATE", "donatur", ref.id, { nama: payload.nama });
+    return ref.id;
+  }
+}
+async function hapusDonatur(id){
+  const item = await getDocument("donatur", id);
+  if(!item) throw new Error("Donatur tidak ditemukan.");
+  await deleteCollectionData("donatur", id);
+  logAudit("DELETE", "donatur", id, { nama: item.nama });
+}
+
+/* ============================================================
+   6J. CRUD PENGELUARAN
+============================================================ */
+async function catatPengeluaran({ judul, kategori, jumlah, metode, penerima, keterangan, tanggal }){
+  const payload = {
+    judul: judul || "",
+    kategori: kategori || "Lainnya",
+    jumlah: Number(jumlah || 0),
+    metode: metode || "Tunai",
+    penerima: penerima || "",
+    keterangan: keterangan || "",
+    tanggal: tanggal || new Date().toISOString(),
+    dicatatOleh: currentProfile?.uid || "",
+    dicatatOlehNama: currentProfile?.nama || ""
+  };
+  const ref = await addCollectionData("pengeluaran", payload);
+  logAudit("CREATE", "pengeluaran", ref.id, { judul: payload.judul, jumlah: payload.jumlah });
+  return ref;
+}
+async function hapusPengeluaran(id){
+  const item = await getDocument("pengeluaran", id);
+  if(!item) throw new Error("Pengeluaran tidak ditemukan.");
+  await deleteCollectionData("pengeluaran", id);
+  logAudit("DELETE", "pengeluaran", id, { judul: item.judul, jumlah: item.jumlah });
+}
+
+/* ============================================================
    7. FIRESTORE SERVICES (dengan cache)
 ============================================================ */
 const cache = new Map();
@@ -3556,10 +3691,14 @@ function openKegiatanForm(jilidList){
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
   await ensureSppBulanIniUntukSemuaSantri();
-  const appSettings = await getAppSettings();
-  const [tagihanSantriList, tabunganList] = await Promise.all([
+
+  const [appSettings, tagihanSantriList, tabunganList, infaqList, donaturList, pengeluaranList] = await Promise.all([
+    getAppSettings(),
     getCollectionData("tagihanSantri"),
-    getCollectionData("tabungan")
+    getCollectionData("tabungan"),
+    getCollectionData("infaq", { forceRefresh:true }),
+    getCollectionData("donatur", { forceRefresh:true }),
+    getCollectionData("pengeluaran", { forceRefresh:true })
   ]);
 
   const sppTanggalPeringatan = Number(appSettings.sppTanggalPeringatan||10);
@@ -3570,30 +3709,49 @@ async function renderKeuanganAdmin(){
   const iuranBills = tagihanSantriList.filter(x=>x.jenis==="Iuran Kegiatan")
     .sort((a,b)=>(a.santriNama||"").localeCompare(b.santriNama||""));
   const tabunganSorted = tabunganList.slice().sort((a,b)=>(b.tanggal?.seconds||0)-(a.tanggal?.seconds||0));
+  const infaqSorted = infaqList.slice().sort((a,b)=>new Date(b.tanggal||0) - new Date(a.tanggal||0));
+  const pengeluaranSorted = pengeluaranList.slice().sort((a,b)=>new Date(b.tanggal||0) - new Date(a.tanggal||0));
 
-  const totalSppTertagihBulanIni = sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.nominal||0),0);
-  const totalSppTerbayarBulanIni = sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.terbayar||0),0);
-  const totalTunggakanSpp = sppBills.reduce((s,x)=>s+Math.max(0, Number(x.nominal||0)-Number(x.terbayar||0)),0);
-  const totalIuranTerkumpul = iuranBills.reduce((s,x)=>s+Number(x.terbayar||0),0);
-  const totalSaldoTabungan = tabunganList.reduce((saldo,t)=> t.jenis==="tarik" ? saldo-Number(t.jumlah||0) : saldo+Number(t.jumlah||0), 0);
+  const saldo = hitungSaldoKas({ sppBills, iuranBills, infaqList, tabunganList, pengeluaranList });
 
   $("page").innerHTML = `
     <div class="toolbar">
-      <div><h2 class="section-title">Keuangan</h2><p class="muted">SPP bulanan, Iuran Kegiatan, dan Tabungan santri.</p></div>
+      <div><h2 class="section-title">Keuangan</h2><p class="muted">Kelola seluruh pemasukan & pengeluaran TPQ.</p></div>
     </div>
+
+    <!-- ========== RINGKASAN SALDO ========== -->
+    <div class="card" style="background:linear-gradient(135deg,#166534,#22c55e);color:#fff;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px">
+        <div>
+          <div style="font-size:13px;opacity:.85">Saldo Kas TPQ Saat Ini</div>
+          <div style="font-size:32px;font-weight:800;margin-top:5px">${formatRupiah(saldo.saldoKas)}</div>
+        </div>
+        <div style="text-align:right;font-size:13px;line-height:1.8">
+          <div>💵 SPP: <b>${formatRupiah(saldo.sppTerbayar)}</b></div>
+          <div>🎉 Iuran: <b>${formatRupiah(saldo.iuranTerbayar)}</b></div>
+          <div>🙏 Infaq: <b>${formatRupiah(saldo.infaqMasuk)}</b></div>
+          <div>📤 Pengeluaran: <b>${formatRupiah(saldo.pengeluaran)}</b></div>
+        </div>
+      </div>
+    </div>
+
     <div class="summary-strip">
-      ${statCard("💵","SPP Tertagih Bulan Ini", formatRupiah(totalSppTertagihBulanIni))}
-      ${statCard("✅","SPP Terbayar Bulan Ini", formatRupiah(totalSppTerbayarBulanIni))}
-      ${statCard("⚠️","Total Tunggakan SPP", formatRupiah(totalTunggakanSpp))}
-      ${statCard("💰","Total Saldo Tabungan", formatRupiah(totalSaldoTabungan))}
+      ${statCard("💵","SPP Tertagih Bulan Ini", formatRupiah(sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.nominal||0),0)))}
+      ${statCard("✅","SPP Terbayar Bulan Ini", formatRupiah(sppBills.filter(x=>x.periode===periodeIni).reduce((s,x)=>s+Number(x.terbayar||0),0)))}
+      ${statCard("🙏","Total Infaq", formatRupiah(saldo.infaqMasuk))}
+      ${statCard("🏦","Saldo Tabungan Santri", formatRupiah(saldo.saldoTabunganSantri))}
     </div>
 
-    <div class="actions" style="margin-bottom:16px">
+    <div class="actions" style="margin-bottom:16px;flex-wrap:wrap">
       <button class="btn" id="tabSpp">💵 SPP</button>
-      <button class="btn btn-light" id="tabIuran">🎉 Iuran Kegiatan ${totalIuranTerkumpul?`(${formatRupiah(totalIuranTerkumpul)} terkumpul)`:""}</button>
-      <button class="btn btn-light" id="tabTabungan">💰 Tabungan</button>
+      <button class="btn btn-light" id="tabIuran">🎉 Iuran</button>
+      <button class="btn btn-light" id="tabTabungan">🏦 Tabungan</button>
+      <button class="btn btn-light" id="tabInfaq">🙏 Infaq</button>
+      <button class="btn btn-light" id="tabDonatur">👤 Donatur</button>
+      <button class="btn btn-light" id="tabPengeluaran">📤 Pengeluaran</button>
     </div>
 
+    <!-- ========== PANEL SPP ========== -->
     <div id="panelSpp">
       <div class="toolbar"><input id="searchSpp" class="search-box" placeholder="Cari nama santri..."></div>
       <div class="table-container">
@@ -3606,17 +3764,18 @@ async function renderKeuanganAdmin(){
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${formatPeriodeLabel(item.periode)}</td>
                 <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
                 <td>${badgeStatusTagihan(item.status)}${menunggak?` <span class="badge badge-red">Menunggak</span>`:""}</td>
-                <td> <div class="actions">
-                    <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
-                    <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button> </div>
-                </td>
+                <td><div class="actions">
+                  <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
+                  <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button>
+                </div></td>
               </tr>`;
-            }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan SPP. Atur nominal SPP di menu Master Tagihan.</td></tr>`}
+            }).join("") : `<tr><td colspan="7" class="empty">Belum ada tagihan SPP.</td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- ========== PANEL IURAN ========== -->
     <div id="panelIuran" class="hidden">
       <div class="toolbar"><input id="searchIuran" class="search-box" placeholder="Cari nama santri..."></div>
       <div class="table-container">
@@ -3628,28 +3787,31 @@ async function renderKeuanganAdmin(){
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td><td>${escapeHTML(item.judul||"-")}</td>
                 <td>${formatRupiah(item.nominal||0)}</td><td>${formatRupiah(item.terbayar||0)}</td>
                 <td>${badgeStatusTagihan(item.status)}</td>
-<td>
-  <div class="actions">
-    <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
-    <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button>
-  </div>
-</td>              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan. Buat lewat menu Master Tagihan.</td></tr>`}
+                <td><div class="actions">
+                  <button class="btn btn-sm" data-bayar="${item.id}">Catat Bayar</button>
+                  <button class="btn btn-sm btn-danger" data-hapus-tagihan="${item.id}">Hapus</button>
+                </div></td>
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada iuran kegiatan.</td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- ========== PANEL TABUNGAN ========== -->
     <div id="panelTabungan" class="hidden">
       <div class="toolbar">
         <input id="searchTabungan" class="search-box" placeholder="Cari nama santri...">
-        <button class="btn" id="btnCatatTabungan">+ Catat Tabungan</button>
+        <div class="actions">
+          <button class="btn btn-success" id="btnCatatTabungan">+ Setor Tabungan</button>
+          <button class="btn btn-warning" id="btnAmbilTabungan">- Ambil Tabungan</button>
+        </div>
       </div>
       <div class="table-container">
         <table id="tableTabungan">
           <thead><tr><th>No</th><th>Santri</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th><th>Tanggal</th><th>Aksi</th></tr></thead>
           <tbody>
             ${tabunganSorted.length ? tabunganSorted.map((item,index)=>`
-             <tr data-row>
+              <tr data-row>
                 <td>${index+1}</td><td>${escapeHTML(item.santriNama)}</td>
                 <td>${item.jenis==="tarik"?`<span class="badge badge-red">Tarik</span>`:`<span class="badge badge-green">Setor</span>`}</td>
                 <td>${formatRupiah(item.jumlah||0)}</td><td>${escapeHTML(item.keterangan||"-")}</td>
@@ -3659,61 +3821,194 @@ async function renderKeuanganAdmin(){
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ========== PANEL INFAQ ========== -->
+    <div id="panelInfaq" class="hidden">
+      <div class="toolbar">
+        <input id="searchInfaq" class="search-box" placeholder="Cari donatur...">
+        <button class="btn" id="btnCatatInfaq">+ Catat Infaq</button>
+      </div>
+      <div class="table-container">
+        <table id="tableInfaq">
+          <thead><tr><th>No</th><th>Donatur</th><th>Jenis</th><th>Jumlah</th><th>Metode</th><th>Tanggal</th><th>Keterangan</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${infaqSorted.length ? infaqSorted.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(item.donaturNama||"Hamba Allah")}</b></td>
+                <td>${item.jenisDonatur==="wali"?`<span class="badge badge-blue">Wali</span>`:(item.jenisDonatur==="donatur"?`<span class="badge badge-green">Donatur</span>`:`<span class="badge badge-gray">Umum</span>`)}</td>
+                <td><b style="color:#166534">${formatRupiah(item.jumlah||0)}</b></td>
+                <td>${escapeHTML(item.metode||"Tunai")}</td>
+                <td>${formatTanggal(item.tanggal)}</td>
+                <td>${escapeHTML(item.keterangan||"-")}</td>
+                <td><button class="btn btn-sm btn-danger" data-hapus-infaq="${item.id}">Hapus</button></td>
+              </tr>`).join("") : `<tr><td colspan="8" class="empty">Belum ada infaq.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== PANEL DONATUR ========== -->
+    <div id="panelDonatur" class="hidden">
+      <div class="toolbar">
+        <input id="searchDonatur" class="search-box" placeholder="Cari nama donatur...">
+        <button class="btn" id="btnTambahDonatur">+ Tambah Donatur</button>
+      </div>
+      <div class="table-container">
+        <table id="tableDonatur">
+          <thead><tr><th>No</th><th>Nama</th><th>Jenis</th><th>Telepon</th><th>Total Donasi</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${donaturList.length ? donaturList.map((item,index)=>{
+              const totalDonasi = infaqList.filter(x => x.donaturId === item.id).reduce((s,x) => s + Number(x.jumlah||0), 0);
+              return `<tr data-row>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(item.nama||"-")}</b></td>
+                <td>${item.jenis==="wali"?`<span class="badge badge-blue">Wali</span>`:(item.jenis==="donatur"?`<span class="badge badge-green">Donatur</span>`:`<span class="badge badge-gray">Umum</span>`)}</td>
+                <td>${escapeHTML(item.telepon||"-")}</td>
+                <td><b style="color:#166534">${formatRupiah(totalDonasi)}</b></td>
+                <td>${item.aktif===false ? `<span class="badge badge-red">Nonaktif</span>` : `<span class="badge badge-green">Aktif</span>`}</td>
+                <td><div class="actions">
+                  <button class="btn btn-sm btn-info" data-edit-donatur="${item.id}">Edit</button>
+                  <button class="btn btn-sm btn-danger" data-hapus-donatur="${item.id}">Hapus</button>
+                </div></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="7" class="empty">Belum ada donatur.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== PANEL PENGELUARAN ========== -->
+    <div id="panelPengeluaran" class="hidden">
+      <div class="toolbar">
+        <input id="searchPengeluaran" class="search-box" placeholder="Cari keterangan...">
+        <button class="btn btn-warning" id="btnCatatPengeluaran">+ Catat Pengeluaran</button>
+      </div>
+      <div class="table-container">
+        <table id="tablePengeluaran">
+          <thead><tr><th>No</th><th>Judul</th><th>Kategori</th><th>Jumlah</th><th>Penerima</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${pengeluaranSorted.length ? pengeluaranSorted.map((item,index)=>`
+              <tr data-row>
+                <td>${index+1}</td>
+                <td><b>${escapeHTML(item.judul||"-")}</b>${item.keterangan?`<br><span class="muted" style="font-size:12px">${escapeHTML(item.keterangan)}</span>`:""}</td>
+                <td>${badgeKategoriPengeluaran(item.kategori)}</td>
+                <td><b style="color:#dc2626">${formatRupiah(item.jumlah||0)}</b></td>
+                <td>${escapeHTML(item.penerima||"-")}</td>
+                <td>${formatTanggal(item.tanggal)}</td>
+                <td><button class="btn btn-sm btn-danger" data-hapus-pengeluaran="${item.id}">Hapus</button></td>
+              </tr>`).join("") : `<tr><td colspan="7" class="empty">Belum ada pengeluaran.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
     </div>`;
 
-  attachTableSearch("searchSpp","tableSpp");
-  attachTableSearch("searchIuran","tableIuran");
-  attachTableSearch("searchTabungan","tableTabungan");
-
+  // ========== TAB SWITCHING ==========
   function switchTab(tab){
-    $("panelSpp").classList.toggle("hidden", tab!=="spp");
-    $("panelIuran").classList.toggle("hidden", tab!=="iuran");
-    $("panelTabungan").classList.toggle("hidden", tab!=="tabungan");
-    $("tabSpp").className = tab==="spp" ? "btn" : "btn btn-light";
-    $("tabIuran").className = tab==="iuran" ? "btn" : "btn btn-light";
-    $("tabTabungan").className = tab==="tabungan" ? "btn" : "btn btn-light";
+    ["Spp","Iuran","Tabungan","Infaq","Donatur","Pengeluaran"].forEach(t => {
+      $(`panel${t}`).classList.toggle("hidden", t.toLowerCase() !== tab);
+      $(`tab${t}`).className = t.toLowerCase() === tab ? "btn" : "btn btn-light";
+    });
   }
   $("tabSpp").addEventListener("click", ()=>switchTab("spp"));
   $("tabIuran").addEventListener("click", ()=>switchTab("iuran"));
   $("tabTabungan").addEventListener("click", ()=>switchTab("tabungan"));
+  $("tabInfaq").addEventListener("click", ()=>switchTab("infaq"));
+  $("tabDonatur").addEventListener("click", ()=>switchTab("donatur"));
+  $("tabPengeluaran").addEventListener("click", ()=>switchTab("pengeluaran"));
 
+  attachTableSearch("searchSpp","tableSpp");
+  attachTableSearch("searchIuran","tableIuran");
+  attachTableSearch("searchTabungan","tableTabungan");
+  attachTableSearch("searchInfaq","tableInfaq");
+  attachTableSearch("searchDonatur","tableDonatur");
+  attachTableSearch("searchPengeluaran","tablePengeluaran");
+
+  // ========== SPP & IURAN ==========
   $("page").querySelectorAll("[data-bayar]").forEach(btn => btn.addEventListener("click", () => {
     const bill = tagihanSantriList.find(x=>x.id===btn.dataset.bayar);
     if(bill) openCatatPembayaranModal(bill, renderKeuanganAdmin);
   }));
-  // Hapus tagihan SPP / Iuran
-$("page").querySelectorAll("[data-hapus-tagihan]").forEach(btn => btn.addEventListener("click", async () => {
-  const bill = tagihanSantriList.find(x=>x.id===btn.dataset.hapusTagihan);
-  if(!bill) return;
-  const pesan = bill.jenis === "SPP"
-    ? `Hapus tagihan SPP ${formatPeriodeLabel(bill.periode)} untuk ${bill.santriNama}?\n\nTotal sudah dibayar: ${formatRupiah(bill.terbayar||0)}.\nTindakan ini tidak bisa dibatalkan.`
-    : `Hapus tagihan "${bill.judul}" untuk ${bill.santriNama}?\n\nTotal sudah dibayar: ${formatRupiah(bill.terbayar||0)}.\nTindakan ini tidak bisa dibatalkan.`;
-  if(!confirm(pesan)) return;
-  try{
-    await hapusTagihanSantri(bill.id);
-    showToast("Tagihan berhasil dihapus.");
-    renderKeuanganAdmin();
-  }catch(error){ showToast("Gagal menghapus: " + error.message, true); }
-}));
+  $("page").querySelectorAll("[data-hapus-tagihan]").forEach(btn => btn.addEventListener("click", async () => {
+    const bill = tagihanSantriList.find(x=>x.id===btn.dataset.hapusTagihan);
+    if(!bill) return;
+    if(!confirm(`Hapus tagihan "${bill.judul}" untuk ${bill.santriNama}?`)) return;
+    try{
+      await hapusTagihanSantri(bill.id);
+      showToast("Tagihan dihapus.");
+      renderKeuanganAdmin();
+    }catch(error){ showToast("Gagal: " + error.message, true); }
+  }));
 
-// Hapus transaksi tabungan
-$("page").querySelectorAll("[data-hapus-tabungan]").forEach(btn => btn.addEventListener("click", async () => {
-  const trx = tabunganList.find(x=>x.id===btn.dataset.hapusTabungan);
-  if(!trx) return;
-  if(!confirm(`Hapus transaksi ${trx.jenis==="tarik"?"tarik":"setor"} ${formatRupiah(trx.jumlah||0)} untuk ${trx.santriNama}?\n\nTindakan ini tidak bisa dibatalkan.`)) return;
-  try{
-    await hapusTransaksiTabungan(trx.id);
-    showToast("Transaksi tabungan berhasil dihapus.");
-    renderKeuanganAdmin();
-  }catch(error){ showToast("Gagal menghapus: " + error.message, true); }
-}));
+  // ========== TABUNGAN ==========
+  $("page").querySelectorAll("[data-hapus-tabungan]").forEach(btn => btn.addEventListener("click", async () => {
+    const trx = tabunganList.find(x=>x.id===btn.dataset.hapusTabungan);
+    if(!trx) return;
+    if(!confirm(`Hapus transaksi ${trx.jenis==="tarik"?"tarik":"setor"} ${formatRupiah(trx.jumlah)} untuk ${trx.santriNama}?`)) return;
+    try{
+      await hapusTransaksiTabungan(trx.id);
+      showToast("Transaksi tabungan dihapus.");
+      renderKeuanganAdmin();
+    }catch(error){ showToast("Gagal: " + error.message, true); }
+  }));
   $("btnCatatTabungan").addEventListener("click", async () => {
     const santriList = (await getCollectionData("santri")).filter(s=>s.aktif!==false);
     openCatatTabunganModal(santriList, renderKeuanganAdmin);
   });
-}
+  $("btnAmbilTabungan").addEventListener("click", async () => {
+    const santriList = (await getCollectionData("santri")).filter(s=>s.aktif!==false);
+    openAmbilTabunganModal(santriList, tabunganList, renderKeuanganAdmin);
+  });
 
-// Modal generik untuk mencatat pembayaran satu tagihan (SPP / Iuran Kegiatan).
+  // ========== INFAQ ==========
+  $("btnCatatInfaq").addEventListener("click", () => openCatatInfaqModal(donaturList, renderKeuanganAdmin));
+  $("page").querySelectorAll("[data-hapus-infaq]").forEach(btn => btn.addEventListener("click", async () => {
+    const item = infaqList.find(x=>x.id===btn.dataset.hapusInfaq);
+    if(!item) return;
+    if(!confirm(`Hapus infaq dari ${item.donaturNama} sebesar ${formatRupiah(item.jumlah)}?`)) return;
+    try{
+      await hapusInfaq(item.id);
+      showToast("Infaq dihapus.");
+      renderKeuanganAdmin();
+    }catch(error){ showToast("Gagal: " + error.message, true); }
+  }));
+
+  // ========== DONATUR ==========
+  $("btnTambahDonatur").addEventListener("click", () => openDonaturForm(null, renderKeuanganAdmin));
+  $("page").querySelectorAll("[data-edit-donatur]").forEach(btn => btn.addEventListener("click", () => {
+    const item = donaturList.find(x=>x.id===btn.dataset.editDonatur);
+    if(item) openDonaturForm(item, renderKeuanganAdmin);
+  }));
+  $("page").querySelectorAll("[data-hapus-donatur]").forEach(btn => btn.addEventListener("click", async () => {
+    const item = donaturList.find(x=>x.id===btn.dataset.hapusDonatur);
+    if(!item) return;
+    const punyaInfaq = infaqList.filter(x => x.donaturId === item.id).length;
+    const pesan = punyaInfaq
+      ? `Donatur "${item.nama}" punya ${punyaInfaq} catatan infaq. Hapus donatur saja (infaq tetap tersimpan)?`
+      : `Hapus donatur "${item.nama}"?`;
+    if(!confirm(pesan)) return;
+    try{
+      await hapusDonatur(item.id);
+      showToast("Donatur dihapus.");
+      renderKeuanganAdmin();
+    }catch(error){ showToast("Gagal: " + error.message, true); }
+  }));
+
+  // ========== PENGELUARAN ==========
+  $("btnCatatPengeluaran").addEventListener("click", () => openCatatPengeluaranModal(renderKeuanganAdmin));
+  $("page").querySelectorAll("[data-hapus-pengeluaran]").forEach(btn => btn.addEventListener("click", async () => {
+    const item = pengeluaranList.find(x=>x.id===btn.dataset.hapusPengeluaran);
+    if(!item) return;
+    if(!confirm(`Hapus pengeluaran "${item.judul}" sebesar ${formatRupiah(item.jumlah)}?`)) return;
+    try{
+      await hapusPengeluaran(item.id);
+      showToast("Pengeluaran dihapus.");
+      renderKeuanganAdmin();
+    }catch(error){ showToast("Gagal: " + error.message, true); }
+  }));
+}
+  // Modal generik untuk mencatat pembayaran satu tagihan (SPP / Iuran Kegiatan).
 // Mendukung pembayaran bertahap/cicilan — setiap kali dicatat, jumlahnya
 // ditambahkan ke riwayat tagihan tersebut, tidak menimpa nilai sebelumnya.
 function openCatatPembayaranModal(bill, onSaved){
@@ -3802,7 +4097,297 @@ function openCatatTabunganModal(santriList, onSaved){
     })();
   });
 }
+/* ========== AMBIL TABUNGAN (dengan validasi saldo) ========== */
+function openAmbilTabunganModal(santriList, tabunganList, onSaved){
+  openModal("Ambil Tabungan", `
+    <form id="ambilTabunganForm">
+      <div class="notice notice-warn">
+        ⚠️ Pastikan saldo mencukupi sebelum melakukan penarikan.
+      </div>
+      <div class="form-group">
+        <label>Santri</label>
+        <select id="ambilSantri" required>
+          <option value="">Pilih santri</option>
+          ${santriList.map(s => {
+            const saldo = hitungSaldoTabungan(tabunganList, s.id);
+            return `<option value="${s.id}" data-nama="${escapeAttr(s.nama)}" data-saldo="${saldo}">${escapeHTML(s.nama)} — Saldo: ${formatRupiah(saldo)}</option>`;
+          }).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Saldo Saat Ini</label>
+        <input id="ambilSaldoInfo" value="-" disabled>
+      </div>
+      <div class="form-group">
+        <label>Jumlah Diambil</label>
+        <input id="ambilJumlah" type="number" min="1" required>
+      </div>
+      <div class="form-group">
+        <label>Keterangan (opsional)</label>
+        <textarea id="ambilKeterangan" rows="2" placeholder="Contoh: diambil untuk beli seragam"></textarea>
+      </div>
+      <button class="btn btn-full btn-warning" type="submit" id="ambilSaveBtn">Konfirmasi Penarikan</button>
+    </form>`);
 
+  const selectSantri = $("ambilSantri");
+  function updateSaldoInfo(){
+    const opt = selectSantri.options[selectSantri.selectedIndex];
+    const saldo = Number(opt?.dataset?.saldo || 0);
+    $("ambilSaldoInfo").value = formatRupiah(saldo);
+    $("ambilJumlah").max = saldo;
+  }
+  selectSantri.addEventListener("change", updateSaldoInfo);
+
+  $("ambilTabunganForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("ambilSaveBtn");
+    const select = $("ambilSantri");
+    const santriId = select.value;
+    const santriNama = select.options[select.selectedIndex]?.dataset.nama || "-";
+    const saldo = Number(select.options[select.selectedIndex]?.dataset.saldo || 0);
+    const jumlah = Number($("ambilJumlah").value || 0);
+
+    if(!santriId){ showToast("Pilih santri terlebih dahulu.", true); return; }
+    if(jumlah <= 0){ showToast("Jumlah harus lebih dari 0.", true); return; }
+    if(jumlah > saldo){
+      showToast(`Saldo tidak cukup. Saldo tersedia: ${formatRupiah(saldo)}.`, true);
+      return;
+    }
+
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await catatTabungan({
+          santriId, santriNama,
+          jenis: "tarik",
+          jumlah,
+          keterangan: $("ambilKeterangan").value.trim() || "Penarikan tabungan"
+        });
+        closeModal();
+        showToast(`Penarikan ${formatRupiah(jumlah)} untuk ${santriNama} berhasil.`);
+        onSaved?.();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
+
+/* ========== CATAT INFAQ ========== */
+function openCatatInfaqModal(donaturList, onSaved){
+  const aktifDonatur = donaturList.filter(d => d.aktif !== false);
+  openModal("Catat Infaq", `
+    <form id="infaqForm">
+      <div class="notice">
+        Infaq bisa dari wali santri (pilih dari daftar donatur) atau dari siapa saja (isi manual).
+      </div>
+
+      <div class="form-group">
+        <label>Sumber Infaq</label>
+        <select id="infaqSumber">
+          <option value="donatur">Dari Donatur Terdaftar</option>
+          <option value="manual">Isi Manual (Hamba Allah / Umum)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="infaqDonaturWrap">
+        <label>Pilih Donatur</label>
+        <select id="infaqDonatur">
+          <option value="">-- Pilih Donatur --</option>
+          ${aktifDonatur.map(d => `<option value="${d.id}" data-nama="${escapeAttr(d.nama)}" data-jenis="${escapeAttr(d.jenis||'umum')}">${escapeHTML(d.nama)} (${d.jenis||"umum"})</option>`).join("")}
+        </select>
+        <div class="muted" style="font-size:12px;margin-top:4px">Belum ada donatur? Tambahkan dulu di tab Donatur.</div>
+      </div>
+
+      <div class="form-group hidden" id="infaqManualWrap">
+        <label>Nama Pemberi</label>
+        <input id="infaqNamaManual" placeholder="Contoh: Hamba Allah / Bpk. Soleh">
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label>Jumlah Infaq</label>
+          <input id="infaqJumlah" type="number" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Metode</label>
+          <select id="infaqMetode">
+            <option value="Tunai">Tunai</option>
+            <option value="QRIS">QRIS</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input id="infaqTanggal" type="date" value="${dateKey(nowWIB())}" required>
+      </div>
+
+      <div class="form-group">
+        <label>Keterangan (opsional)</label>
+        <textarea id="infaqKeterangan" rows="2" placeholder="Contoh: infaq pembangunan"></textarea>
+      </div>
+
+      <button class="btn btn-full" type="submit" id="infaqSaveBtn">Simpan Infaq</button>
+    </form>`);
+
+  const sumberSelect = $("infaqSumber");
+  sumberSelect.addEventListener("change", () => {
+    const v = sumberSelect.value;
+    $("infaqDonaturWrap").classList.toggle("hidden", v !== "donatur");
+    $("infaqManualWrap").classList.toggle("hidden", v !== "manual");
+  });
+
+  $("infaqForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("infaqSaveBtn");
+    const sumber = sumberSelect.value;
+    const jumlah = Number($("infaqJumlah").value || 0);
+    if(jumlah <= 0){ showToast("Jumlah harus lebih dari 0.", true); return; }
+
+    let donaturId = null, donaturNama = "", jenisDonatur = "umum";
+
+    if(sumber === "donatur"){
+      const opt = $("infaqDonatur").options[$("infaqDonatur").selectedIndex];
+      if(!$("infaqDonatur").value){ showToast("Pilih donatur terlebih dahulu.", true); return; }
+      donaturId = $("infaqDonatur").value;
+      donaturNama = opt.dataset.nama;
+      jenisDonatur = opt.dataset.jenis || "umum";
+    } else {
+      donaturNama = $("infaqNamaManual").value.trim() || "Hamba Allah";
+      jenisDonatur = "umum";
+    }
+
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await catatInfaq({
+          donaturId, donaturNama, jenisDonatur, jumlah,
+          metode: $("infaqMetode").value,
+          keterangan: $("infaqKeterangan").value.trim(),
+          tanggal: new Date($("infaqTanggal").value + "T" + new Date().toTimeString().slice(0,8)).toISOString()
+        });
+        closeModal();
+        showToast("Infaq berhasil dicatat.");
+        onSaved?.();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
+
+/* ========== FORM DONATUR ========== */
+function openDonaturForm(item, onSaved){
+  openModal(item ? "Edit Donatur" : "Tambah Donatur", `
+    <form id="donaturForm">
+      <div class="form-group">
+        <label>Nama Donatur</label>
+        <input id="donaturNama" value="${escapeHTML(item?.nama || "")}" required>
+      </div>
+      <div class="form-group">
+        <label>Jenis</label>
+        <select id="donaturJenis">
+          <option value="umum" ${item?.jenis==="umum"?"selected":""}>Umum</option>
+          <option value="wali" ${item?.jenis==="wali"?"selected":""}>Wali Santri</option>
+          <option value="donatur" ${item?.jenis==="donatur"?"selected":""}>Donatur Tetap</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Telepon</label><input id="donaturTelepon" value="${escapeHTML(item?.telepon || "")}" placeholder="08xxxxxxxxxx"></div>
+      <div class="form-group"><label>Alamat</label><textarea id="donaturAlamat" rows="2">${escapeHTML(item?.alamat || "")}</textarea></div>
+      <div class="form-group"><label>Catatan</label><textarea id="donaturCatatan" rows="2">${escapeHTML(item?.catatan || "")}</textarea></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="donaturAktif">
+          <option value="true" ${item?.aktif!==false?"selected":""}>Aktif</option>
+          <option value="false" ${item?.aktif===false?"selected":""}>Nonaktif</option>
+        </select>
+      </div>
+      <button class="btn btn-full" type="submit" id="donaturSaveBtn">Simpan Donatur</button>
+    </form>`);
+
+  $("donaturForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("donaturSaveBtn");
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await simpanDonatur({
+          nama: $("donaturNama").value.trim(),
+          jenis: $("donaturJenis").value,
+          telepon: $("donaturTelepon").value.trim(),
+          alamat: $("donaturAlamat").value.trim(),
+          catatan: $("donaturCatatan").value.trim(),
+          aktif: $("donaturAktif").value === "true"
+        }, item?.id || null);
+        closeModal();
+        showToast("Donatur berhasil disimpan.");
+        onSaved?.();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
+
+/* ========== FORM PENGELUARAN ========== */
+function openCatatPengeluaranModal(onSaved){
+  openModal("Catat Pengeluaran", `
+    <form id="pengeluaranForm">
+      <div class="form-group">
+        <label>Judul Pengeluaran</label>
+        <input id="pengeluaranJudul" placeholder="Contoh: Honor Ustadzah Bulan September" required>
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="pengeluaranKategori" required>
+          ${KATEGORI_PENGELUARAN.map(k => `<option value="${escapeAttr(k)}">${escapeHTML(k)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Jumlah</label>
+          <input id="pengeluaranJumlah" type="number" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Metode</label>
+          <select id="pengeluaranMetode">
+            <option value="Tunai">Tunai</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Penerima (opsional)</label>
+        <input id="pengeluaranPenerima" placeholder="Contoh: Ustadzah Fatimah">
+      </div>
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input id="pengeluaranTanggal" type="date" value="${dateKey(nowWIB())}" required>
+      </div>
+      <div class="form-group">
+        <label>Keterangan (opsional)</label>
+        <textarea id="pengeluaranKeterangan" rows="2"></textarea>
+      </div>
+      <button class="btn btn-full btn-warning" type="submit" id="pengeluaranSaveBtn">Simpan Pengeluaran</button>
+    </form>`);
+
+  $("pengeluaranForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("pengeluaranSaveBtn");
+    const jumlah = Number($("pengeluaranJumlah").value || 0);
+    if(jumlah <= 0){ showToast("Jumlah harus lebih dari 0.", true); return; }
+
+    await withButtonLoading(btn, "Menyimpan...", async () => {
+      try{
+        await catatPengeluaran({
+          judul: $("pengeluaranJudul").value.trim(),
+          kategori: $("pengeluaranKategori").value,
+          jumlah,
+          metode: $("pengeluaranMetode").value,
+          penerima: $("pengeluaranPenerima").value.trim(),
+          keterangan: $("pengeluaranKeterangan").value.trim(),
+          tanggal: new Date($("pengeluaranTanggal").value + "T" + new Date().toTimeString().slice(0,8)).toISOString()
+        });
+        closeModal();
+        showToast("Pengeluaran berhasil dicatat.");
+        onSaved?.();
+      }catch(error){ alert(error.message); }
+    })();
+  });
+}
 /* ============================================================
    23. ADMIN: PENGATURAN
 ============================================================ */
