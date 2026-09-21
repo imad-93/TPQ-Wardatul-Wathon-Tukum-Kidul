@@ -442,16 +442,56 @@ async function deleteCollectionData(name, id){
   await deleteDoc(doc(db, name, id));
   invalidateCache(name);
 }
-async function logAudit(action, entity, entityId, metadata={}){
-  try{
-    await addCollectionData("audit", {
-      action, entity, entityId, metadata,
-      userUid: currentProfile?.uid || null, userNama: currentProfile?.nama || null, userRole: currentProfile?.role || null,
-      timestamp: new Date().toISOString()
-    });
-  }catch(err){ console.warn("Audit log gagal:", err); }
+
+const auditBuffer = [];
+let auditFlushTimer = null;
+const AUDIT_FLUSH_DELAY = 3000;   // kirim ke Firestore tiap 3 detik
+const AUDIT_FLUSH_MAX   = 20;     // atau saat buffer sudah 20 entri
+
+function flushAuditBuffer(){
+  if(!auditBuffer.length) return;
+  const items = auditBuffer.splice(0, auditBuffer.length);
+  // Firestore tidak punya bulk insert di client SDK, jadi loop saja
+  // tapi ini hanya dipanggil tiap 3 detik, bukan tiap aksi.
+  items.forEach(async (item) => {
+    try{
+      await addCollectionData("audit", item);
+    }catch(err){
+      // Diamkan kalau gagal (audit bukan critical).
+      console.warn("Audit log gagal (diabaikan):", err?.code || err?.message);
+    }
+  });
 }
 
+function logAudit(action, entity, entityId, metadata={}){
+  // Kalau belum login, jangan log.
+  if(!currentProfile?.uid) return;
+
+  auditBuffer.push({
+    action, entity, entityId, metadata,
+    userUid:  currentProfile.uid,
+    userNama: currentProfile.nama || null,
+    userRole: currentProfile.role || null,
+    timestamp: new Date().toISOString()
+  });
+
+  if(auditBuffer.length >= AUDIT_FLUSH_MAX){
+    clearTimeout(auditFlushTimer);
+    auditFlushTimer = null;
+    flushAuditBuffer();
+  } else if(!auditFlushTimer){
+    auditFlushTimer = setTimeout(() => {
+      auditFlushTimer = null;
+      flushAuditBuffer();
+    }, AUDIT_FLUSH_DELAY);
+  }
+}
+
+// Saat user keluar / tab ditutup, coba flush supaya log tidak hilang.
+window.addEventListener("beforeunload", () => { flushAuditBuffer(); });
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "hidden") flushAuditBuffer();
+});
 /* ============ 6. WAKTU & PENGATURAN ============ */
 const toWIB = d => new Date(d.toLocaleString("en-US", { timeZone:"Asia/Jakarta" }));
 const nowWIB = () => toWIB(new Date());
