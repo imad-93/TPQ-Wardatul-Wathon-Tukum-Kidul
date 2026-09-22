@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#14532d">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f3d22">
 <meta name="description" content="Sistem Informasi TPQ Wardatul Wathon Tukum Kidul Lumajang">
 <title>TPQ Wardatul Wathon</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
@@ -13,14 +13,15 @@
   --primary:#166534; --primary-dark:#0f3d22; --primary-soft:#f0fdf4; --accent:#22c55e;
   --bg:#f5f7f6; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e5e9ee;
   --danger:#dc2626; --warning:#d97706; --info:#2563eb; --success:#16a34a;
-  --sidebar:248px; --radius:12px;
+  --sidebar:230px; --radius:12px;
   --shadow:0 1px 2px rgba(15,23,42,.04),0 2px 10px rgba(15,23,42,.04);
+  --tap:44px; /* ukuran minimum tombol di HP */
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{margin:0;letter-spacing:-.01em}
-h3{font-size:16px;margin-bottom:4px}
+h3{font-size:15px;margin-bottom:4px}
 p{margin:0 0 8px}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
@@ -29,138 +30,218 @@ button{cursor:pointer}
 .small{font-size:12px}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
+/* ---------- LOGIN ---------- */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#166534 0%,#0f3d22 60%,#052e16 100%)}
-.login-card{width:100%;max-width:400px;background:#fff;border-radius:20px;padding:32px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
-.login-logo{width:64px;height:64px;margin:0 auto 16px;border-radius:18px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px}
+.login-card{width:100%;max-width:390px;background:#fff;border-radius:20px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.login-logo{width:60px;height:60px;margin:0 auto 14px;border-radius:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px}
 .login-title,.login-subtitle{text-align:center}
 .login-subtitle{color:var(--muted);margin-top:4px}
-.login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:12px}
-.link-btn{border:0;background:none;color:var(--primary);font-weight:600;padding:6px}
+.login-error{min-height:18px;color:var(--danger);text-align:center;font-size:12.5px;margin-top:10px}
+.link-btn{border:0;background:none;color:var(--primary);font-weight:600;padding:6px;font-size:13px}
 
-.form-group{margin-bottom:14px}
-.form-group>label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+/* ---------- FORM ---------- */
+.form-group{margin-bottom:12px}
+.form-group>label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px;color:#334155}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
 input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.12)}
 input:disabled,select:disabled,textarea:disabled{background:#f1f5f9;color:var(--muted);cursor:not-allowed}
 input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:pointer}
 .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:190px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px}
 .check-grid label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;margin:0}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--primary);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:background .15s,opacity .15s}
+/* ---------- BUTTON ---------- */
+.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--primary);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:background .15s,opacity .15s,transform .1s}
 .btn:hover{background:var(--primary-dark)}
+.btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.6;cursor:not-allowed}
 .btn-full{width:100%}
 .btn-sm{padding:6px 10px;font-size:12px;border-radius:8px}
+.btn-icon{padding:8px;min-width:36px}
 .btn-danger{background:var(--danger)} .btn-danger:hover{background:#b91c1c}
 .btn-warning{background:var(--warning)} .btn-warning:hover{background:#b45309}
 .btn-info{background:var(--info)} .btn-info:hover{background:#1d4ed8}
 .btn-success{background:var(--success)} .btn-success:hover{background:#15803d}
 .btn-light{background:#eef2f0;color:var(--text)} .btn-light:hover{background:#dde4e0}
 
-.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:18px 12px;overflow-y:auto;transition:transform .2s}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px}
-.brand-icon{width:40px;height:40px;border-radius:11px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
-.brand-name{font-size:13px;font-weight:700;line-height:1.3}
-.brand-role{display:block;margin-top:2px;color:#bbf7d0;font-size:11px;font-weight:400}
-.nav{display:grid;gap:4px}
-.nav button{border:0;background:transparent;color:#d1fae5;width:100%;text-align:left;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:background .15s}
+/* ---------- LAYOUT ---------- */
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar);background:var(--primary-dark);color:#fff;z-index:100;padding:16px 10px;overflow-y:auto;transition:transform .2s}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand-icon{width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.brand-name{font-size:12.5px;font-weight:700;line-height:1.25}
+.brand-role{display:block;margin-top:2px;color:#bbf7d0;font-size:10.5px;font-weight:400}
+.nav{display:grid;gap:3px}
+.nav button{border:0;background:transparent;color:#d1fae5;width:100%;text-align:left;border-radius:9px;padding:10px 11px;display:flex;align-items:center;gap:9px;transition:background .15s;font-size:13.5px}
 .nav button:hover{background:rgba(255,255,255,.08)}
-.nav button.active{background:rgba(255,255,255,.15);color:#fff;font-weight:600}
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+.nav button.active{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90}
 .main{margin-left:var(--sidebar);min-height:100vh;display:flex;flex-direction:column}
-.topbar{height:60px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
-.top-left,.user-area{display:flex;align-items:center;gap:10px}
-.page-title{font-weight:700;font-size:15px}
+.topbar{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:50}
+.top-left,.user-area{display:flex;align-items:center;gap:8px}
+.page-title{font-weight:700;font-size:14.5px}
 .user-area{font-size:13px}
-.page{padding:24px;max-width:1400px;margin:0 auto;width:100%;flex:1}
+.page{padding:18px;max-width:1400px;margin:0 auto;width:100%;flex:1}
 .mobile-menu{display:none}
-.page-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.page-head h2{font-size:21px}
-.page-head p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.page-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.page-head h2{font-size:19px}
+.page-head p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
 .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.search-box{max-width:260px}
-.stack>*+*{margin-top:18px}
+.search-box{max-width:240px}
+.stack>*+*{margin-top:14px}
 
-.tabs{display:flex;gap:4px;background:#fff;padding:5px;border-radius:12px;border:1px solid var(--border);overflow-x:auto;margin-bottom:18px;scrollbar-width:none}
+/* ---------- TABS ---------- */
+.tabs{display:flex;gap:3px;background:#fff;padding:4px;border-radius:11px;border:1px solid var(--border);overflow-x:auto;margin-bottom:14px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tabs button{border:0;background:transparent;color:var(--muted);padding:9px 15px;border-radius:9px;font-weight:600;font-size:13px;white-space:nowrap;transition:background .15s,color .15s}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:8px 13px;border-radius:8px;font-weight:600;font-size:12.5px;white-space:nowrap;transition:background .15s,color .15s}
 .tabs button:hover{background:#f1f5f3;color:var(--text)}
 .tabs button.active{background:var(--primary);color:#fff}
 
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+/* ---------- CARD ---------- */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .grid-3{grid-template-columns:repeat(3,1fr)}
 .grid-2{grid-template-columns:repeat(2,1fr)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
 .card.soft{background:#f8faf9;box-shadow:none}
 .card.warn{background:#fffbeb;border-color:#fde68a}
 .card.danger{background:#fef2f2;border-color:#fecaca}
 .card.info{background:#eff6ff;border-color:#bfdbfe}
 .card.ok{background:var(--primary-soft);border-color:#bbf7d0}
-.stat-icon{font-size:22px}
-.stat-label{color:var(--muted);font-size:13px;margin-top:6px}
-.stat-value{font-size:24px;font-weight:700;margin-top:2px}
-.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-.balance{background:var(--primary);color:#fff;border:0;margin-bottom:18px}
+.stat-icon{font-size:20px}
+.stat-label{color:var(--muted);font-size:12.5px;margin-top:6px}
+.stat-value{font-size:22px;font-weight:700;margin-top:2px}
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.balance{background:var(--primary);color:#fff;border:0;margin-bottom:14px}
 
-.table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:680px}
-th,td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13.5px;text-align:left;vertical-align:middle}
-th{background:#f8faf9;font-size:12.5px;color:#475569;font-weight:600}
+/* ---------- TABLE ---------- */
+.table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;text-align:left;vertical-align:middle}
+th{background:#f8faf9;font-size:12px;color:#475569;font-weight:600;position:sticky;top:0}
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#fafcfb}
-.empty{text-align:center;padding:32px;color:var(--muted)}
+.empty{text-align:center;padding:28px;color:var(--muted);font-size:13px}
 
-.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+/* ---------- BADGE / NOTICE ---------- */
+.badge{display:inline-block;padding:2.5px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
 .badge-green{background:#dcfce7;color:#166534}
 .badge-yellow{background:#fef3c7;color:#92400e}
 .badge-red{background:#fee2e2;color:#991b1b}
 .badge-blue{background:#dbeafe;color:#1e40af}
 .badge-gray{background:#e5e9ee;color:#334155}
-.notice{border-left:3px solid var(--primary);background:var(--primary-soft);padding:12px 14px;border-radius:8px;margin-bottom:10px}
+.notice{border-left:3px solid var(--primary);background:var(--primary-soft);padding:10px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
 .notice-warn{border-left-color:var(--warning);background:#fffbeb}
 .notice p:last-child{margin-bottom:0}
 
-.modal{position:fixed;inset:0;z-index:500;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:14px}
-.modal-box{width:100%;max-width:700px;max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:22px}
-.modal-header{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}
-.modal-header h3{margin:0;font-size:17px}
-.modal-close{width:32px;height:32px;border:0;border-radius:50%;background:#eef2f0;font-size:20px;line-height:1}
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;z-index:500;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:12px;animation:fadeIn .15s}
+.modal-box{width:100%;max-width:680px;max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:18px;animation:slideUp .2s}
+.modal-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;position:sticky;top:-18px;background:#fff;padding:6px 0;z-index:1}
+.modal-header h3{margin:0;font-size:16px}
+.modal-close{width:32px;height:32px;border:0;border-radius:50%;background:#eef2f0;font-size:19px;line-height:1;flex-shrink:0}
 .modal-close:hover{background:#dde4e0}
-.toast{position:fixed;right:18px;bottom:18px;background:#0f172a;color:#fff;padding:12px 16px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:340px}
-.toast.error{background:var(--danger)}
-.spinner{width:20px;height:20px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:40px;justify-content:center}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-.pdf-upload-box{border:1.5px dashed #cbd5e1;border-radius:12px;padding:16px;background:#f8faf9}
+/* ---------- TOAST / SPINNER ---------- */
+.toast{position:fixed;right:16px;bottom:16px;background:#0f172a;color:#fff;padding:11px 14px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:320px;font-size:13px;animation:slideUp .2s}
+.toast.error{background:var(--danger)}
+.spinner{width:18px;height:18px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:36px;justify-content:center}
+
+/* ---------- PDF UPLOAD ---------- */
+.pdf-upload-box{border:1.5px dashed #cbd5e1;border-radius:12px;padding:14px;background:#f8faf9}
 .pdf-upload-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-.pdf-file-info{margin-top:10px;padding:9px 12px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:12.5px}
-.pdf-progress{display:none;margin-top:12px}
+.pdf-file-info{margin-top:9px;padding:8px 11px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:12.5px}
+.pdf-progress{display:none;margin-top:10px}
 .pdf-progress.active{display:block}
-.pdf-progress-track{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.pdf-progress-track{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden}
 .pdf-progress-bar{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .2s}
 .pdf-progress-text{font-size:12px;color:var(--muted);margin-top:6px}
-.pdf-current{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-size:13px}
-.pdf-viewer{background:#202124;border-radius:14px;overflow:hidden}
-.pdf-toolbar{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#111827;color:#fff;flex-wrap:wrap}
-.pdf-toolbar-group{display:flex;align-items:center;gap:6px}
-.pdf-toolbar button{border:0;min-width:34px;height:34px;border-radius:8px;background:#374151;color:#fff;font-weight:700}
-.pdf-toolbar button:hover{background:#4b5563}
-.pdf-page-indicator{min-width:90px;text-align:center;font-size:13px;font-weight:600}
-.pdf-frame-wrap{position:relative;background:#525659;min-height:480px;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:10px}
-.pdf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,33,36,.9);color:#fff;z-index:2}
-.pdf-info-bar{padding:9px 14px;background:#111827;color:#cbd5e1;font-size:12px}
+.pdf-current{margin-top:9px;padding:9px 11px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-size:12.5px}
 
-@media(max-width:1000px){.grid,.summary-strip{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
+/* ---------- PDF VIEWER (auto-fit, hemat) ---------- */
+.pdf-viewer{background:#202124;border-radius:14px;overflow:hidden}
+.pdf-toolbar{min-height:50px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#111827;color:#fff;flex-wrap:wrap}
+.pdf-toolbar-group{display:flex;align-items:center;gap:5px}
+.pdf-toolbar button{border:0;min-width:34px;height:34px;border-radius:8px;background:#374151;color:#fff;font-weight:700;font-size:15px}
+.pdf-toolbar button:hover{background:#4b5563}
+.pdf-page-indicator{min-width:78px;text-align:center;font-size:12.5px;font-weight:600}
+.pdf-frame-wrap{
+  position:relative;
+  background:#3a3d41;
+  min-height:340px;
+  max-height:calc(100vh - 200px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  overflow:auto;
+  padding:6px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.pdf-page-img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  max-height:calc(100vh - 220px);
+  object-fit:contain;
+  border-radius:4px;
+  background:#fff;
+  transform-origin:top center;
+  transition:width .15s ease-out;
+  will-change:width;
+}
+.pdf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,33,36,.92);color:#fff;z-index:2}
+.pdf-loading.hidden{display:none}
+.pdf-info-bar{padding:8px 12px;background:#111827;color:#cbd5e1;font-size:11.5px;line-height:1.4}
+
+/* Skeleton halaman buku */
+.pdf-skeleton{
+  width:100%;height:80%;max-width:560px;margin:auto;
+  background:linear-gradient(90deg,#2a2d31 25%,#35393e 50%,#2a2d31 75%);
+  background-size:200% 100%;
+  animation:pdfShimmer 1.4s infinite;
+  border-radius:6px;
+}
+@keyframes pdfShimmer{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:1000px){
+  .grid,.summary-strip{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+}
 @media(max-width:800px){
-  .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0} .mobile-menu{display:inline-flex} .topbar{padding:0 14px} .user-name{display:none}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .mobile-menu{display:inline-flex}
+  .topbar{padding:0 12px}
+  .user-name{display:none}
+  /* Di HP: sembunyikan teks pada tombol aksi toolbar supaya bersih */
+  .btn-mobile-icon{padding:8px;min-width:36px}
+  .btn-mobile-icon .btn-label{display:none}
 }
 @media(max-width:600px){
-  .page{padding:14px} .grid,.grid-3,.grid-2,.summary-strip,.row{grid-template-columns:1fr}
-  .login-card{padding:24px} .pdf-upload-row{grid-template-columns:1fr} .page-head h2{font-size:18px}
+  .page{padding:12px}
+  .grid,.grid-3,.grid-2,.summary-strip,.row{grid-template-columns:1fr}
+  .login-card{padding:22px}
+  .pdf-upload-row{grid-template-columns:1fr}
+  .page-head h2{font-size:17px}
   .check-grid{grid-template-columns:1fr}
+  .pdf-frame-wrap{min-height:280px;max-height:calc(100vh - 180px);padding:4px}
+  .pdf-page-img{max-height:calc(100vh - 200px);border-radius:2px}
+  .pdf-toolbar button{min-width:32px;height:32px;font-size:14px}
+  .pdf-page-indicator{font-size:11.5px;min-width:66px}
+  .modal{padding:8px}
+  .modal-box{padding:14px;border-radius:14px;max-height:94vh}
+  .modal-header{top:-14px;padding:4px 0}
+  th,td{padding:9px 10px;font-size:12.5px}
+  .card{padding:12px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -172,7 +253,7 @@ tbody tr:hover{background:#fafcfb}
     <div class="login-logo">📖</div>
     <h1 class="login-title">TPQ Wardatul Wathon</h1>
     <div class="login-subtitle">Tukum Kidul, Lumajang</div>
-    <form id="loginForm" style="margin-top:24px" autocomplete="on">
+    <form id="loginForm" style="margin-top:22px" autocomplete="on">
       <div class="form-group">
         <label for="loginEmail">Email</label>
         <input id="loginEmail" type="email" autocomplete="username" placeholder="email@contoh.com" required>
@@ -184,7 +265,12 @@ tbody tr:hover{background:#fafcfb}
       <button type="submit" class="btn btn-full" id="loginSubmitBtn">Masuk</button>
     </form>
     <div class="login-error" id="loginError"></div>
-    <div style="text-align:center"><button type="button" class="link-btn" id="setupAdminButton">Setup admin pertama</button></div>
+    <div style="text-align:center;margin-top:6px">
+      <button type="button" class="link-btn" id="forgotPasswordButton">Lupa password?</button>
+    </div>
+    <div style="text-align:center">
+      <button type="button" class="link-btn" id="setupAdminButton">Setup admin pertama</button>
+    </div>
   </div>
 </section>
 
@@ -200,12 +286,12 @@ tbody tr:hover{background:#fafcfb}
   <main class="main">
     <header class="topbar">
       <div class="top-left">
-        <button type="button" class="btn btn-light mobile-menu" id="mobileMenuButton" aria-label="Menu">☰</button>
+        <button type="button" class="btn btn-light mobile-menu btn-icon" id="mobileMenuButton" aria-label="Menu">☰</button>
         <span id="pageTitle" class="page-title">Dashboard</span>
       </div>
       <div class="user-area">
         <span id="userName" class="user-name">-</span>
-        <button type="button" class="btn btn-light btn-sm" id="logoutButton">Keluar</button>
+        <button type="button" class="btn btn-light btn-sm btn-icon" id="logoutButton" title="Keluar">⏏</button>
       </div>
     </header>
     <section id="page" class="page"></section>
@@ -225,7 +311,7 @@ tbody tr:hover{background:#fafcfb}
 
 <script type="module">
 /* ============================================================
-   TPQ WARDATUL WATHON — aplikasi satu file
+   TPQ WARDATUL WATHON — satu file
 ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
@@ -234,7 +320,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc,
-  updateDoc, deleteDoc, collection, serverTimestamp
+  updateDoc, deleteDoc, collection, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 /* ============ 1. KONFIGURASI ============ */
@@ -246,9 +332,12 @@ const firebaseConfig = {
   appId: "1:308318249706:web:ad1f631acee81a2fe6ad93",
   measurementId: "G-ZVC3M0L8XJ"
 };
+
 const APP_CONFIG = {
   maxPdfSize: 60 * 1024 * 1024,
-  maxHalamanBytes: 700 * 1024,
+  // Target ukuran gambar per halaman buku (di bawah 1MB Firestore limit).
+  // 180KB × base64 ≈ 240KB. Aman & hemat bandwidth di HP.
+  maxHalamanBytes: 180 * 1024,
   pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
   pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
@@ -256,8 +345,15 @@ const APP_CONFIG = {
   batasIzinJam: 15,
   batasAlphaJam: 18,
   batasAlphaHari: 2,
-  jumlahHariRekap: 7
+  jumlahHariRekap: 7,
+  // Resolusi maksimal sisi terpanjang halaman (px). Di HP cukup 1400px.
+  pdfMaxDim: 1400,
+  // Kompresi WebP (lebih ringan dari JPEG). Fallback ke JPEG bila browser tak dukung.
+  imageMime: "image/webp",
+  imageQualityAwal: 0.78,
+  imageQualityMin: 0.4
 };
+
 const NAMA_BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const NAMA_HARI = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
 const KATEGORI_PENGELUARAN = ["Honor Ustadzah","ATK & Cetak","Konsumsi Kegiatan","Sewa & Listrik","Perawatan Gedung","Bantuan Sosial","Lainnya"];
@@ -339,9 +435,39 @@ function firebaseError(error){
     "auth/user-disabled": "Akun ini dinonaktifkan.",
     "auth/user-not-found": "Akun tidak ditemukan.",
     "permission-denied": "Anda tidak memiliki izin untuk operasi ini.",
+    "resource-exhausted": "Server sedang sibuk. Coba beberapa saat lagi.",
     "unavailable": "Layanan sedang tidak tersedia. Coba lagi."
   };
   return messages[error?.code] || error?.message || "Terjadi kesalahan.";
+}
+
+// Export array of object jadi .xlsx (fallback .csv kalau XLSX gagal)
+function exportToExcel(rows, filename, sheetName="Data"){
+  if(!rows || !rows.length){ showToast("Tidak ada data untuk diexport.", true); return; }
+  try{
+    if(!window.XLSX) throw new Error("Pustaka XLSX belum siap.");
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 30));
+    XLSX.writeFile(wb, filename.endsWith(".xlsx") ? filename : filename + ".xlsx");
+    showToast("File Excel berhasil diunduh.");
+  }catch(err){
+    console.error(err);
+    try{
+      const headers = Object.keys(rows[0]);
+      const csv = [
+        headers.map(h => `"${h}"`).join(","),
+        ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replaceAll('"','""')}"`).join(","))
+      ].join("\r\n");
+      const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" }));
+      const a = Object.assign(document.createElement("a"), { href:url, download: filename.replace(/\.xlsx$/i, ".csv") });
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      showToast("Diexport sebagai CSV (Excel tidak tersedia).");
+    }catch(err2){
+      showToast("Gagal export: " + err2.message, true);
+    }
+  }
 }
 
 const badge = (text, color="gray") => `<span class="badge badge-${color}">${esc(text)}</span>`;
@@ -443,55 +569,36 @@ async function deleteCollectionData(name, id){
   invalidateCache(name);
 }
 
+// Audit buffer — kurangi write ke Firestore, hindari error resource-exhausted.
 const auditBuffer = [];
 let auditFlushTimer = null;
-const AUDIT_FLUSH_DELAY = 3000;   // kirim ke Firestore tiap 3 detik
-const AUDIT_FLUSH_MAX   = 20;     // atau saat buffer sudah 20 entri
+const AUDIT_FLUSH_DELAY = 1500;   // 1.5 detik
+const AUDIT_FLUSH_MAX = 15;
 
 function flushAuditBuffer(){
   if(!auditBuffer.length) return;
   const items = auditBuffer.splice(0, auditBuffer.length);
-  // Firestore tidak punya bulk insert di client SDK, jadi loop saja
-  // tapi ini hanya dipanggil tiap 3 detik, bukan tiap aksi.
-  items.forEach(async (item) => {
-    try{
-      await addCollectionData("audit", item);
-    }catch(err){
-      // Diamkan kalau gagal (audit bukan critical).
-      console.warn("Audit log gagal (diabaikan):", err?.code || err?.message);
-    }
+  items.forEach(async item => {
+    try{ await addCollectionData("audit", item); }
+    catch(err){ console.warn("Audit log gagal (diabaikan):", err?.code || err?.message); }
   });
 }
-
 function logAudit(action, entity, entityId, metadata={}){
-  // Kalau belum login, jangan log.
   if(!currentProfile?.uid) return;
-
   auditBuffer.push({
     action, entity, entityId, metadata,
-    userUid:  currentProfile.uid,
-    userNama: currentProfile.nama || null,
-    userRole: currentProfile.role || null,
+    userUid: currentProfile.uid, userNama: currentProfile.nama || null, userRole: currentProfile.role || null,
     timestamp: new Date().toISOString()
   });
-
   if(auditBuffer.length >= AUDIT_FLUSH_MAX){
-    clearTimeout(auditFlushTimer);
-    auditFlushTimer = null;
-    flushAuditBuffer();
+    clearTimeout(auditFlushTimer); auditFlushTimer = null; flushAuditBuffer();
   } else if(!auditFlushTimer){
-    auditFlushTimer = setTimeout(() => {
-      auditFlushTimer = null;
-      flushAuditBuffer();
-    }, AUDIT_FLUSH_DELAY);
+    auditFlushTimer = setTimeout(() => { auditFlushTimer = null; flushAuditBuffer(); }, AUDIT_FLUSH_DELAY);
   }
 }
+window.addEventListener("beforeunload", () => flushAuditBuffer());
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") flushAuditBuffer(); });
 
-// Saat user keluar / tab ditutup, coba flush supaya log tidak hilang.
-window.addEventListener("beforeunload", () => { flushAuditBuffer(); });
-document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "hidden") flushAuditBuffer();
-});
 /* ============ 6. WAKTU & PENGATURAN ============ */
 const toWIB = d => new Date(d.toLocaleString("en-US", { timeZone:"Asia/Jakarta" }));
 const nowWIB = () => toWIB(new Date());
@@ -519,7 +626,6 @@ const batasAlphaHari = s => num(s?.batasAlphaHari ?? APP_CONFIG.batasAlphaHari);
 const jumlahHariRekap = s => num(s?.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap);
 const isLewatBatasIzin = s => nowWIB().getHours() >= batasIzinJam(s);
 const isLewatBatasAlpha = s => nowWIB().getHours() >= batasAlphaJam(s);
-
 /* ============ 7. HARI LIBUR ============ */
 function isHariLibur(tanggal, settings){
   const mingguan = Array.isArray(settings?.liburMingguan) ? settings.liburMingguan : [];
@@ -802,7 +908,8 @@ async function getSantriUstadzah(){
 async function getSantriWali(){
   return (await getCollectionData("santri")).filter(s => s.waliUid === currentProfile.uid && s.aktif !== false);
 }
-/* ============ 10. KEUANGAN ============ */
+
+/* ============ 10. KEUANGAN HELPER ============ */
 function getPeriodeSekarang(){
   const now = nowWIB();
   return { key: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`, year: now.getFullYear(), month: now.getMonth()+1, tanggal: now.getDate() };
@@ -845,6 +952,7 @@ function hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList }){
   return { sppTerbayar, iuranTerbayar, infaqMasuk, pengeluaran, tabunganSantri, saldoKas, totalUangDiKas: saldoKas + tabunganSantri };
 }
 
+// SPP bulan berjalan otomatis dibuat lewat writeBatch (hemat write).
 let sppEnsuredPeriode = null;
 async function ensureSppBulanIni(){
   const { key: periode } = getPeriodeSekarang();
@@ -855,11 +963,17 @@ async function ensureSppBulanIni(){
     const [santriList, bills] = await Promise.all([getCollectionData("santri"), getCollectionData("tagihanSantri")]);
     const ada = new Set(bills.map(b => b.id));
     const baru = santriList.filter(s => s.aktif !== false && !ada.has(`spp_${s.id}_${periode}`));
-    await Promise.all(baru.map(s => setDoc(doc(db, "tagihanSantri", `spp_${s.id}_${periode}`), {
-      santriId: s.id, santriNama: s.nama || "-", jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`,
-      periode, kegiatanId:null, nominal, terbayar:0, status:"belum", riwayat:[],
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-    })));
+    for(let i = 0; i < baru.length; i += 450){
+      const batch = writeBatch(db);
+      baru.slice(i, i + 450).forEach(s => {
+        batch.set(doc(db, "tagihanSantri", `spp_${s.id}_${periode}`), {
+          santriId: s.id, santriNama: s.nama || "-", jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`,
+          periode, kegiatanId:null, nominal, terbayar:0, status:"belum", riwayat:[],
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        });
+      });
+      await batch.commit();
+    }
     if(baru.length) invalidateCache("tagihanSantri");
     sppEnsuredPeriode = periode;
   }catch(err){ console.warn("Gagal membuat SPP otomatis:", err); }
@@ -889,10 +1003,16 @@ async function catatPembayaranTagihan(billId, { jumlah, metode, keterangan }){
 async function buatIuranKegiatan({ nama, nominal, tanggalMulai, tanggalSelesai, target, targetNama, penerima }){
   const ref = await addCollectionData("kegiatan", { nama, nominal, tanggalMulai, tanggalSelesai, target, targetNama, penerima: penerima || "", aktif:true });
   const santriList = (await getCollectionData("santri")).filter(s => s.aktif !== false && (target === "semua" || s.jilidId === target));
-  await Promise.all(santriList.map(s => setDoc(doc(db, "tagihanSantri", `iuran_${s.id}_${ref.id}`), {
-    santriId: s.id, santriNama: s.nama || "-", jenis:"Iuran Kegiatan", judul: nama, periode:null, kegiatanId: ref.id,
-    nominal, terbayar:0, status:"belum", riwayat:[], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
-  })));
+  for(let i = 0; i < santriList.length; i += 450){
+    const batch = writeBatch(db);
+    santriList.slice(i, i + 450).forEach(s => {
+      batch.set(doc(db, "tagihanSantri", `iuran_${s.id}_${ref.id}`), {
+        santriId: s.id, santriNama: s.nama || "-", jenis:"Iuran Kegiatan", judul: nama, periode:null, kegiatanId: ref.id,
+        nominal, terbayar:0, status:"belum", riwayat:[], createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      });
+    });
+    await batch.commit();
+  }
   invalidateCache("tagihanSantri");
   await addCollectionData("pengumuman", {
     judul: `📢 Iuran Kegiatan: ${nama}`,
@@ -944,7 +1064,7 @@ function keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable 
   const rows = (list, labelFn) => list.map((b,i) => `<tr><td>${i+1}</td><td>${labelFn(b)}</td>
     <td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
     <td>${badgeStatusTagihan(b.status)}${isSppMenunggak(b,tgl) ? " " + badge("Menunggak","red") : ""}</td>
-    ${editable ? `<td><button class="btn btn-sm" data-bayar="${esc(b.id)}">Catat bayar</button></td>` : ""}</tr>`);
+    ${editable ? `<td><button class="btn btn-sm" data-bayar="${esc(b.id)}">Bayar</button></td>` : ""}</tr>`);
   return `
     <div class="card"><h3>💵 SPP</h3><div style="margin-top:10px">${dataTable("", head("Bulan"), rows(sppBills, b => esc(formatPeriodeLabel(b.periode))), "Belum ada tagihan SPP.")}</div></div>
     <div class="card"><h3>🎉 Iuran kegiatan</h3><div style="margin-top:10px">${dataTable("", head("Kegiatan"), rows(iuranBills, b => esc(b.judul || "-")), "Belum ada iuran kegiatan.")}</div></div>
@@ -1082,7 +1202,7 @@ function openPengeluaranModal(onSaved){
   });
 }
 
-/* ============ 11. PENGUMUMAN ============ */
+/* ============ 11. PENGUMUMAN HELPER ============ */
 const isPengumumanKadaluarsa = p => { const d = toDate(p?.berlakuSampai); return !!d && d.getTime() < Date.now(); };
 const isPengumumanTampil = p => !!p && p.aktif !== false && p.manualHidden !== true && !isPengumumanKadaluarsa(p);
 function badgeStatusPengumuman(p){
@@ -1092,7 +1212,7 @@ function badgeStatusPengumuman(p){
   return badge("Aktif","green");
 }
 
-/* ============ 12. PEMBELAJARAN ============ */
+/* ============ 12. PEMBELAJARAN HELPER ============ */
 const badgePembelajaran = s => s === "naik" ? badge("Naik","green") : badge("Mengulang","yellow");
 function hitungRekapPembelajaran(list){
   const total = list.length;
@@ -1121,14 +1241,14 @@ function hitungRekapPembelajaran(list){
 }
 function chartTren(tren){
   const max = Math.max(1, ...tren.map(t => t.total));
-  return `<div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding:10px 0;border-bottom:1px solid var(--border)">
+  return `<div style="display:flex;align-items:flex-end;gap:5px;height:110px;padding:8px 0;border-bottom:1px solid var(--border)">
     ${tren.map(t => `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px">
       <div class="muted" style="font-size:10px">${t.total || ""}</div>
-      <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:80px">
+      <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:72px">
         ${t.naik ? `<div style="height:${t.naik/max*100}%;background:#22c55e;border-radius:3px 3px 0 0" title="Naik: ${t.naik}"></div>` : ""}
         ${t.mengulang ? `<div style="height:${t.mengulang/max*100}%;background:#f59e0b" title="Mengulang: ${t.mengulang}"></div>` : ""}
       </div><div class="muted" style="font-size:10px">${t.label}</div></div>`).join("")}</div>
-    <div style="display:flex;gap:14px;font-size:12px;margin-top:6px">
+    <div style="display:flex;gap:14px;font-size:11.5px;margin-top:6px">
       <span><span style="display:inline-block;width:10px;height:10px;background:#22c55e;border-radius:2px;margin-right:4px"></span>Naik</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:4px"></span>Mengulang</span></div>`;
 }
@@ -1144,7 +1264,7 @@ function bindHalamanButtons(root){
 }
 const totalHalamanJilid = (jilid, tipe) => num(tipe === "hafalan" ? jilid?.totalHalamanHafalan : jilid?.totalHalamanBaca);
 
-/* ============ 13. PDF PER HALAMAN (FIRESTORE) ============ */
+/* ============ 13. PDF PER HALAMAN (RINGAN — WebP) ============ */
 const halamanImageCache = new Map();
 const halamanDocId = (jilidId, tipe, halaman) => `${jilidId}_${tipe}_${halaman}`;
 
@@ -1153,6 +1273,7 @@ function validatePdfFile(file){
   if(!(file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) throw new Error("File harus berformat PDF.");
   if(file.size > APP_CONFIG.maxPdfSize) throw new Error(`Ukuran PDF maksimal ${formatFileSize(APP_CONFIG.maxPdfSize)}.`);
 }
+
 async function fetchHalamanGambar(jilidId, tipe, halaman){
   if(!jilidId || !tipe || !halaman) return null;
   const id = halamanDocId(jilidId, tipe, halaman);
@@ -1186,21 +1307,48 @@ async function loadPdfJs(){
   lib.GlobalWorkerOptions.workerSrc = APP_CONFIG.pdfJsWorkerUrl;
   return lib;
 }
+
+// Konversi canvas ke blob → dataURL, pakai WebP bila didukung.
+function canvasKeDataUrl(canvas, mime, quality){
+  try{
+    const url = canvas.toDataURL(mime, quality);
+    // Jika browser tidak dukung mime, akan fallback ke PNG (data:image/png) — deteksi.
+    if(mime !== "image/png" && url.startsWith("data:image/png")) return null;
+    return url;
+  }catch{ return null; }
+}
+
 async function renderPageToDataUrl(pdfPage, maxBytes){
-  let scale = 1.4, quality = 0.72, last = null;
-  for(let i = 0; i < 7; i++){
+  // Skala awal berdasarkan lebar viewport target
+  const baseViewport = pdfPage.getViewport({ scale: 1 });
+  const maxDimAwal = APP_CONFIG.pdfMaxDim;
+  const skalaAwal = Math.min(2, maxDimAwal / Math.max(baseViewport.width, baseViewport.height));
+  let scale = Math.max(0.6, skalaAwal);
+  let quality = APP_CONFIG.imageQualityAwal;
+  let last = null;
+  const mime = APP_CONFIG.imageMime;
+
+  for(let i = 0; i < 8; i++){
     const viewport = pdfPage.getViewport({ scale });
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(viewport.width));
     canvas.height = Math.max(1, Math.round(viewport.height));
-    await pdfPage.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
-    last = canvas.toDataURL("image/jpeg", quality);
+    const ctx = canvas.getContext("2d", { alpha:false });
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+    const url = canvasKeDataUrl(canvas, mime, quality);
+    if(!url){
+      // Browser tidak dukung WebP, fallback ke JPEG
+      last = canvas.toDataURL("image/jpeg", quality);
+    } else last = url;
     if(Math.ceil(last.length * 0.75) <= maxBytes) return last;
-    if(quality > 0.35) quality = Math.max(0.35, quality - 0.12);
-    else scale = Math.max(0.6, scale - 0.2);
+    if(quality > APP_CONFIG.imageQualityMin) quality = Math.max(APP_CONFIG.imageQualityMin, quality - 0.1);
+    else scale = Math.max(0.55, scale - 0.15);
   }
   return last;
 }
+
 async function uploadPdfPerPage(file, jilidId, tipe, onProgress){
   validatePdfFile(file);
   const pdfjs = await loadPdfJs();
@@ -1216,7 +1364,7 @@ async function uploadPdfPerPage(file, jilidId, tipe, onProgress){
   return pdfDoc.numPages;
 }
 
-const PDF_INFO_DEFAULT = "PDF diproses menjadi gambar per halaman di browser, lalu tiap halaman disimpan sebagai dokumen di Firestore.";
+const PDF_INFO_DEFAULT = "PDF diproses menjadi gambar per halaman di browser (WebP ringan), lalu tiap halaman disimpan di Firestore.";
 function pdfUploadBlock(type, label){
   return `<div class="pdf-upload-box"><label style="display:block;font-weight:600;margin-bottom:8px">${esc(label)}</label>
     <div class="pdf-upload-row"><input id="pdfFile_${type}" type="file" accept="application/pdf,.pdf">
@@ -1286,7 +1434,6 @@ function bindPdfUploader(type, jilidId, initialTotal, persist){
   });
   return { getTotal: () => total };
 }
-
 /* ============ 14. AKUN ============ */
 const roleLabel = r => ({ admin:"Admin", ustadzah:"Ustadzah", wali:"Wali Santri" }[r] || r);
 function requireRole(role){
@@ -1325,6 +1472,23 @@ async function deleteManagedAccountRecord(uid, role){
 }
 
 /* ============ 15. AUTH ============ */
+// Lupa password
+$("forgotPasswordButton").addEventListener("click", () => {
+  openFormModal({
+    title: "Lupa Password",
+    submit: "Kirim Email Reset",
+    body: `${fg("Email akun Anda", `<input id="forgotEmail" type="email" placeholder="email@contoh.com" required>
+      <div class="muted small" style="margin-top:6px">Kami akan mengirim tautan reset password ke email ini.</div>`)}`,
+    onSubmit: async () => {
+      const email = $("forgotEmail").value.trim();
+      if(!email){ showToast("Masukkan email terlebih dahulu.", true); return false; }
+      await sendPasswordResetEmail(auth, email);
+      showToast("Email reset password telah dikirim. Periksa inbox/spam Anda.");
+    }
+  });
+});
+
+// Setup admin pertama
 $("setupAdminButton").addEventListener("click", () => {
   openFormModal({
     title: "Setup admin pertama", submit: "Buat akun admin",
@@ -1428,7 +1592,7 @@ const HANDLERS = {
 };
 function buildNavigation(){
   const items = MENUS[currentProfile.role] || [];
-  $("navigation").innerHTML = items.map(i => `<button type="button" data-page="${i.page}">${i.icon} ${esc(i.label)}</button>`).join("");
+  $("navigation").innerHTML = items.map(i => `<button type="button" data-page="${i.page}"><span style="font-size:15px">${i.icon}</span> ${esc(i.label)}</button>`).join("");
   $("navigation").querySelectorAll("button").forEach(b => b.addEventListener("click", () => navigate(b.dataset.page)));
 }
 async function navigate(page){
@@ -1436,7 +1600,7 @@ async function navigate(page){
   $("pageTitle").textContent = item?.label || "Dashboard";
   $("navigation").querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
   toggleSidebar(false);
-  $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat data...</div>`;
+  $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat...</div>`;
   try{ await HANDLERS[page](); }
   catch(err){
     console.error(err);
@@ -1472,12 +1636,12 @@ async function renderDashboardAdmin(){
       ${statCard("👨‍🎓","Santri aktif", aktif(santri).length)}${statCard("👩‍🏫","Ustadzah aktif", aktif(ustadzah).length)}
       ${statCard("👨‍👩‍👧","Wali aktif", aktif(wali).length)}${statCard("📚","Kelas / jilid", aktif(jilid).length)}
     </div>
-    <div class="card balance" style="margin-top:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
-        <div><div style="font-size:13px;opacity:.85">Saldo kas TPQ</div>
-          <div style="font-size:28px;font-weight:700;margin-top:4px">${formatRupiah(saldo.saldoKas)}</div>
-          <div style="font-size:12px;opacity:.8;margin-top:4px">Termasuk tabungan santri ${formatRupiah(saldo.tabunganSantri)}.</div></div>
-        <div style="text-align:right;font-size:13px;line-height:1.7">
+    <div class="card balance" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div><div style="font-size:12.5px;opacity:.85">Saldo kas TPQ</div>
+          <div style="font-size:26px;font-weight:700;margin-top:4px">${formatRupiah(saldo.saldoKas)}</div>
+          <div style="font-size:11.5px;opacity:.8;margin-top:4px">Termasuk tabungan santri ${formatRupiah(saldo.tabunganSantri)}.</div></div>
+        <div style="text-align:right;font-size:12.5px;line-height:1.7">
           <div>💵 SPP bulan ini: <b>${formatRupiah(totalSppTerbayar)}</b> / ${formatRupiah(totalSppTertagih)}</div>
           <div>🙏 Infaq total: <b>${formatRupiah(saldo.infaqMasuk)}</b></div>
           <div>📤 Pengeluaran: <b>${formatRupiah(saldo.pengeluaran)}</b></div>
@@ -1485,7 +1649,7 @@ async function renderDashboardAdmin(){
       </div>
     </div>
     ${pesanDashboard(ctx.settings)}
-    <div class="stack" style="margin-top:18px">
+    <div class="stack" style="margin-top:14px">
       ${liburCard(ctx.settings)}
       ${rekapCard("📊 Rekap kehadiran ustadzah", rekap, ctx.settings)}
     </div>`;
@@ -1512,11 +1676,31 @@ async function renderDashboardUstadzah(){
       : santriIds.has(z.santriId))
     .sort(byCreatedDesc).slice(0, 10);
 
-  // PENGAYAAN: info izin santri kelas yang saya ampu (termasuk yang diklaim)
   const santriKelasIds = new Set(santri.map(s => s.id));
-  const izinHariIni = izinList.filter(z => 
+  const izinHariIni = izinList.filter(z =>
     z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today)
   );
+
+  // Ringkasan SPP menunggak (kelas ini)
+  const tagihanList = await fresh("tagihanSantri");
+  const sppTanggalPeringatan = num(settings.sppTanggalPeringatan || 10);
+  const tunggakanPerSantri = {};
+  tagihanList.forEach(bill => {
+    if(bill.jenis !== "SPP") return;
+    if(!santriKelasIds.has(bill.santriId)) return;
+    if(!isSppMenunggak(bill, sppTanggalPeringatan)) return;
+    const sisa = Math.max(0, num(bill.nominal) - num(bill.terbayar));
+    if(!tunggakanPerSantri[bill.santriId]){
+      tunggakanPerSantri[bill.santriId] = {
+        santriId: bill.santriId, santriNama: bill.santriNama || "-",
+        bulanList: [], totalTunggakan: 0
+      };
+    }
+    tunggakanPerSantri[bill.santriId].bulanList.push({ label: formatPeriodeLabel(bill.periode), sisa });
+    tunggakanPerSantri[bill.santriId].totalTunggakan += sisa;
+  });
+  const daftarMenunggak = Object.values(tunggakanPerSantri).sort((a,b) => b.totalTunggakan - a.totalTunggakan);
+  const totalTunggakanKelas = daftarMenunggak.reduce((s,x) => s + x.totalTunggakan, 0);
 
   $("page").innerHTML = `
     ${pageHead("Dashboard ustadzah", `Selamat datang, ${esc(currentProfile.nama || "Ustadzah")}.`)}
@@ -1525,27 +1709,42 @@ async function renderDashboardUstadzah(){
       ${statCard("🤝","Kelas diklaim", klaimAktif.length)}${statCard("🟢","Santri aktif", santri.filter(s => s.aktif !== false).length)}
     </div>
     ${pesanDashboard(settings)}
-    <div class="stack" style="margin-top:18px">
-      <div class="card"><h3>Kelas Anda hari ini</h3>
-        ${jilidNames.length ? `<p>${jilidNames.map(esc).join(", ")}</p>` : `<p class="muted">Belum ada kelas.</p>`}
-        ${klaimAktif.length ? `<div class="notice"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}`).join("<br>")}</div>` : ""}
-        <button class="btn btn-sm" id="btnKeKlaim">🤝 Kelola klaim kelas</button></div>
-      ${izinHariIni.length ? `<div class="card warn"><h3 style="color:#92400e">📝 Santri izin hari ini (kelas Anda)</h3><div style="margin-top:10px">
+    <div class="stack" style="margin-top:14px">
+      <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+        <div><h3 style="margin:0">Kelas Anda hari ini</h3>
+          ${jilidNames.length ? `<p style="margin:6px 0 0">${jilidNames.map(esc).join(", ")}</p>` : `<p class="muted" style="margin:6px 0 0">Belum ada kelas.</p>`}
+          ${klaimAktif.length ? `<div class="notice" style="margin-top:10px"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}`).join("<br>")}</div>` : ""}</div>
+        <button class="btn btn-sm" id="btnKeKlaim">🤝 Klaim kelas</button></div></div>
+      ${izinHariIni.length ? `<div class="card warn"><h3 style="color:#92400e">📝 Santri izin hari ini</h3><div style="margin-top:10px">
         ${dataTable("", ["Santri","Alasan","Tanggal","Pengaju"], izinHariIni.map(z => `<tr>
           <td><b style="color:#dc2626">${esc(z.santriNama)}</b></td>
           <td>${badgeAlasan(z.alasan)}${z.alasan === "kegiatan" && z.namaKegiatan ? ` ${esc(z.namaKegiatan)}` : ""}</td>
           <td>${esc(rangeText(z))}</td><td>${esc(z.diajukanOlehNama || "-")}</td></tr>`), "")}</div></div>` : ""}
       ${liburCard(settings)}
       ${peringatanCard(rekapSantri, settings, "Santri kelas Anda")}
+      ${daftarMenunggak.length ? `<div class="card danger">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><h3 style="color:#991b1b;margin:0">💵 Santri menunggak SPP</h3>
+            <p class="muted" style="color:#7f1d1d;margin:4px 0 0 0;font-size:12.5px">
+              ${daftarMenunggak.length} santri · total <b>${formatRupiah(totalTunggakanKelas)}</b></p></div>
+          <button class="btn btn-sm" id="btnKeKeuanganSpp">💰 Catat pembayaran</button>
+        </div>
+        <div style="margin-top:10px">
+          ${dataTable("", ["Santri","Bulan","Sisa"], daftarMenunggak.map(item => `<tr>
+            <td><b style="color:#dc2626">${esc(item.santriNama)}</b></td>
+            <td>${item.bulanList.map(b => `${esc(b.label)} <span class="muted small">(${formatRupiah(b.sisa)})</span>`).join("<br>")}</td>
+            <td><b style="color:#dc2626">${formatRupiah(item.totalTunggakan)}</b></td></tr>`), "")}
+        </div></div>` : ""}
       ${rekapSaya.alpha >= batasAlphaHari(settings) ? `<div class="card danger"><h3 style="color:#991b1b">⚠️ Peringatan kehadiran Anda</h3>
-        <p style="color:#7f1d1d;margin:0">Anda tercatat <b>alpha ${rekapSaya.alpha} hari</b> dalam ${jumlahHariRekap(settings)} hari terakhir. Mohon aktif mengisi hasil belajar atau ajukan izin bila berhalangan.</p></div>` : ""}
+        <p style="color:#7f1d1d;margin:0">Anda tercatat <b>alpha ${rekapSaya.alpha} hari</b> dalam ${jumlahHariRekap(settings)} hari terakhir.</p></div>` : ""}
       ${izinFormCard({ isUstadzah:true, santriList:[], settings })}
       ${riwayatIzinCard(riwayatIzin)}
       ${rekapCard("📊 Rekap kehadiran santri kelas", rekapSantri, settings, "Belum ada santri.")}
       <div class="card"><h3>📊 Rekap kehadiran Anda</h3><p class="muted small">${esc(periodeRekapText(settings))}</p>
-        <div class="grid" style="margin-top:12px">${statCard("✅","Hadir", rekapSaya.hadir)}${statCard("🟡","Izin", rekapSaya.izin)}${statCard("🔴","Alpha", rekapSaya.alpha)}${statCard("📊","Total hari", rekapSaya.total)}</div></div>
+        <div class="grid" style="margin-top:10px">${statCard("✅","Hadir", rekapSaya.hadir)}${statCard("🟡","Izin", rekapSaya.izin)}${statCard("🔴","Alpha", rekapSaya.alpha)}${statCard("📊","Total hari", rekapSaya.total)}</div></div>
     </div>`;
   $("btnKeKlaim").addEventListener("click", () => navigate("daftarSantri"));
+  $("btnKeKeuanganSpp")?.addEventListener("click", () => navigate("daftarSantri"));
   bindIzinForm({ isUstadzah:true, santriList:[], settings });
 }
 
@@ -1560,7 +1759,6 @@ async function renderDashboardWali(){
   const ids = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList.filter(z => ids.has(z.santriId)).sort(byCreatedDesc).slice(0, 10);
 
-  // PENGAYAAN: pendamping dari semua santri wali
   const pendampingSet = new Set();
   santri.forEach(s => {
     const j = jilidList.find(x => x.id === s.jilidId);
@@ -1575,10 +1773,10 @@ async function renderDashboardWali(){
       <div class="card"><div class="stat-icon">👩‍🏫</div><div class="stat-label">Ustadzah pendamping</div><div style="font-weight:700;margin-top:4px">${esc(pendamping || "Belum ditentukan")}</div></div>
     </div>
     ${pesanDashboard(settings)}
-    <div class="stack" style="margin-top:18px">
+    <div class="stack" style="margin-top:14px">
       ${liburCard(settings)}
       ${peringatanCard(rekap, settings, "Santri Anda")}
-      ${santri.length ? `<div class="card"><h3>Ananda</h3><div class="grid grid-3" style="margin-top:12px">
+      ${santri.length ? `<div class="card"><h3>Ananda</h3><div class="grid grid-3" style="margin-top:10px">
         ${santri.map(s => {
           const st = statusSantri(s.id, today, ctx);
           return `<div class="card soft"><h3 style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama || "-")}</h3>
@@ -1615,16 +1813,22 @@ async function renderDataUserAdmin(){
     }));
     $("dataUserContent").querySelectorAll("[data-remove]").forEach(b => b.addEventListener("click", () => onRemove(b.dataset.remove)));
   };
-  const rowActions = id => `<div class="actions"><button class="btn btn-sm btn-info" data-edit="${esc(id)}">Edit</button><button class="btn btn-sm btn-danger" data-remove="${esc(id)}">Hapus</button></div>`;
+  // Tombol aksi kecil, ikon-only di HP
+  const rowActions = id => `<div class="actions">
+    <button class="btn btn-sm btn-info btn-mobile-icon" data-edit="${esc(id)}" title="Edit">✏️<span class="btn-label"> Edit</span></button>
+    <button class="btn btn-sm btn-danger btn-mobile-icon" data-remove="${esc(id)}" title="Hapus">🗑<span class="btn-label"> Hapus</span></button></div>`;
 
   async function renderTabSantri(){
     const [data, ctx] = await Promise.all([fresh("santri"), loadKehadiranContext()]);
     const today = todayStr();
     $("dataUserContent").innerHTML = `
       <div class="toolbar"><input id="searchSantri" class="search-box" placeholder="Cari nama santri...">
-        <div class="actions"><button class="btn btn-light" id="btnTemplateSantri">⬇ Template</button>
-          <button class="btn btn-info" id="btnImportSantri">⬆ Import</button><button class="btn" id="addSantri">+ Tambah santri</button></div></div>
-      ${dataTable("tableSantri", ["No","Nama santri","JK","Kelas","Wali","Hari ini","Status","Aksi"], data.map((s,i) => {
+        <div class="actions">
+          <button class="btn btn-light btn-mobile-icon" id="btnTemplateSantri" title="Download template">⬇<span class="btn-label"> Template</span></button>
+          <button class="btn btn-info btn-mobile-icon" id="btnImportSantri" title="Import dari Excel">⬆<span class="btn-label"> Import</span></button>
+          <button class="btn" id="addSantri">+ Santri</button>
+        </div></div>
+      ${dataTable("tableSantri", ["No","Nama","JK","Kelas","Wali","Hari ini","Status",""], data.map((s,i) => {
         const st = statusSantri(s.id, today, ctx);
         return `<tr data-row><td>${i+1}</td><td><b style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama)}</b></td>
           <td>${esc(s.jenisKelamin || "-")}</td><td>${esc(s.jilidNama || "-")}</td><td>${esc(s.waliNama || "-")}</td>
@@ -1647,8 +1851,8 @@ async function renderDataUserAdmin(){
   async function renderTabWali(){
     const data = await fresh("wali");
     $("dataUserContent").innerHTML = `
-      <div class="toolbar"><input id="searchWali" class="search-box" placeholder="Cari nama/email..."><button class="btn" id="addWali">+ Buat akun wali</button></div>
-      ${dataTable("tableWali", ["No","Nama","Email","Telepon","Status","Aksi"], data.map((w,i) => `<tr data-row>
+      <div class="toolbar"><input id="searchWali" class="search-box" placeholder="Cari nama/email..."><button class="btn" id="addWali">+ Wali</button></div>
+      ${dataTable("tableWali", ["No","Nama","Email","Telepon","Status",""], data.map((w,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(w.nama)}</b></td><td>${esc(w.email)}</td><td>${esc(w.telepon || "-")}</td><td>${badgeAktif(w)}</td><td>${rowActions(w.id)}</td></tr>`), "Belum ada akun wali.")}`;
     attachTableSearch("searchWali","tableWali");
     $("addWali").addEventListener("click", () => openAkunForm("wali", null, renderTabWali));
@@ -1665,8 +1869,8 @@ async function renderDataUserAdmin(){
     const [data, jilid] = await Promise.all([fresh("ustadzah"), fresh("jilid")]);
     const kelasDari = u => jilid.filter(j => getJilidUstadzahIds(j).includes(u.id)).map(j => j.nama).join(", ") || (u.jilidNames || []).join(", ") || "Belum diatur";
     $("dataUserContent").innerHTML = `
-      <div class="toolbar"><input id="searchUstadzah" class="search-box" placeholder="Cari nama/email..."><button class="btn" id="addUstadzah">+ Buat akun ustadzah</button></div>
-      ${dataTable("tableUstadzah", ["No","Nama","Email","Kelas diampu","Status","Aksi"], data.map((u,i) => `<tr data-row>
+      <div class="toolbar"><input id="searchUstadzah" class="search-box" placeholder="Cari nama/email..."><button class="btn" id="addUstadzah">+ Ustadzah</button></div>
+      ${dataTable("tableUstadzah", ["No","Nama","Email","Kelas","Status",""], data.map((u,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(u.nama)}</b></td><td>${esc(u.email)}</td><td>${esc(kelasDari(u))}</td><td>${badgeAktif(u)}</td><td>${rowActions(u.id)}</td></tr>`), "Belum ada akun ustadzah.")}`;
     attachTableSearch("searchUstadzah","tableUstadzah");
     $("addUstadzah").addEventListener("click", () => openAkunForm("ustadzah", null, renderTabUstadzah, jilid));
@@ -1691,7 +1895,7 @@ function openAkunForm(role, item, onSaved, jilidList=[]){
       ${!item ? fg("Password awal", `<input id="akunPassword" type="password" minlength="6" placeholder="Minimal 6 karakter" required>`) : ""}
       ${fg("Telepon", `<input id="akunTelepon" value="${esc(item?.telepon)}" placeholder="08xxxxxxxxxx">`)}
       ${isUstadzah
-        ? fg("Kelas / jilid diampu (boleh lebih dari satu)", `<div class="check-grid">${jilidList.length ? jilidList.map(k => `
+        ? fg("Kelas / jilid diampu", `<div class="check-grid">${jilidList.length ? jilidList.map(k => `
             <label><input type="checkbox" class="jilid-check" value="${esc(k.id)}" ${kelasAwal.includes(k.id) ? "checked" : ""}>${esc(k.nama)}</label>`).join("") : `<span class="muted small">Belum ada kelas/jilid.</span>`}</div>`)
         : fg("Alamat", `<textarea id="akunAlamat" rows="2">${esc(item?.alamat)}</textarea>`)}
       ${fg("Status", `<select id="akunAktif"><option value="true" ${item?.aktif !== false ? "selected" : ""}>Aktif</option><option value="false" ${item?.aktif === false ? "selected" : ""}>Nonaktif</option></select>`)}`,
@@ -1791,8 +1995,8 @@ function openImportSantriModal(existingSantri, onDone){
         <li><b>Kelas / Jilid</b> harus sama persis dengan nama jilid di menu Ruang Ngaji.</li>
         <li>Jika <b>Email Wali</b> belum terdaftar, akun wali dibuat otomatis.</li>
         <li>Baris dengan nama santri dan kelas yang sama dengan data lama dilewati.</li></ol></div>
-      ${fg("File CSV / Excel (.csv, .xls, .xlsx)", `<input id="importFile" type="file" accept=".csv,.xls,.xlsx" required>`)}
-      ${fg("Password default untuk wali baru (minimal 6 karakter)", `<input id="importPassword" type="text" minlength="6" value="wali123456" required>
+      ${fg("File CSV / Excel", `<input id="importFile" type="file" accept=".csv,.xls,.xlsx" required>`)}
+      ${fg("Password default untuk wali baru", `<input id="importPassword" type="text" minlength="6" value="wali123456" required>
         <div class="muted small" style="margin-top:4px">Dipakai bila kolom password di file kosong.</div>`)}
       <div id="importPreview"></div>
       <button type="submit" class="btn btn-full" id="importSubmit" style="margin-top:14px">Import sekarang</button>
@@ -1875,9 +2079,9 @@ function openImportSantriModal(existingSantri, onDone){
         const list = arr => arr.map(esc).join("<br>");
         openModal("Hasil import santri", `
           <div class="notice">✅ <b>${berhasil}</b> santri ditambahkan.<br>👤 <b>${waliBaru.length}</b> akun wali baru dibuat.<br>
-            ⏭ <b>${dilewati}</b> baris dilewati (nama kosong / duplikat).<br>❌ <b>${gagal.length}</b> gagal disimpan.</div>
+            ⏭ <b>${dilewati}</b> baris dilewati.<br>❌ <b>${gagal.length}</b> gagal disimpan.</div>
           ${waliBaru.length ? `<div class="notice" style="margin-top:10px"><b>Akun wali baru:</b><br><span class="small">${list(waliBaru)}</span>
-            <div class="muted small" style="margin-top:6px">Password awal: <b>${esc(defaultPassword)}</b> (atau dari kolom password).</div></div>` : ""}
+            <div class="muted small" style="margin-top:6px">Password awal: <b>${esc(defaultPassword)}</b>.</div></div>` : ""}
           ${tanpaJilid.length ? `<div class="notice notice-warn" style="margin-top:10px"><b>Jilid tidak ditemukan (${tanpaJilid.length}):</b><br><span class="small">${list(tanpaJilid)}</span></div>` : ""}
           ${gagal.length ? `<div class="notice notice-warn" style="margin-top:10px"><b>Gagal:</b><br><span class="small">${list(gagal)}</span></div>` : ""}
           <button class="btn btn-full" id="importDone" style="margin-top:14px">Selesai</button>`);
@@ -1893,9 +2097,9 @@ function openImportSantriModal(existingSantri, onDone){
 /* ============ 19. ADMIN: RUANG NGAJI ============ */
 async function renderRuangNgajiAdmin(){
   if(!requireRole("admin")) return;
-  $("page").innerHTML = `${pageHead("📚 Ruang Ngaji", "Kelola kelas/jilid, pantau pembelajaran, dan kehadiran harian.")}
-    <div class="tabs" id="tabRuangNgaji"><button data-tab="jilid" class="active">📖 Jilid / Kelas</button>
-      <button data-tab="hasil">📊 Hasil belajar</button><button data-tab="harian">📅 Kehadiran harian</button></div>
+  $("page").innerHTML = `${pageHead("📚 Ruang Ngaji", "Kelola kelas/jilid, pembelajaran, dan kehadiran.")}
+    <div class="tabs" id="tabRuangNgaji"><button data-tab="jilid" class="active">📖 Jilid</button>
+      <button data-tab="hasil">📊 Hasil</button><button data-tab="harian">📅 Harian</button></div>
     <div id="ruangNgajiContent"></div>`;
   bindTabs($("tabRuangNgaji"), t => {
     if(t === "jilid") renderTabJilid();
@@ -1907,16 +2111,18 @@ async function renderRuangNgajiAdmin(){
   async function renderTabJilid(){
     const [data, ustadzahList] = await Promise.all([fresh("jilid"), getCollectionData("ustadzah")]);
     $("ruangNgajiContent").innerHTML = `
-      <div class="toolbar"><p class="muted" style="margin:0">Atur kelas, pengampu, serta buku PDF baca dan hafalan.</p><button class="btn" id="addJilid">+ Tambah jilid / kelas</button></div>
+      <div class="toolbar"><p class="muted" style="margin:0">Atur kelas, pengampu, buku PDF.</p><button class="btn" id="addJilid">+ Jilid</button></div>
       <div class="grid grid-3">${data.length ? data.map(j => `
         <div class="card"><div style="display:flex;justify-content:space-between;gap:10px">
           <div><h3 style="margin:0">📚 ${esc(j.nama)}</h3><div class="muted small" style="margin-top:4px">${esc(j.keterangan || "")}</div></div>${badgeAktif(j)}</div>
-          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
-          <div style="display:grid;gap:8px">
-            <div><b>👩‍🏫 Pengampu</b><div class="muted small">${esc(namaPengampu(j, ustadzahList).join(", ") || "Belum ditentukan")}</div></div>
-            <div><b>📖 Buku baca</b><div class="muted small">${num(j.totalHalamanBaca) > 0 ? `${j.totalHalamanBaca} halaman` : "Belum ada"}</div></div>
-            <div><b>🧠 Buku hafalan</b><div class="muted small">${num(j.totalHalamanHafalan) > 0 ? `${j.totalHalamanHafalan} halaman` : "Belum ada"}</div></div></div>
-          <div class="actions" style="margin-top:14px"><button class="btn btn-sm" data-edit="${esc(j.id)}">Edit</button><button class="btn btn-sm btn-danger" data-remove="${esc(j.id)}">Hapus</button></div></div>`).join("")
+          <hr style="border:0;border-top:1px solid var(--border);margin:12px 0">
+          <div style="display:grid;gap:6px">
+            <div><b>👩‍🏫</b> <span class="muted small">${esc(namaPengampu(j, ustadzahList).join(", ") || "Belum ditentukan")}</span></div>
+            <div><b>📖</b> <span class="muted small">${num(j.totalHalamanBaca) > 0 ? `${j.totalHalamanBaca} hlm` : "Belum ada"}</span>
+              <b style="margin-left:8px">🧠</b> <span class="muted small">${num(j.totalHalamanHafalan) > 0 ? `${j.totalHalamanHafalan} hlm` : "Belum ada"}</span></div></div>
+          <div class="actions" style="margin-top:12px">
+            <button class="btn btn-sm btn-mobile-icon" data-edit="${esc(j.id)}">✏️<span class="btn-label"> Edit</span></button>
+            <button class="btn btn-sm btn-danger btn-mobile-icon" data-remove="${esc(j.id)}">🗑<span class="btn-label"> Hapus</span></button></div></div>`).join("")
         : `<div class="card empty">Belum ada kelas/jilid.</div>`}</div>`;
     $("addJilid").addEventListener("click", () => openJilidForm(null, renderTabJilid));
     $("ruangNgajiContent").querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openJilidForm(data.find(x => x.id === b.dataset.edit), renderTabJilid)));
@@ -1924,7 +2130,7 @@ async function renderRuangNgajiAdmin(){
       if(!confirm("Hapus kelas/jilid ini?")) return;
       try{
         await deleteCollectionData("jilid", b.dataset.remove); logAudit("DELETE","jilid",b.dataset.remove);
-        showToast("Jilid / kelas dihapus."); renderTabJilid();
+        showToast("Jilid dihapus."); renderTabJilid();
       }catch(err){ showToast(firebaseError(err), true); }
     }));
   }
@@ -1934,7 +2140,7 @@ async function renderRuangNgajiAdmin(){
     $("ruangNgajiContent").innerHTML = `
       <div class="card">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>
         ${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div>
-      <div id="hasilBelajarBody" style="margin-top:18px"></div>`;
+      <div id="hasilBelajarBody" style="margin-top:14px"></div>`;
 
     function renderKonten(){
       const jid = $("filterJilidHasil").value;
@@ -1947,22 +2153,21 @@ async function renderRuangNgajiAdmin(){
       const warna = p => p >= 70 ? "#166534" : p >= 40 ? "#d97706" : "#dc2626";
       const medal = i => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
       $("hasilBelajarBody").innerHTML = `
-        <div class="grid">${statCard("👨‍🎓","Total santri", santri.length)}${statCard("📚","Total catatan", totalCatatan)}
-          ${statCard("⬆️","Total naik", totalNaik)}${statCard("🎯","Persentase naik", (totalCatatan ? Math.round(totalNaik / totalCatatan * 100) : 0) + "%")}</div>
-        <div class="card" style="margin-top:18px"><h3>📈 Tren kelas 7 hari terakhir</h3>${chartTren(kelas.tren)}</div>
-        <div class="card" style="margin-top:18px"><h3>🏆 Peringkat berdasarkan % naik</h3><div style="margin-top:10px">
-          ${dataTable("", ["Peringkat","Santri","Total","Baca","Hafalan","Naik","Mengulang","% Naik","Aksi"], rekap.map((r,i) => `<tr>
-            <td><b>#${i+1}</b> ${medal(i)}</td><td><b>${esc(r.santri.nama)}</b></td><td>${r.total}</td><td>${r.baca}</td><td>${r.hafalan}</td>
+        <div class="grid">${statCard("👨‍🎓","Santri", santri.length)}${statCard("📚","Catatan", totalCatatan)}
+          ${statCard("⬆️","Naik", totalNaik)}${statCard("🎯","% Naik", (totalCatatan ? Math.round(totalNaik / totalCatatan * 100) : 0) + "%")}</div>
+        <div class="card" style="margin-top:14px"><h3>📈 Tren kelas 7 hari</h3>${chartTren(kelas.tren)}</div>
+        <div class="card" style="margin-top:14px"><h3>🏆 Peringkat</h3><div style="margin-top:10px">
+          ${dataTable("", ["#","Santri","Total","📖","🧠","⬆️","🔄","%","Aksi"], rekap.map((r,i) => `<tr>
+            <td><b>${i+1}</b> ${medal(i)}</td><td><b>${esc(r.santri.nama)}</b></td><td>${r.total}</td><td>${r.baca}</td><td>${r.hafalan}</td>
             <td>${badge(r.naik,"green")}</td><td>${badge(r.mengulang,"yellow")}</td>
             <td><b style="color:${warna(r.persenNaik)}">${r.persenNaik}%</b></td>
-            <td><button class="btn btn-sm btn-info" data-riwayat="${esc(r.santri.id)}">Detail</button></td></tr>`), "Belum ada data.")}</div></div>`;
+            <td><button class="btn btn-sm btn-info btn-mobile-icon" data-riwayat="${esc(r.santri.id)}">📊<span class="btn-label"> Detail</span></button></td></tr>`), "Belum ada data.")}</div></div>`;
       $("hasilBelajarBody").querySelectorAll("[data-riwayat]").forEach(b => b.addEventListener("click", () => renderRiwayatPembelajaranSantri(b.dataset.riwayat, "ruangNgaji")));
     }
     $("filterJilidHasil").addEventListener("change", renderKonten);
     renderKonten();
   }
 
-  // PENGAYAAN: tab kehadiran harian per tanggal
   async function renderTabHarian(){
     const [jilidList, santriList, ctx] = await Promise.all([fresh("jilid"), fresh("santri"), loadKehadiranContext()]);
     const today = todayStr();
@@ -1978,7 +2183,7 @@ async function renderRuangNgajiAdmin(){
           </select>`)}
         </div>
       </div>
-      <div id="rekapHarianBody" style="margin-top:18px"></div>`;
+      <div id="rekapHarianBody" style="margin-top:14px"></div>`;
 
     function renderKonten(){
       const tanggal = $("rekapTanggal").value || today;
@@ -1992,21 +2197,19 @@ async function renderRuangNgajiAdmin(){
 
       const liburInfo = isHariLibur(tanggal, ctx.settings)
         ? `<div class="card info"><b style="color:#1e40af">🏖️ ${esc(labelLibur(tanggal, ctx.settings))}</b>
-            <div class="muted small" style="margin-top:4px">Tanggal ini libur, tidak ada perhitungan alpha.</div></div>`
+            <div class="muted small" style="margin-top:4px">Tanggal ini libur.</div></div>`
         : "";
 
       $("rekapHarianBody").innerHTML = `
         ${liburInfo}
-        <div class="grid" style="margin-top:14px">
-          ${statCard("✅","Hadir", count.hadir || 0)}
-          ${statCard("🟡","Izin", count.izin || 0)}
-          ${statCard("🔴","Alpha", count.alpha || 0)}
-          ${statCard("⏳","Belum", count.belum || 0)}
+        <div class="grid" style="margin-top:12px">
+          ${statCard("✅","Hadir", count.hadir || 0)}${statCard("🟡","Izin", count.izin || 0)}
+          ${statCard("🔴","Alpha", count.alpha || 0)}${statCard("⏳","Belum", count.belum || 0)}
         </div>
-        <div class="card" style="margin-top:18px">
+        <div class="card" style="margin-top:14px">
           <h3>Detail kehadiran ${esc(tanggal)}</h3>
           <div style="margin-top:10px">
-            ${dataTable("", ["No","Santri","Kelas","Status","Keterangan"],
+            ${dataTable("", ["No","Santri","Kelas","Status","Ket"],
               rows.map((r, i) => {
                 const ket = r.st.status === "izin" && r.st.izin
                   ? `${labelAlasan(r.st.izin.alasan)}${r.st.izin.namaKegiatan ? " — " + esc(r.st.izin.namaKegiatan) : ""}`
@@ -2014,13 +2217,11 @@ async function renderRuangNgajiAdmin(){
                 return `<tr><td>${i+1}</td>
                   <td><b style="${r.st.status === "izin" ? "color:#dc2626" : ""}">${esc(r.santri.nama)}</b></td>
                   <td>${esc(r.santri.jilidNama || "-")}</td>
-                  <td>${badgeStatusHarian(r.st)}</td>
-                  <td>${ket}</td></tr>`;
+                  <td>${badgeStatusHarian(r.st)}</td><td>${ket}</td></tr>`;
               }), "Belum ada santri.")}
           </div>
         </div>`;
     }
-
     $("rekapTanggal").addEventListener("change", renderKonten);
     $("rekapJilid").addEventListener("change", renderKonten);
     renderKonten();
@@ -2034,16 +2235,14 @@ async function openJilidForm(item, onSaved){
   const persist = field => item ? (total => updateCollectionData("jilid", item.id, { [field]: total })) : null;
 
   openFormModal({
-    title: item ? "Edit jilid / kelas" : "Tambah jilid / kelas", submit: "💾 Simpan jilid / kelas",
+    title: item ? "Edit jilid / kelas" : "Tambah jilid / kelas", submit: "💾 Simpan",
     body: `${fg("Nama jilid / kelas", `<input id="jilidNama" value="${esc(item?.nama)}" placeholder="Contoh: Jilid 1" required>`)}
-      ${fg("Keterangan", `<textarea id="jilidKeterangan" rows="3">${esc(item?.keterangan)}</textarea>`)}
-      ${fg("Ustadzah pengampu (boleh lebih dari satu)", `<div class="check-grid">${ustadzahList.length ? ustadzahList.map(u => `
+      ${fg("Keterangan", `<textarea id="jilidKeterangan" rows="2">${esc(item?.keterangan)}</textarea>`)}
+      ${fg("Ustadzah pengampu", `<div class="check-grid">${ustadzahList.length ? ustadzahList.map(u => `
         <label><input type="checkbox" class="ustadzah-check" value="${esc(u.id)}" ${currentIds.includes(u.id) ? "checked" : ""}>${esc(u.nama || u.email || "-")}</label>`).join("")
         : `<span class="muted small">Belum ada akun ustadzah.</span>`}</div>`)}
-      ${pdfUploadBlock("baca", "📖 Buku baca (PDF)")}<div style="height:12px"></div>${pdfUploadBlock("hafalan", "🧠 Buku hafalan (PDF)")}
-      <div class="notice" style="margin-top:14px">PDF dipecah menjadi gambar per halaman di browser dan disimpan per dokumen di Firestore, sehingga hanya halaman yang dibuka yang diunduh.
-        <div class="muted small" style="margin-top:6px">Ukuran maksimal PDF sumber ${formatFileSize(APP_CONFIG.maxPdfSize)}. Jangan tutup jendela ini selama upload berjalan.
-        ${item ? "" : "Untuk jilid baru, klik Simpan setelah upload agar jumlah halaman tercatat."}</div></div>
+      ${pdfUploadBlock("baca", "📖 Buku baca (PDF)")}<div style="height:10px"></div>${pdfUploadBlock("hafalan", "🧠 Buku hafalan (PDF)")}
+      <div class="notice" style="margin-top:12px">PDF dikompres otomatis (~180 KB/halaman, WebP) supaya ringan di HP.</div>
       ${fg("Status", `<select id="jilidAktif"><option value="true" ${item?.aktif !== false ? "selected" : ""}>Aktif</option><option value="false" ${item?.aktif === false ? "selected" : ""}>Nonaktif</option></select>`)}`,
     onSubmit: async () => {
       const ustadzahIds = [...document.querySelectorAll(".ustadzah-check:checked")].map(x => x.value);
@@ -2057,7 +2256,7 @@ async function openJilidForm(item, onSaved){
         await setDoc(doc(db, "jilid", jilidId), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
         invalidateCache("jilid"); logAudit("CREATE","jilid",jilidId,{ nama: payload.nama });
       }
-      showToast("Jilid / kelas berhasil disimpan.");
+      showToast("Jilid berhasil disimpan.");
       onSaved?.();
     }
   });
@@ -2066,7 +2265,6 @@ async function openJilidForm(item, onSaved){
     hafalan: bindPdfUploader("hafalan", jilidId, item?.totalHalamanHafalan, persist("totalHalamanHafalan"))
   };
 }
-
 /* ============ 20. ADMIN: KEUANGAN ============ */
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
@@ -2085,52 +2283,61 @@ async function renderKeuanganAdmin(){
   const saldo = hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList });
   const sppBulanIni = sppBills.filter(x => x.periode === periodeIni);
   const jumlah = (list, f) => list.reduce((s,x) => s + num(f(x)), 0);
-  const billActions = id => `<div class="actions"><button class="btn btn-sm" data-bayar="${esc(id)}">Catat bayar</button><button class="btn btn-sm btn-danger" data-hapus-tagihan="${esc(id)}">Hapus</button></div>`;
+  const billActions = id => `<div class="actions">
+    <button class="btn btn-sm btn-mobile-icon" data-bayar="${esc(id)}" title="Catat bayar">💵<span class="btn-label"> Bayar</span></button>
+    <button class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-tagihan="${esc(id)}" title="Hapus">🗑<span class="btn-label"> Hapus</span></button></div>`;
   const search = (id, ph) => `<input id="${id}" class="search-box" placeholder="${ph}">`;
 
   const panels = {
-    spp: `<div class="toolbar">${search("searchSpp","Cari nama santri...")}</div>` +
-      dataTable("tableSpp", ["No","Santri","Bulan","Nominal","Terbayar","Status","Aksi"], sppBills.map((b,i) => `<tr data-row>
+    spp: `<div class="toolbar">${search("searchSpp","Cari nama santri...")}<div class="actions">
+        <button class="btn btn-light btn-mobile-icon" id="btnExportSpp" title="Export Excel">⬇<span class="btn-label"> Excel</span></button></div></div>` +
+      dataTable("tableSpp", ["No","Santri","Bulan","Nominal","Terbayar","Status",""], sppBills.map((b,i) => `<tr data-row>
         <td>${i+1}</td><td>${esc(b.santriNama)}</td><td>${esc(formatPeriodeLabel(b.periode))}</td><td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
         <td>${badgeStatusTagihan(b.status)}${isSppMenunggak(b,tgl) ? " " + badge("Menunggak","red") : ""}</td><td>${billActions(b.id)}</td></tr>`), "Belum ada tagihan SPP."),
     iuran: `<div class="toolbar">${search("searchIuran","Cari nama santri...")}</div>` +
-      dataTable("tableIuran", ["No","Santri","Kegiatan","Nominal","Terbayar","Status","Aksi"], iuranBills.map((b,i) => `<tr data-row>
+      dataTable("tableIuran", ["No","Santri","Kegiatan","Nominal","Terbayar","Status",""], iuranBills.map((b,i) => `<tr data-row>
         <td>${i+1}</td><td>${esc(b.santriNama)}</td><td>${esc(b.judul || "-")}</td><td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
         <td>${badgeStatusTagihan(b.status)}</td><td>${billActions(b.id)}</td></tr>`), "Belum ada iuran kegiatan."),
     tabungan: `<div class="toolbar">${search("searchTabungan","Cari nama santri...")}<div class="actions">
-        <button class="btn btn-info" id="btnRekapTabungan">📊 Rekap per santri</button>
-        <button class="btn btn-success" id="btnSetor">+ Setor tabungan</button><button class="btn btn-warning" id="btnTarik">− Ambil tabungan</button></div></div>` +
-      dataTable("tableTabungan", ["No","Santri","Jenis","Jumlah","Keterangan","Tanggal","Aksi"], tabunganSorted.map((t,i) => `<tr data-row>
+        <button class="btn btn-light btn-mobile-icon" id="btnExportTabungan" title="Export Excel">⬇<span class="btn-label"> Excel</span></button>
+        <button class="btn btn-info btn-mobile-icon" id="btnRekapTabungan" title="Rekap per santri">📊<span class="btn-label"> Rekap</span></button>
+        <button class="btn btn-success btn-mobile-icon" id="btnSetor" title="Setor">+<span class="btn-label"> Setor</span></button>
+        <button class="btn btn-warning btn-mobile-icon" id="btnTarik" title="Tarik">−<span class="btn-label"> Tarik</span></button>
+      </div></div>` +
+      dataTable("tableTabungan", ["No","Santri","Jenis","Jumlah","Keterangan","Tanggal",""], tabunganSorted.map((t,i) => `<tr data-row>
         <td>${i+1}</td><td>${esc(t.santriNama)}</td><td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td><td>${formatRupiah(t.jumlah)}</td>
-        <td>${esc(t.keterangan || "-")}</td><td>${formatTanggal(t.tanggal)}</td><td><button class="btn btn-sm btn-danger" data-hapus-tabungan="${esc(t.id)}">Hapus</button></td></tr>`), "Belum ada transaksi tabungan."),
-    infaq: `<div class="toolbar">${search("searchInfaq","Cari donatur...")}<button class="btn" id="btnCatatInfaq">+ Catat infaq</button></div>` +
-      dataTable("tableInfaq", ["No","Donatur","Jenis","Jumlah","Metode","Tanggal","Keterangan","Aksi"], infaqList.slice().sort(byTanggal).map((x,i) => `<tr data-row>
+        <td>${esc(t.keterangan || "-")}</td><td>${formatTanggal(t.tanggal)}</td>
+        <td><button class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-tabungan="${esc(t.id)}" title="Hapus">🗑</button></td></tr>`), "Belum ada transaksi tabungan."),
+    infaq: `<div class="toolbar">${search("searchInfaq","Cari donatur...")}<button class="btn btn-mobile-icon" id="btnCatatInfaq">+<span class="btn-label"> Infaq</span></button></div>` +
+      dataTable("tableInfaq", ["No","Donatur","Jenis","Jumlah","Metode","Tanggal",""], infaqList.slice().sort(byTanggal).map((x,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(x.donaturNama || "Hamba Allah")}</b></td><td>${badgeJenisDonatur(x.jenisDonatur)}</td>
         <td><b style="color:#166534">${formatRupiah(x.jumlah)}</b></td><td>${esc(x.metode || "Tunai")}</td><td>${formatTanggal(x.tanggal)}</td>
-        <td>${esc(x.keterangan || "-")}</td><td><button class="btn btn-sm btn-danger" data-hapus-infaq="${esc(x.id)}">Hapus</button></td></tr>`), "Belum ada infaq."),
-    donatur: `<div class="toolbar">${search("searchDonatur","Cari nama donatur...")}<button class="btn" id="btnTambahDonatur">+ Tambah donatur</button></div>` +
-      dataTable("tableDonatur", ["No","Nama","Jenis","Telepon","Total donasi","Status","Aksi"], donaturList.map((d,i) => `<tr data-row>
+        <td><button class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-infaq="${esc(x.id)}" title="Hapus">🗑</button></td></tr>`), "Belum ada infaq."),
+    donatur: `<div class="toolbar">${search("searchDonatur","Cari nama donatur...")}<button class="btn btn-mobile-icon" id="btnTambahDonatur">+<span class="btn-label"> Donatur</span></button></div>` +
+      dataTable("tableDonatur", ["No","Nama","Jenis","Telepon","Total","Status",""], donaturList.map((d,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(d.nama || "-")}</b></td><td>${badgeJenisDonatur(d.jenis)}</td><td>${esc(d.telepon || "-")}</td>
         <td><b style="color:#166534">${formatRupiah(jumlah(infaqList.filter(x => x.donaturId === d.id), x => x.jumlah))}</b></td><td>${badgeAktif(d)}</td>
-        <td><div class="actions"><button class="btn btn-sm btn-info" data-edit-donatur="${esc(d.id)}">Edit</button><button class="btn btn-sm btn-danger" data-hapus-donatur="${esc(d.id)}">Hapus</button></div></td></tr>`), "Belum ada donatur."),
-    pengeluaran: `<div class="toolbar">${search("searchPengeluaran","Cari keterangan...")}<button class="btn btn-warning" id="btnCatatPengeluaran">+ Catat pengeluaran</button></div>` +
-      dataTable("tablePengeluaran", ["No","Judul","Kategori","Jumlah","Penerima","Tanggal","Aksi"], pengeluaranList.slice().sort(byTanggal).map((x,i) => `<tr data-row>
+        <td><div class="actions">
+          <button class="btn btn-sm btn-info btn-mobile-icon" data-edit-donatur="${esc(d.id)}" title="Edit">✏️</button>
+          <button class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-donatur="${esc(d.id)}" title="Hapus">🗑</button></div></td></tr>`), "Belum ada donatur."),
+    pengeluaran: `<div class="toolbar">${search("searchPengeluaran","Cari keterangan...")}<button class="btn btn-warning btn-mobile-icon" id="btnCatatPengeluaran">+<span class="btn-label"> Pengeluaran</span></button></div>` +
+      dataTable("tablePengeluaran", ["No","Judul","Kategori","Jumlah","Penerima","Tanggal",""], pengeluaranList.slice().sort(byTanggal).map((x,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(x.judul || "-")}</b>${x.keterangan ? `<br><span class="muted small">${esc(x.keterangan)}</span>` : ""}</td>
         <td>${badgeKategori(x.kategori)}</td><td><b style="color:#dc2626">${formatRupiah(x.jumlah)}</b></td><td>${esc(x.penerima || "-")}</td><td>${formatTanggal(x.tanggal)}</td>
-        <td><button class="btn btn-sm btn-danger" data-hapus-pengeluaran="${esc(x.id)}">Hapus</button></td></tr>`), "Belum ada pengeluaran.")
+        <td><button class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-pengeluaran="${esc(x.id)}" title="Hapus">🗑</button></td></tr>`), "Belum ada pengeluaran.")
   };
   const tabLabels = { spp:"💵 SPP", iuran:"🎉 Iuran", tabungan:"🏦 Tabungan", infaq:"🙏 Infaq", donatur:"👤 Donatur", pengeluaran:"📤 Pengeluaran" };
 
   $("page").innerHTML = `
     ${pageHead("💰 Keuangan", "Pemasukan dan pengeluaran TPQ.")}
-    <div class="card balance"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
-      <div><div style="font-size:13px;opacity:.85">Saldo kas TPQ</div><div style="font-size:30px;font-weight:700;margin-top:4px">${formatRupiah(saldo.saldoKas)}</div>
-        <div style="font-size:12px;opacity:.8;margin-top:4px">Pemasukan dikurangi pengeluaran. Total uang di kas termasuk tabungan santri: ${formatRupiah(saldo.totalUangDiKas)}</div></div>
-      <div style="text-align:right;font-size:13px;line-height:1.8"><div>💵 SPP: <b>${formatRupiah(saldo.sppTerbayar)}</b></div><div>🎉 Iuran: <b>${formatRupiah(saldo.iuranTerbayar)}</b></div>
-        <div>🙏 Infaq: <b>${formatRupiah(saldo.infaqMasuk)}</b></div><div>📤 Pengeluaran: <b>${formatRupiah(saldo.pengeluaran)}</b></div></div></div></div>
+    <div class="card balance"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div><div style="font-size:12.5px;opacity:.85">Saldo kas TPQ</div><div style="font-size:26px;font-weight:700;margin-top:4px">${formatRupiah(saldo.saldoKas)}</div>
+        <div style="font-size:11.5px;opacity:.8;margin-top:4px">Termasuk tabungan santri ${formatRupiah(saldo.tabunganSantri)}</div></div>
+      <div style="text-align:right;font-size:12.5px;line-height:1.7"><div>💵 SPP: <b>${formatRupiah(saldo.sppTerbayar)}</b></div><div>🎉 Iuran: <b>${formatRupiah(saldo.iuranTerbayar)}</b></div>
+        <div>🙏 Infaq: <b>${formatRupiah(saldo.infaqMasuk)}</b></div><div>📤 Keluar: <b>${formatRupiah(saldo.pengeluaran)}</b></div></div></div></div>
     <div class="summary-strip">
       ${statCard("💵","SPP tertagih bulan ini", formatRupiah(jumlah(sppBulanIni, x => x.nominal)))}${statCard("✅","SPP terbayar bulan ini", formatRupiah(jumlah(sppBulanIni, x => x.terbayar)))}
-      ${statCard("🙏","Total infaq", formatRupiah(saldo.infaqMasuk))}${statCard("🏦","Saldo tabungan santri", formatRupiah(saldo.tabunganSantri))}</div>
+      ${statCard("🙏","Total infaq", formatRupiah(saldo.infaqMasuk))}${statCard("🏦","Saldo tabungan", formatRupiah(saldo.tabunganSantri))}</div>
     <div class="tabs" id="tabKeuangan">${Object.entries(tabLabels).map(([k,l],i) => `<button data-tab="${k}" class="${i === 0 ? "active" : ""}">${l}</button>`).join("")}</div>
     ${Object.entries(panels).map(([k,h],i) => `<div id="panel_${k}" class="${i === 0 ? "" : "hidden"}">${h}</div>`).join("")}`;
 
@@ -2153,10 +2360,33 @@ async function renderKeuanganAdmin(){
     if(t && confirm(`Hapus transaksi ${t.jenis === "tarik" ? "tarik" : "setor"} ${formatRupiah(t.jumlah)} untuk ${t.santriNama}?`))
       guarded(() => hapusDenganAudit("tabungan", id, "Transaksi tidak ditemukan.", x => ({ santriNama:x.santriNama, jenis:x.jenis, jumlah:x.jumlah })), "Transaksi tabungan dihapus.");
   });
+
+  // Export Excel SPP
+  $("btnExportSpp").addEventListener("click", () => {
+    const rows = sppBills.map((b, i) => ({
+      "No": i + 1, "Nama Santri": b.santriNama || "", "Bulan": formatPeriodeLabel(b.periode),
+      "Nominal": num(b.nominal), "Terbayar": num(b.terbayar),
+      "Sisa": Math.max(0, num(b.nominal) - num(b.terbayar)),
+      "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar",
+      "Menunggak": isSppMenunggak(b, tgl) ? "Ya" : "Tidak"
+    }));
+    exportToExcel(rows, `rekap-spp-${todayStr()}.xlsx`, "Rekap SPP");
+  });
+  // Export Excel Tabungan
+  $("btnExportTabungan").addEventListener("click", () => {
+    const rows = tabunganSorted.map((t, i) => ({
+      "No": i + 1, "Nama Santri": t.santriNama || "",
+      "Jenis": t.jenis === "tarik" ? "Tarik" : "Setor",
+      "Jumlah": num(t.jumlah), "Keterangan": t.keterangan || "",
+      "Tanggal": formatTanggal(t.tanggal), "Dicatat Oleh": t.dicatatOlehNama || ""
+    }));
+    exportToExcel(rows, `rekap-tabungan-${todayStr()}.xlsx`, "Rekap Tabungan");
+  });
+
   $("btnSetor").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"setor", onSaved: reload }));
   $("btnTarik").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"tarik", onSaved: reload }));
 
-  // PENGAYAAN: rekap tabungan per santri
+  // Rekap tabungan per santri
   $("btnRekapTabungan").addEventListener("click", () => {
     const rekap = santriAktif.map(s => ({
       santri: s,
@@ -2203,7 +2433,8 @@ async function renderKeuanganAdmin(){
 async function renderPengaturanAdmin(){
   if(!requireRole("admin")) return;
   $("page").innerHTML = `${pageHead("⚙️ Pengaturan", "Konfigurasi TPQ, tagihan, dan akun.")}
-    <div class="tabs" id="tabPengaturan"><button data-tab="umum" class="active">🏠 Umum</button><button data-tab="tagihan">🧾 Tagihan</button><button data-tab="akun">👤 Akun</button></div>
+    <div class="tabs" id="tabPengaturan"><button data-tab="umum" class="active">🏠 Umum</button>
+      <button data-tab="tagihan">🧾 Tagihan</button><button data-tab="akun">👤 Akun</button></div>
     <div id="pengaturanContent" class="stack"></div>`;
   const tabs = { umum: renderTabUmum, tagihan: renderTabTagihan, akun: renderTabAkun };
   bindTabs($("tabPengaturan"), t => tabs[t]());
@@ -2233,20 +2464,22 @@ async function renderPengaturanAdmin(){
         ${fg("Tanggal mulai pembelajaran", `<input id="cfgMulai" type="date" value="${esc(s.mulaiPembelajaran)}" required><div class="muted small" style="margin-top:4px">Titik awal perhitungan rekap dan peringatan.</div>`)}
         <div class="row">${fg("Batas jam input izin (WIB)", `<input id="cfgBatasIzin" type="number" min="0" max="23" value="${batasIzinJam(s)}" required>`)}
           ${fg("Batas jam status alpha (WIB)", `<input id="cfgBatasAlpha" type="number" min="0" max="23" value="${batasAlphaJam(s)}" required>`)}</div>
-        <div class="row">${fg("Batas hari alpha untuk peringatan", `<input id="cfgAlphaHari" type="number" min="1" max="7" value="${batasAlphaHari(s)}" required>`)}
+        <div class="row">${fg("Batas hari alpha", `<input id="cfgAlphaHari" type="number" min="1" max="7" value="${batasAlphaHari(s)}" required>`)}
           ${fg("Jumlah hari rekap", `<input id="cfgHariRekap" type="number" min="1" max="30" value="${jumlahHariRekap(s)}" required>`)}</div>
         <button class="btn" type="submit" id="izinConfigSaveBtn">💾 Simpan</button></form></div>
 
       <div class="card"><h3>🏖️ Hari libur</h3><p class="muted small">Hari libur tidak dihitung sebagai alpha untuk santri maupun ustadzah.</p>
         <form id="liburMingguanForm" style="margin-top:10px">
-          ${fg("Libur mingguan (berulang tiap pekan)", `<div class="check-grid" style="grid-template-columns:repeat(4,1fr);max-height:none">${NAMA_HARI.map((n,i) => `
+          ${fg("Libur mingguan", `<div class="check-grid" style="grid-template-columns:repeat(4,1fr);max-height:none">${NAMA_HARI.map((n,i) => `
             <label><input type="checkbox" class="libur-hari-check" value="${i}" ${(s.liburMingguan || []).includes(i) ? "checked" : ""}>${n}</label>`).join("")}</div>`)}
           <button type="submit" class="btn" id="liburMingguanSaveBtn">💾 Simpan libur mingguan</button></form>
-        <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+        <hr style="border:0;border-top:1px solid var(--border);margin:16px 0">
         <h4 style="margin:0 0 8px">Libur event</h4>
         <div style="margin-bottom:12px">${events.length ? events.map((e,i) => `<div class="notice" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
           <div><b>${esc(e.nama || "Libur")}</b><div class="muted small">${esc(e.mulai)} s/d ${esc(e.selesai)}</div></div>
-          <div class="actions"><button type="button" class="btn btn-sm btn-info" data-edit-libur="${i}">Edit</button><button type="button" class="btn btn-sm btn-danger" data-hapus-libur="${i}">Hapus</button></div></div>`).join("")
+          <div class="actions">
+            <button type="button" class="btn btn-sm btn-info btn-mobile-icon" data-edit-libur="${i}" title="Edit">✏️</button>
+            <button type="button" class="btn btn-sm btn-danger btn-mobile-icon" data-hapus-libur="${i}" title="Hapus">🗑</button></div></div>`).join("")
           : `<div class="muted small">Belum ada libur event.</div>`}</div>
         <form id="liburEventForm">
           ${fg("Nama event", `<input id="liburEventNama" placeholder="Contoh: Libur Maulid Nabi" required>`)}
@@ -2254,8 +2487,8 @@ async function renderPengaturanAdmin(){
           ${fg("Keterangan (opsional)", `<textarea id="liburEventKeterangan" rows="2" placeholder="Contoh: Dalam rangka peringatan Maulid Nabi"></textarea>`)}
           <button type="submit" class="btn" id="liburEventSaveBtn">+ Tambah libur event</button></form></div>
 
-      <div class="card"><h3>📱 QRIS pembayaran</h3><p class="muted small">Gunakan file QRIS yang disimpan di repository GitHub atau URL gambar.</p>
-        ${qris ? `<img src="${esc(qris)}" alt="QRIS" style="width:220px;max-width:100%;display:block;margin:12px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
+      <div class="card"><h3>📱 QRIS pembayaran</h3><p class="muted small">Gunakan file QRIS di repository GitHub atau URL gambar.</p>
+        ${qris ? `<img src="${esc(qris)}" alt="QRIS" style="width:200px;max-width:100%;display:block;margin:12px 0;border-radius:12px;border:1px solid var(--border)">` : `<div class="notice">QRIS belum diatur.</div>`}
         ${fg("URL / path QRIS", `<input id="qrisUrl" type="url" value="${esc(qris)}" placeholder="./assets/qris/qris.png">`)}
         <button class="btn" id="saveQris">💾 Simpan URL QRIS</button></div>`;
 
@@ -2321,18 +2554,18 @@ async function renderPengaturanAdmin(){
     const [s, kegiatanList, jilidList] = await Promise.all([getAppSettings(), fresh("kegiatan"), getCollectionData("jilid")]);
     $("pengaturanContent").innerHTML = `
       <div class="card"><h3>💵 Pengaturan SPP</h3>
-        <p class="muted small">SPP otomatis ditagihkan ke semua santri aktif setiap awal bulan. Untuk santri yang menunggak dari bulan sebelumnya, gunakan Backfill agar tagihan lama bisa dicatat pembayarannya.</p>
+        <p class="muted small">SPP otomatis ditagihkan ke semua santri aktif setiap awal bulan.</p>
         <form id="sppSettingsForm" style="margin-top:12px"><div class="row">
           ${fg("Nominal SPP per bulan", `<input id="sppNominal" type="number" min="0" value="${num(s.sppNominal)}" required>`)}
-          ${fg("Tanggal mulai peringatan tunggakan", `<input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${num(s.sppTanggalPeringatan || 10)}" required>`)}</div>
+          ${fg("Tanggal mulai peringatan", `<input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${num(s.sppTanggalPeringatan || 10)}" required>`)}</div>
           <button class="btn" type="submit" id="sppSettingsSaveBtn">💾 Simpan SPP</button></form>
         <button class="btn btn-light" id="btnBackfillSpp" style="margin-top:12px">⏱ Backfill SPP menunggak</button></div>
-      <div class="toolbar" style="margin:6px 0 0"><div><h3 style="margin:0">🎉 Iuran kegiatan</h3><p class="muted small" style="margin:0">Iuran sekali jalan; tagihan per santri dan pengumuman dibuat otomatis.</p></div>
+      <div class="toolbar" style="margin:6px 0 0"><div><h3 style="margin:0">🎉 Iuran kegiatan</h3><p class="muted small" style="margin:0">Iuran sekali jalan; tagihan per santri & pengumuman dibuat otomatis.</p></div>
         <button class="btn" id="btnTambahKegiatan">+ Buat iuran</button></div>
-      ${dataTable("", ["No","Nama","Nominal","Periode","Berlaku untuk","Status","Aksi"], kegiatanList.map((k,i) => `<tr>
+      ${dataTable("", ["No","Nama","Nominal","Periode","Target","Status",""], kegiatanList.map((k,i) => `<tr>
         <td>${i+1}</td><td><b>${esc(k.nama)}</b>${k.penerima ? `<br><span class="muted small">Kepada: ${esc(k.penerima)}</span>` : ""}</td>
         <td>${formatRupiah(k.nominal)}</td><td>${esc(k.tanggalMulai || "-")} s/d ${esc(k.tanggalSelesai || "-")}</td><td>${esc(k.targetNama || "Semua Santri")}</td>
-        <td>${badgeAktif(k)}</td><td>${k.aktif === false ? "" : `<button class="btn btn-sm btn-danger" data-remove-kegiatan="${esc(k.id)}">Nonaktifkan</button>`}</td></tr>`), "Belum ada iuran kegiatan.")}`;
+        <td>${badgeAktif(k)}</td><td>${k.aktif === false ? "" : `<button class="btn btn-sm btn-danger btn-mobile-icon" data-remove-kegiatan="${esc(k.id)}" title="Nonaktifkan">🗑</button>`}</td></tr>`), "Belum ada iuran kegiatan.")}`;
 
     onSave("sppSettingsForm","sppSettingsSaveBtn", async () => {
       await saveSettings({ sppNominal: num($("sppNominal").value), sppTanggalPeringatan: num($("sppTanggalPeringatan").value) || 10 });
@@ -2357,7 +2590,7 @@ async function renderPengaturanAdmin(){
         ${fg("Nama", `<input value="${esc(currentProfile.nama)}" disabled>`)}${fg("Email", `<input value="${esc(currentProfile.email || currentUser.email)}" disabled>`)}
         ${fg("Role", `<input value="${esc(roleLabel(currentProfile.role))}" disabled>`)}${fg("Status", `<input value="${currentProfile.aktif === false ? "Nonaktif" : "Aktif"}" disabled>`)}</div>
         <button class="btn" id="btnResetPassword">📧 Kirim email reset password</button></div>
-      <div class="card"><h3>🛠 Tools admin</h3><p class="muted small">Migrasi struktur data lama ke format multi-ustadzah. Jalankan sekali saja setelah pembaruan besar.</p>
+      <div class="card"><h3>🛠 Tools admin</h3><p class="muted small">Migrasi struktur data lama & lihat log audit.</p>
         <div class="actions">
           <button class="btn btn-light" id="btnMigrasiData">🔄 Migrasi multi-ustadzah</button>
           <button class="btn btn-light" id="btnLihatAudit">📜 Lihat log audit</button>
@@ -2365,7 +2598,6 @@ async function renderPengaturanAdmin(){
     $("btnResetPassword").addEventListener("click", () => kirimResetPassword($("btnResetPassword")));
     $("btnMigrasiData").addEventListener("click", jalankanMigrasiMultiUstadzah);
 
-    // PENGAYAAN: lihat log audit
     $("btnLihatAudit").addEventListener("click", async () => {
       const audit = (await fresh("audit")).sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 100);
       openModal("📜 Log audit (100 terbaru)", `
@@ -2420,7 +2652,7 @@ function openBackfillSppForm(settings){
     const aktif = list.filter(s => s.aktif !== false);
     openFormModal({
       title: "Backfill SPP menunggak", submit: "Buat tagihan SPP",
-      body: `<div class="notice">Buat tagihan SPP bulan-bulan sebelumnya (tahun ini) untuk santri yang menunggak, supaya pembayarannya bisa dicatat.</div>
+      body: `<div class="notice">Buat tagihan SPP bulan-bulan sebelumnya (tahun ini) untuk santri yang menunggak.</div>
         ${fg("Santri", `<select id="bfSantri" required><option value="">Pilih santri</option>${aktif.map(s => `<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join("")}</select>`)}
         ${fg("Bulan tertagih", `<select id="bfBulan">${daftarBulanTahunIni().map(b => `<option value="${b.key}">${b.label}</option>`).join("")}</select>`)}
         ${fg("Nominal SPP bulan tersebut", `<input id="bfNominal" type="number" min="0" value="${num(settings.sppNominal)}" required>`)}`,
@@ -2471,7 +2703,7 @@ async function jalankanMigrasiMultiUstadzah(){
       await updateCollectionData("ustadzah", u.id, { jilidIds: u.jilidId ? [u.jilidId] : [], jilidNames: u.jilidNama ? [u.jilidNama] : [] });
       nUstadzah++;
     }
-    showToast(`Migrasi selesai. Jilid diperbarui: ${nJilid}, ustadzah diperbarui: ${nUstadzah}.`);
+    showToast(`Migrasi selesai. Jilid: ${nJilid}, ustadzah: ${nUstadzah}.`);
   }catch(err){ showToast("Gagal migrasi: " + firebaseError(err), true); }
 }
 window.jalankanMigrasiMultiUstadzah = jalankanMigrasiMultiUstadzah;
@@ -2501,9 +2733,11 @@ async function renderPengumuman(){
           <div class="muted small" style="margin-top:4px">Dibuat: ${formatTanggal(p.createdAt)}</div>
           ${p.berlakuSampai ? `<div class="muted small">Berlaku sampai: <b>${formatTanggalJam(p.berlakuSampai)}</b></div>` : ""}</div>${isAdmin ? badgeStatusPengumuman(p) : ""}</div>
         <p style="white-space:pre-wrap;line-height:1.6;margin-top:10px">${esc(p.isi || "")}</p>
-        ${isAdmin ? `<div class="actions"><button class="btn btn-sm" data-edit="${esc(p.id)}">Edit</button>
-          ${tersembunyi ? `<button class="btn btn-sm btn-success" data-tampilkan="${esc(p.id)}">👁 Tampilkan lagi</button>` : `<button class="btn btn-sm btn-warning" data-sembunyikan="${esc(p.id)}">🙈 Sembunyikan</button>`}
-          <button class="btn btn-sm btn-danger" data-remove="${esc(p.id)}">Hapus</button></div>` : ""}</div>`;
+        ${isAdmin ? `<div class="actions">
+          <button class="btn btn-sm btn-mobile-icon" data-edit="${esc(p.id)}" title="Edit">✏️<span class="btn-label"> Edit</span></button>
+          ${tersembunyi ? `<button class="btn btn-sm btn-success btn-mobile-icon" data-tampilkan="${esc(p.id)}" title="Tampilkan">👁<span class="btn-label"> Tampilkan</span></button>` 
+                        : `<button class="btn btn-sm btn-warning btn-mobile-icon" data-sembunyikan="${esc(p.id)}" title="Sembunyikan">🙈<span class="btn-label"> Sembunyikan</span></button>`}
+          <button class="btn btn-sm btn-danger btn-mobile-icon" data-remove="${esc(p.id)}" title="Hapus">🗑<span class="btn-label"> Hapus</span></button></div>` : ""}</div>`;
     }).join("") : `<div class="card empty">Belum ada pengumuman.</div>`;
     bindActions();
   }
@@ -2538,7 +2772,7 @@ async function renderPengumuman(){
 
   $("page").innerHTML = `
     ${pageHead("📢 Pengumuman", isAdmin ? "Semua pengumuman, termasuk yang kadaluarsa." : "Informasi terbaru dari admin TPQ.",
-      isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat pengumuman</button>` : "")}
+      isAdmin ? `<button class="btn" id="btnTambahPengumuman">+ Buat</button>` : "")}
     ${isAdmin ? `<div class="tabs" id="filterPengumuman" style="margin-bottom:14px">
       <button data-f="semua" class="active">Semua (${hitung.semua})</button>
       <button data-f="aktif">Aktif (${hitung.aktif})</button>
@@ -2568,7 +2802,7 @@ function openPengumumanForm(item){
     body: `${fg("Judul", `<input id="pgmJudul" value="${esc(item?.judul)}" required>`)}
       ${fg("Isi pengumuman", `<textarea id="pgmIsi" rows="7" required>${esc(item?.isi)}</textarea>`)}
       ${fg("⏰ Berlaku sampai (opsional)", `<input id="pgmSampai" type="datetime-local" value="${toLocal(item?.berlakuSampai)}">
-        <div class="muted small" style="margin-top:4px">Setelah tanggal dan jam ini lewat, pengumuman otomatis disembunyikan dari wali dan ustadzah. Kosongkan bila tidak perlu kadaluarsa.</div>`)}
+        <div class="muted small" style="margin-top:4px">Setelah tanggal dan jam ini lewat, pengumuman otomatis disembunyikan. Kosongkan bila tidak perlu kadaluarsa.</div>`)}
       ${fg("Status", `<select id="pgmAktif"><option value="true" ${item?.aktif !== false ? "selected" : ""}>Aktif</option><option value="false" ${item?.aktif === false ? "selected" : ""}>Nonaktif</option></select>`)}
       ${item && isPengumumanKadaluarsa(item) ? `<div class="notice">Pengumuman ini sudah kadaluarsa pada ${formatTanggalJam(item.berlakuSampai)}.</div>` : ""}`,
     onSubmit: async () => {
@@ -2598,22 +2832,25 @@ async function renderDaftarSantriUstadzah(){
   const efektif = jilidList.filter(j => asliIds.includes(j.id) || klaimAktif.some(k => k.id === j.id)).map(j => j.nama);
 
   $("page").innerHTML = `
-    <div class="toolbar"><div><h2 style="font-size:21px">Daftar santri</h2>
-      <p class="muted" style="margin:2px 0 0">Kelas efektif hari ini: <b>${efektif.length ? esc(efektif.join(", ")) : "belum ada"}</b></p></div>
-      <input id="searchSantriUstadzah" class="search-box" placeholder="Cari nama santri..."></div>
+    <div class="toolbar"><div><h2 style="font-size:19px">Daftar santri</h2>
+      <p class="muted" style="margin:2px 0 0">Kelas efektif: <b>${efektif.length ? esc(efektif.join(", ")) : "belum ada"}</b></p></div>
+      <input id="searchSantriUstadzah" class="search-box" placeholder="Cari santri..."></div>
     <div class="stack">
     ${klaimAktif.length ? `<div class="card ok"><h3>🤝 Anda menggantikan kelas hari ini (${today})</h3><div style="margin-top:10px">
-      ${dataTable("", ["Kelas","Pengampu asli","Alasan","Aksi"], klaimAktif.map(j => `<tr><td><b>${esc(j.nama)}</b></td><td>${esc(namaPengampu(j, ustadzahList).join(", ") || "-")}</td>
-        <td>${esc(j.substituteAlasan || "-")}</td><td><button class="btn btn-sm btn-danger" data-lepas="${esc(j.id)}">Lepas klaim</button></td></tr>`), "")}</div></div>` : ""}
+      ${dataTable("", ["Kelas","Pengampu","Alasan",""], klaimAktif.map(j => `<tr><td><b>${esc(j.nama)}</b></td><td>${esc(namaPengampu(j, ustadzahList).join(", ") || "-")}</td>
+        <td>${esc(j.substituteAlasan || "-")}</td><td><button class="btn btn-sm btn-danger btn-mobile-icon" data-lepas="${esc(j.id)}" title="Lepas">✕</button></td></tr>`), "")}</div></div>` : ""}
     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div><h3 style="margin:0">🤝 Klaim kelas pengganti</h3><p class="muted small" style="margin:4px 0 0">Gunakan jika Anda menggantikan ustadzah lain yang tidak hadir.</p></div>
       ${bisaKlaim.length ? `<button class="btn" id="btnBukaKlaim">+ Klaim kelas</button>` : badge("Tidak ada kelas yang bisa diklaim")}</div></div>
-    ${dataTable("tableSantriUstadzah", ["No.","Nama santri","Hari ini","Status akun","Aksi"], santri.map((s,i) => {
+    ${dataTable("tableSantriUstadzah", ["No.","Nama santri","Hari ini","Status","Aksi"], santri.map((s,i) => {
       const st = statusSantri(s.id, today, ctx);
       return `<tr data-row><td>${i+1}</td><td><b style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama || "-")}</b></td><td>${badgeStatusHarian(st)}</td><td>${badgeAktif(s)}</td>
-        <td><div class="actions"><button class="btn btn-sm" data-view="${esc(s.id)}">📖 Baca &amp; hafalan</button>
-          <button class="btn btn-sm btn-info" data-keuangan="${esc(s.id)}">💰 Keuangan</button><button class="btn btn-sm btn-success" data-riwayat="${esc(s.id)}">📊 Riwayat</button></div></td></tr>`;
-    }), "Belum ada santri di kelas Anda. Hubungi admin untuk penugasan kelas.")}</div>`;
+        <td><div class="actions">
+          <button class="btn btn-sm btn-mobile-icon" data-view="${esc(s.id)}" title="Baca & hafalan">📖<span class="btn-label"> Baca</span></button>
+          <button class="btn btn-sm btn-info btn-mobile-icon" data-keuangan="${esc(s.id)}" title="Keuangan">💰<span class="btn-label"> Keuangan</span></button>
+          <button class="btn btn-sm btn-success btn-mobile-icon" data-riwayat="${esc(s.id)}" title="Riwayat">📊<span class="btn-label"> Riwayat</span></button>
+        </div></td></tr>`;
+    }), "Belum ada santri di kelas Anda.")}</div>`;
 
   attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
   const onClick = (sel, attr, fn) => $("page").querySelectorAll(sel).forEach(b => b.addEventListener("click", () => fn(b.dataset[attr])));
@@ -2700,20 +2937,22 @@ async function openPembelajaranEditor(santri, jilid, tipe){
     <div class="toolbar"><button class="btn btn-light btn-sm" id="btnKembali">← Kembali</button></div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <div><h2 style="font-size:20px">${tipe === "hafalan" ? "🧠 Buku hafalan" : "📖 Buku baca"}</h2>
+        <div><h2 style="font-size:18px">${tipe === "hafalan" ? "🧠 Buku hafalan" : "📖 Buku baca"}</h2>
           <div class="muted" style="margin-top:4px">Santri: <b>${esc(santri.nama)}</b> · ${esc(jilid.nama)}</div></div>
         <span class="badge badge-blue" id="pageBadge"></span></div>
-      <div class="actions" style="margin-top:16px">
+      <div class="actions" style="margin-top:14px">
         <button class="btn btn-sm" id="btnPrev">◀</button>
-        <input id="pageInput" type="number" min="1" max="${total}" value="${current}" style="width:90px;text-align:center">
+        <input id="pageInput" type="number" min="1" max="${total}" value="${current}" style="width:80px;text-align:center">
         <button class="btn btn-sm" id="btnNext">▶</button>
-        <button class="btn btn-sm btn-success" id="btnSavePage">📌 Tandai halaman terakhir</button></div>
-      <div class="pdf-frame-wrap" style="margin-top:14px;border-radius:12px;min-height:600px">
-        <div class="pdf-loading" id="pageLoading"><div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat halaman...</div></div></div>
-        <img id="pageImage" style="max-width:100%;display:block;border-radius:4px" alt="Halaman buku"></div>
-      <div class="card soft" style="margin-top:14px"><h3>Hasil pembelajaran</h3>
-        <div class="actions" style="margin-top:8px"><button class="btn btn-success" id="btnNaik">↑ Naik</button><button class="btn btn-warning" id="btnMengulang">↻ Mengulang</button></div>
-        ${fg("Pesan ustadzah", `<textarea id="pesanPembelajaran" rows="4" placeholder="Tuliskan catatan untuk wali...">${esc(progress?.pesan)}</textarea>`, "", "pesanWrap")}
+        <button class="btn btn-sm btn-success btn-mobile-icon" id="btnSavePage">📌<span class="btn-label"> Tandai terakhir</span></button></div>
+      <div class="pdf-frame-wrap" style="margin-top:12px;border-radius:12px">
+        <div class="pdf-loading" id="pageLoading"><div class="pdf-skeleton"></div></div>
+        <img id="pageImage" class="pdf-page-img" alt="Halaman buku" decoding="async"></div>
+      <div class="card soft" style="margin-top:12px"><h3>Hasil pembelajaran</h3>
+        <div class="actions" style="margin-top:8px">
+          <button class="btn btn-success" id="btnNaik">↑ Naik</button>
+          <button class="btn btn-warning" id="btnMengulang">↻ Mengulang</button></div>
+        ${fg("Pesan ustadzah", `<textarea id="pesanPembelajaran" rows="3" placeholder="Tuliskan catatan untuk wali...">${esc(progress?.pesan)}</textarea>`, "", "pesanWrap")}
         <button class="btn btn-info" id="btnSimpanPesan">💾 Simpan pesan</button></div></div>`;
 
   $("btnKembali").addEventListener("click", renderDaftarSantriUstadzah);
@@ -2728,6 +2967,10 @@ async function openPembelajaranEditor(santri, jilid, tipe){
       else{ $("pageImage").removeAttribute("src"); showToast(`Halaman ${current} belum tersedia.`, true); }
     }catch(err){ showToast("Gagal memuat halaman: " + firebaseError(err), true); }
     finally{ $("pageLoading").classList.add("hidden"); }
+
+    // Preload halaman tetangga (tidak blocking)
+    if(current < total) fetchHalamanGambar(jilid.id, tipe, current + 1).catch(() => {});
+    if(current > 1) fetchHalamanGambar(jilid.id, tipe, current - 1).catch(() => {});
   }
   $("btnPrev").addEventListener("click", () => { $("pageInput").value = current - 1; showPage(); });
   $("btnNext").addEventListener("click", () => { $("pageInput").value = current + 1; showPage(); });
@@ -2755,10 +2998,10 @@ async function saveProgress({ santriId, tipe, halaman, status, pesan }){
     else await addCollectionData("progress", payload);
     await addCollectionData("riwayat", payload);
     logAudit("UPDATE","progress",santriId,{ tipe, halaman: payload.halaman, status: payload.status });
-    showToast("Hasil pembelajaran berhasil disimpan.");
+    showToast("Hasil pembelajaran disimpan.");
   }catch(err){
     console.error(err);
-    showToast("Gagal menyimpan pembelajaran: " + firebaseError(err), true);
+    showToast("Gagal menyimpan: " + firebaseError(err), true);
   }
 }
 
@@ -2786,16 +3029,16 @@ async function renderPembelajaranWali(santriId){
 
   $("page").innerHTML = `
     <div class="toolbar"><button class="btn btn-light btn-sm" id="btnKembali">← Kembali</button>
-      <button class="btn btn-sm btn-success" id="btnRiwayatLengkap">📊 Riwayat &amp; rekap lengkap</button></div>
+      <button class="btn btn-sm btn-success btn-mobile-icon" id="btnRiwayatLengkap">📊<span class="btn-label"> Riwayat lengkap</span></button></div>
     <div class="stack">
-      <div class="card"><h2 style="font-size:20px">${esc(santri.nama || "-")}</h2>
+      <div class="card"><h2 style="font-size:18px">${esc(santri.nama || "-")}</h2>
         <p class="muted" style="margin:6px 0 0">Kelas/jilid: <b>${esc(jilid?.nama || santri.jilidNama || "-")}</b></p>
         <p class="muted" style="margin:0">Ustadzah pendamping: <b>${esc(pendamping || "Belum ditentukan")}</b></p></div>
       <div class="grid grid-2">${kartu("📖 Baca","baca")}${kartu("🧠 Hafalan","hafalan")}</div>
       <div class="card"><h3>📚 Riwayat pembelajaran</h3><div style="margin-top:10px">
-        ${dataTable("", ["No.","Materi","Halaman","Status","Pesan","Tanggal"], riwayat.map((r,i) => `<tr><td>${i+1}</td><td>${r.tipe === "hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
-          <td><b>Halaman ${num(r.halaman) || 1}</b><br>${bukaHalamanBtn({ jilidId: jilid?.id, tipe: r.tipe, page: r.halaman, total: totalHalamanJilid(jilid, r.tipe), label: r.tipe === "hafalan" ? "Buku Hafalan" : "Buku Baca" })}</td>
-          <td>${badgePembelajaran(r.status)}</td><td>${esc(r.pesan || "-")}</td><td>${formatTanggal(r.createdAt)}</td></tr>`), "Belum ada riwayat pembelajaran.")}</div></div>
+        ${dataTable("", ["No.","Materi","Halaman","Status","Tanggal"], riwayat.map((r,i) => `<tr><td>${i+1}</td><td>${r.tipe === "hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
+          <td><b>Hlm ${num(r.halaman) || 1}</b><br>${bukaHalamanBtn({ jilidId: jilid?.id, tipe: r.tipe, page: r.halaman, total: totalHalamanJilid(jilid, r.tipe), label: r.tipe === "hafalan" ? "Buku Hafalan" : "Buku Baca" })}</td>
+          <td>${badgePembelajaran(r.status)}</td><td>${formatTanggal(r.createdAt)}</td></tr>`), "Belum ada riwayat pembelajaran.")}</div></div>
       ${keuanganSantriHtml({ bills: tagihan.filter(x => x.santriId === santri.id), tabunganList, santriId: santri.id, settings, editable:false })}
       <div><button class="btn btn-sm" id="btnLihatQris">📱 Lihat QRIS pembayaran</button></div>
     </div>`;
@@ -2806,7 +3049,7 @@ async function renderPembelajaranWali(santriId){
     const url = assetUrl(settings.qrisUrl);
     if(!url) return showToast("QRIS belum tersedia. Hubungi admin.", true);
     openModal("QRIS pembayaran", `<div style="text-align:center"><p class="muted">Scan QRIS berikut untuk melakukan pembayaran.</p>
-      <img src="${esc(url)}" alt="QRIS pembayaran" style="width:350px;max-width:100%;border-radius:12px;border:1px solid var(--border)">
+      <img src="${esc(url)}" alt="QRIS pembayaran" style="width:320px;max-width:100%;border-radius:12px;border:1px solid var(--border)">
       <p class="muted" style="margin-top:12px">Setelah membayar, konfirmasikan kepada ustadzah atau admin sesuai prosedur TPQ.</p></div>`);
   });
   bindHalamanButtons($("page"));
@@ -2827,7 +3070,7 @@ async function renderRiwayatPembelajaranSantri(santriId, kembali="daftarSantri")
     return data.map((r,i) => {
       const total = totalHalamanJilid(jilid, r.tipe);
       return `<tr><td>${i+1}</td><td>${r.tipe === "hafalan" ? "🧠 Hafalan" : "📖 Baca"}</td>
-        <td><b>Halaman ${num(r.halaman) || 1}</b>${total ? ` dari ${total}` : ""}<br>${bukaHalamanBtn({ jilidId: jilid?.id, tipe: r.tipe, page: r.halaman, total, label: r.tipe === "hafalan" ? "Buku Hafalan" : "Buku Baca", text: "👁 Lihat halaman" })}</td>
+        <td><b>Hlm ${num(r.halaman) || 1}</b>${total ? ` / ${total}` : ""}<br>${bukaHalamanBtn({ jilidId: jilid?.id, tipe: r.tipe, page: r.halaman, total, label: r.tipe === "hafalan" ? "Buku Hafalan" : "Buku Baca", text: "👁 Lihat" })}</td>
         <td>${badgePembelajaran(r.status)}</td><td>${esc(r.pesan || "-")}</td>
         <td>${esc(r.ustadzahNama || ustadzahList.find(u => u.id === r.ustadzahUid)?.nama || "-")}<br><span class="muted small">${formatTanggal(r.createdAt)}</span></td></tr>`;
     }).join("");
@@ -2841,16 +3084,19 @@ async function renderRiwayatPembelajaranSantri(santriId, kembali="daftarSantri")
     <div class="toolbar"><button class="btn btn-light btn-sm" id="btnKembali">← Kembali</button><span class="muted small">Riwayat &amp; rekap pembelajaran</span></div>
     <div class="stack">
       <div class="card"><div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start">
-        <div><h2 style="font-size:20px">${esc(santri.nama)}</h2><p class="muted" style="margin:4px 0 0">Kelas/jilid: <b>${esc(jilid?.nama || santri.jilidNama || "-")}</b></p></div>
-        <div style="text-align:right"><div class="muted small">Persentase naik</div><div style="font-size:28px;font-weight:700;color:#166534">${rekap.persenNaik}%</div></div></div></div>
-      <div class="grid grid-3">${statCard("📚","Total catatan", rekap.total)}${statCard("📖","Baca", rekap.baca)}${statCard("🧠","Hafalan", rekap.hafalan)}
-        ${statCard("⬆️","Naik", rekap.naik)}${statCard("🔄","Mengulang", rekap.mengulang)}${statCard("🎯","Persentase naik", rekap.persenNaik + "%")}</div>
+        <div><h2 style="font-size:18px">${esc(santri.nama)}</h2><p class="muted" style="margin:4px 0 0">Kelas: <b>${esc(jilid?.nama || santri.jilidNama || "-")}</b></p></div>
+        <div style="text-align:right"><div class="muted small">% Naik</div><div style="font-size:26px;font-weight:700;color:#166534">${rekap.persenNaik}%</div></div></div></div>
+      <div class="grid grid-3">${statCard("📚","Catatan", rekap.total)}${statCard("📖","Baca", rekap.baca)}${statCard("🧠","Hafalan", rekap.hafalan)}
+        ${statCard("⬆️","Naik", rekap.naik)}${statCard("🔄","Mengulang", rekap.mengulang)}${statCard("🎯","% Naik", rekap.persenNaik + "%")}</div>
       <div class="card"><h3>📈 Tren 7 hari terakhir</h3>${chartTren(rekap.tren)}</div>
       <div class="grid grid-2">${terakhir("📖 Buku baca — terakhir", rekap.terakhirBaca, "baca")}${terakhir("🧠 Buku hafalan — terakhir", rekap.terakhirHafalan, "hafalan")}</div>
       <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <h3 style="margin:0">📋 Riwayat lengkap</h3>
-        <div class="actions" id="filterBtns"><button class="btn btn-sm" data-f="semua">Semua</button><button class="btn btn-sm btn-light" data-f="baca">📖 Baca</button><button class="btn btn-sm btn-light" data-f="hafalan">🧠 Hafalan</button></div></div>
-        <div class="table-container" style="margin-top:12px"><table><thead><tr><th>No.</th><th>Materi</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Ustadzah / tanggal</th></tr></thead>
+        <div class="actions" id="filterBtns">
+          <button class="btn btn-sm" data-f="semua">Semua</button>
+          <button class="btn btn-sm btn-light" data-f="baca">📖 Baca</button>
+          <button class="btn btn-sm btn-light" data-f="hafalan">🧠 Hafalan</button></div></div>
+        <div class="table-container" style="margin-top:12px"><table><thead><tr><th>No.</th><th>Materi</th><th>Halaman</th><th>Status</th><th>Pesan</th><th>Ustadzah</th></tr></thead>
           <tbody id="riwayatBody">${rows()}</tbody></table></div></div>
     </div>`;
 
@@ -2868,6 +3114,7 @@ async function renderRiwayatPembelajaranSantri(santriId, kembali="daftarSantri")
   bindHalamanButtons($("page"));
 }
 
+/* ============ 25. VIEWER HALAMAN (RINGAN, AUTO-FIT) ============ */
 function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Buku" }){
   if(!jilidId || !tipe) return showToast("Buku belum tersedia.", true);
   let page = Math.max(1, num(halaman) || 1), zoom = 100;
@@ -2875,11 +3122,18 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
 
   openModal(label, `<div class="pdf-viewer">
     <div class="pdf-toolbar">
-      <div class="pdf-toolbar-group"><button type="button" id="halPrev" title="Halaman sebelumnya">◀</button><div class="pdf-page-indicator" id="halIndicator"></div><button type="button" id="halNext" title="Halaman berikutnya">▶</button></div>
-      <div class="pdf-toolbar-group"><button type="button" id="halZoomOut" title="Perkecil">−</button><span id="halZoom" style="min-width:45px;text-align:center;font-size:12px">100%</span>
-        <button type="button" id="halZoomIn" title="Perbesar">+</button><button type="button" id="halFull" title="Layar penuh">⛶</button></div></div>
-    <div class="pdf-frame-wrap"><div class="pdf-loading" id="halLoading"><div style="text-align:center"><span class="spinner"></span><div style="margin-top:8px">Memuat halaman...</div></div></div>
-      <img id="halImage" style="max-width:100%;display:block;transform-origin:top center;border-radius:4px" alt="${esc(label)}"></div>
+      <div class="pdf-toolbar-group">
+        <button type="button" id="halPrev" title="Sebelumnya">◀</button>
+        <div class="pdf-page-indicator" id="halIndicator"></div>
+        <button type="button" id="halNext" title="Berikutnya">▶</button></div>
+      <div class="pdf-toolbar-group">
+        <button type="button" id="halZoomOut" title="Perkecil">−</button>
+        <span id="halZoom" style="min-width:42px;text-align:center;font-size:12px">100%</span>
+        <button type="button" id="halZoomIn" title="Perbesar">+</button>
+        <button type="button" id="halFull" title="Layar penuh">⛶</button></div></div>
+    <div class="pdf-frame-wrap" id="halFrameWrap">
+      <div class="pdf-loading" id="halLoading"><div class="pdf-skeleton"></div></div>
+      <img id="halImage" class="pdf-page-img" alt="${esc(label)}" decoding="async"></div>
     <div class="pdf-info-bar">📄 ${esc(label)} · halaman dimuat satu per satu dari Firestore.</div></div>`);
 
   const img = $("halImage");
@@ -2892,8 +3146,22 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
       else{ img.removeAttribute("src"); showToast(`Halaman ${page} belum tersedia.`, true); }
     }catch(err){ showToast("Gagal memuat halaman: " + firebaseError(err), true); }
     finally{ $("halLoading").classList.add("hidden"); }
+
+    // Preload tetangga
+    if(total && page < total) fetchHalamanGambar(jilidId, tipe, page + 1).catch(() => {});
+    if(page > 1) fetchHalamanGambar(jilidId, tipe, page - 1).catch(() => {});
   }
-  const applyZoom = delta => { zoom = Math.min(200, Math.max(50, zoom + delta)); $("halZoom").textContent = zoom + "%"; img.style.transform = `scale(${zoom/100})`; };
+  const applyZoom = delta => {
+    zoom = Math.min(300, Math.max(50, zoom + delta));
+    $("halZoom").textContent = zoom + "%";
+    if(zoom === 100){
+      img.style.width = "100%";
+      img.style.maxWidth = "100%";
+    }else{
+      img.style.width = zoom + "%";
+      img.style.maxWidth = "none";
+    }
+  };
   $("halPrev").addEventListener("click", () => { page = Math.max(1, page - 1); load(); });
   $("halNext").addEventListener("click", () => { if(!total || page < total){ page++; load(); } });
   $("halZoomIn").addEventListener("click", () => applyZoom(10));
@@ -2902,10 +3170,28 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
     const v = document.querySelector(".pdf-viewer");
     if(!document.fullscreenElement) v?.requestFullscreen().catch(() => {}); else document.exitFullscreen();
   });
+
+  // Swipe gesture horizontal untuk ganti halaman di HP
+  let startX = 0, startY = 0;
+  const wrap = $("halFrameWrap");
+  wrap.addEventListener("touchstart", e => {
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive:true });
+  wrap.addEventListener("touchend", e => {
+    if(!e.changedTouches.length) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+    if(dx < 0 && (!total || page < total)){ page++; load(); }
+    else if(dx > 0 && page > 1){ page--; load(); }
+  }, { passive:true });
+
   load();
 }
 
-/* ============ 25. PROFIL ============ */
+/* ============ 26. PROFIL ============ */
 function renderProfil(){
   $("page").innerHTML = `${pageHead("Profil", "Informasi akun yang sedang digunakan.")}
     <div class="card"><div class="row">
@@ -2915,6 +3201,10 @@ function renderProfil(){
   $("btnResetPassword").addEventListener("click", () => kirimResetPassword($("btnResetPassword")));
 }
 
+/* ============ 27. AUTO-SWITCH JIKA USER SUDAH LOGIN ============ */
+// Ditangani onAuthStateChanged di atas — tidak perlu ada lagi di sini.
+
+/* ============ END ============ */
 </script>
 </body>
 </html>
