@@ -196,36 +196,6 @@ input[type="number"]{font-size:16px}
 }
 .chips button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 
-/* Bottom nav — mobile only */
-.bottom-nav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;
-  background:#fff;
-  border-top:1px solid var(--border);
-  padding:6px 8px calc(6px + var(--safe-bottom));
-  z-index:60;
-  box-shadow:0 -4px 16px rgba(15,23,42,.05);
-}
-.bottom-nav-inner{
-  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
-  max-width:560px;margin:0 auto;
-}
-.bottom-nav button{
-  border:0;background:transparent;color:var(--muted);
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  padding:6px 4px;border-radius:12px;
-  font-size:10.5px;font-weight:600;
-  min-height:52px;
-  transition:.15s;
-}
-.bottom-nav button .ico{
-  font-size:20px;line-height:1;
-  transition:transform .15s;
-}
-.bottom-nav button.active{color:var(--primary)}
-.bottom-nav button.active .ico{transform:translateY(-1px) scale(1.08)}
-.bottom-nav button:active{background:var(--primary-soft)}
-
 .page{
   padding:14px 14px 24px;
   max-width:1200px;margin:0 auto;width:100%;flex:1;
@@ -517,6 +487,38 @@ tbody tr:hover{background:#fafcfb}
   margin-top:9px;padding:10px 12px;border-radius:10px;
   background:var(--primary-soft);color:var(--primary);font-size:12.5px;
 }
+/* ============ WELCOME BANNER ============ */
+.welcome-banner{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+  color:#fff;
+  border-radius:var(--radius);
+  margin-bottom:14px;
+  box-shadow:0 4px 14px rgba(22,101,52,.18);
+}
+.welcome-banner .wb-text{min-width:0;flex:1}
+.welcome-banner .wb-greet{
+  font-size:12.5px;opacity:.85;font-weight:500;
+}
+.welcome-banner .wb-name{
+  font-size:16px;font-weight:700;
+  margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.welcome-banner .wb-role{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:6px;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(255,255,255,.18);
+  font-size:11.5px;font-weight:600;
+}
+.welcome-banner .wb-icon{
+  font-size:32px;line-height:1;
+  flex-shrink:0;
+  opacity:.9;
+}
 
 /* ============ RESPONSIVE ============ */
 
@@ -531,13 +533,25 @@ tbody tr:hover{background:#fafcfb}
   .modal-box::before{display:none}
   .modal-header{top:-20px}
 }
-
 @media(max-width:700px){
-  /* Mobile: aktifkan bottom nav, sembunyikan chips */
-  .chips{display:none}
-  .bottom-nav{display:block}
+  /* Mobile: chips tampil (bukan bottom nav) */
+  .chips{
+    display:flex;
+    padding:8px 12px;
+  }
+@media(max-width:600px){
+  .welcome-banner{padding:12px 14px}
+  .welcome-banner .wb-name{font-size:15px}
+  .welcome-banner .wb-icon{font-size:28px}
+}
+  .chips button{
+    padding:7px 13px;
+    font-size:12.5px;
+    min-height:36px;
+  }
+  .bottom-nav{display:none!important}
   .page{
-    padding-bottom:calc(var(--bottomnav-h) + 28px + var(--safe-bottom));  /* ← DIPERBESAR */
+    padding-bottom:24px; /* tidak perlu ruang bottom nav lagi */
   }
 }
 @media(max-width:600px){
@@ -612,10 +626,6 @@ tbody tr:hover{background:#fafcfb}
 
     <section id="page" class="page"></section>
 
-    <!-- Bottom nav untuk mobile -->
-    <nav class="bottom-nav" id="bottomNav" aria-label="Navigasi utama">
-      <div class="bottom-nav-inner" id="bottomNavInner"></div>
-    </nav>
   </main>
 </section>
 
@@ -1924,12 +1934,12 @@ const CHIPS = {
 function buildNavigation(){
   const items = CHIPS[currentProfile.role] || [];
 
-  // Chips untuk desktop
+  // Chips untuk desktop & mobile
   $("mainChips").innerHTML = items.map(i =>
     `<button type="button" data-tab="${i.tab}">${i.icon} ${esc(i.label)}</button>`).join("");
   $("mainChips").querySelectorAll("button").forEach(b =>
     b.addEventListener("click", () => navigate(b.dataset.tab)));
-
+}
   // Bottom nav untuk mobile — maksimal 5 item
   const navItems = items.slice(0, 5);
   $("bottomNavInner").innerHTML = navItems.map(i =>
@@ -1939,10 +1949,8 @@ function buildNavigation(){
 }
 
 async function navigate(tab){
-  // Update active state di chips & bottom nav
+  // Update active state di chips
   $("mainChips").querySelectorAll("button").forEach(b =>
-    b.classList.toggle("active", b.dataset.tab === tab));
-  $("bottomNavInner").querySelectorAll("button").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab));
 
   $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat...</div>`;
@@ -1964,7 +1972,6 @@ async function navigate(tab){
     $("page").innerHTML = `<div class="card empty">Gagal memuat: ${esc(firebaseError(err))}</div>`;
   }
 }
-
 /* ============ HELPER MENU GRID ============ */
 function scrollPanelIntoView(panel){
   if(!panel) return;
@@ -2012,7 +2019,23 @@ function lazyPanel(panelId, loader){
 /* ============ 17. DASHBOARD ============ */
 const pesanDashboard = s => s.pesan
   ? `<div class="notice" style="margin-bottom:12px;white-space:pre-wrap">${esc(s.pesan)}</div>` : "";
+/* ============ WELCOME BANNER ============ */
+const roleIcon = r => ({ admin:"🛡️", ustadzah:"👩‍🏫", wali:"👨‍👩‍👧" }[r] || "👤");
 
+function welcomeBanner(){
+  if(!currentProfile) return "";
+  const nama = currentProfile.nama || currentUser?.email?.split("@")[0] || "Pengguna";
+  const role = roleLabel(currentProfile.role);
+  const icon = roleIcon(currentProfile.role);
+  return `<div class="welcome-banner">
+    <div class="wb-text">
+      <div class="wb-greet">Selamat datang,</div>
+      <div class="wb-name">${esc(nama)}</div>
+      <div class="wb-role">${icon} ${esc(role)}</div>
+    </div>
+    <div class="wb-icon">📖</div>
+  </div>`;
+}
 function renderDashboard(){
   if(currentProfile.role === "admin")    return renderDashboardAdmin();
   if(currentProfile.role === "ustadzah") return renderDashboardUstadzah();
@@ -2080,6 +2103,7 @@ async function renderDashboardUstadzah(){
   });
 
   $("page").innerHTML = `
+     ${welcomeBanner()}
     <div class="card balance">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div>
@@ -2621,6 +2645,7 @@ async function renderDashboardWali(){
   const totalTunggakanAnanda = daftarMenunggakAnanda.reduce((s,x) => s + x.totalTunggakan, 0);
 
   $("page").innerHTML = `
+     ${welcomeBanner()}
     <div class="card balance">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div>
@@ -2793,6 +2818,7 @@ async function renderDashboardAdmin(){
   const totalSppTerbayar = sppBulanIni.reduce((s,x) => s + num(x.terbayar), 0);
 
   $("page").innerHTML = `
+     ${welcomeBanner()}
     <div class="card balance">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
