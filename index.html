@@ -1816,6 +1816,7 @@ function openAkunModal(){
   $("btnAkunLogout").addEventListener("click", async () => {
     if(!confirm("Yakin ingin keluar dari aplikasi?")) return;
     logAudit("LOGOUT","users",currentUser?.uid || "");
+    closeModal();
     await signOut(auth);
   });
 }
@@ -1874,6 +1875,7 @@ $("avatarButton").addEventListener("click", () => { if(currentProfile) openAkunM
 onAuthStateChanged(auth, async user => {
   if(!user){
     currentUser = null; currentProfile = null; sppEnsuredPeriode = null; cache.clear();
+    closeModal();
     $("loginScreen").classList.remove("hidden");
     $("app").classList.add("hidden");
     return;
