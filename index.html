@@ -22,10 +22,14 @@
   --shadow-lg:0 8px 24px rgba(15,23,42,.10);
   --safe-bottom:env(safe-area-inset-bottom, 0px);
   --topbar-h:56px;
-  --bottomnav-h:62px;
+  --bottomnav-h:76px;   /* ← DINAIKKAN */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{ -webkit-text-size-adjust:100%; }
+html{
+  -webkit-text-size-adjust:100%;
+  scroll-padding-bottom:calc(var(--bottomnav-h) + 24px + var(--safe-bottom));  /* ← TAMBAH */
+  scroll-behavior:smooth;
+}
 html,body{height:100%}
 body{
   margin:0;background:var(--bg);color:var(--text);
@@ -515,6 +519,7 @@ tbody tr:hover{background:#fafcfb}
 }
 
 /* ============ RESPONSIVE ============ */
+
 @media(max-width:1000px){
   .grid,.summary-strip{grid-template-columns:repeat(2,1fr)}
   .grid-3{grid-template-columns:repeat(2,1fr)}
@@ -526,11 +531,14 @@ tbody tr:hover{background:#fafcfb}
   .modal-box::before{display:none}
   .modal-header{top:-20px}
 }
+
 @media(max-width:700px){
   /* Mobile: aktifkan bottom nav, sembunyikan chips */
   .chips{display:none}
   .bottom-nav{display:block}
-  .page{padding-bottom:calc(var(--bottomnav-h) + 20px + var(--safe-bottom))}
+  .page{
+    padding-bottom:calc(var(--bottomnav-h) + 28px + var(--safe-bottom));  /* ← DIPERBESAR */
+  }
 }
 @media(max-width:600px){
   body{font-size:14px}
@@ -1958,6 +1966,14 @@ async function navigate(tab){
 }
 
 /* ============ HELPER MENU GRID ============ */
+function scrollPanelIntoView(panel){
+  if(!panel) return;
+  const topbarH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topbar-h")) || 56;
+  const rect = panel.getBoundingClientRect();
+  const y = window.scrollY + rect.top - topbarH - 8;
+  window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
+
 function bindMenuGrid(menuId){
   const menuEl = $(menuId);
   if(!menuEl) return;
@@ -1980,7 +1996,7 @@ function bindMenuGrid(menuId){
     menuEl.querySelectorAll("button").forEach(x => x.classList.toggle("active", x === b));
     semuaPanel.forEach(p => p.classList.toggle("show", p === panel));
     panelAktif = target;
-    setTimeout(() => panel.scrollIntoView({ behavior:"smooth", block:"start" }), 50);
+    setTimeout(() => scrollPanelIntoView(panel), 60);
   }));
 }
 
@@ -1990,8 +2006,9 @@ function lazyPanel(panelId, loader){
   if(panel.dataset.loaded === "1") return;
   panel.dataset.loaded = "1";
   loader?.(panel);
+  // Setelah konten terisi, scroll ulang dengan offset
+  setTimeout(() => scrollPanelIntoView(panel), 120);
 }
-
 /* ============ 17. DASHBOARD ============ */
 const pesanDashboard = s => s.pesan
   ? `<div class="notice" style="margin-bottom:12px;white-space:pre-wrap">${esc(s.pesan)}</div>` : "";
