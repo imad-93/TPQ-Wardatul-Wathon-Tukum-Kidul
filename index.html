@@ -1941,14 +1941,6 @@ function buildNavigation(){
   $("mainChips").querySelectorAll("button").forEach(b =>
     b.addEventListener("click", () => navigate(b.dataset.tab)));
 }
-  // Bottom nav untuk mobile — maksimal 5 item
-  const navItems = items.slice(0, 5);
-  $("bottomNavInner").innerHTML = navItems.map(i =>
-    `<button type="button" data-tab="${i.tab}"><span class="ico">${i.icon}</span><span>${esc(i.label.split(" ")[0])}</span></button>`).join("");
-  $("bottomNavInner").querySelectorAll("button").forEach(b =>
-    b.addEventListener("click", () => navigate(b.dataset.tab)));
-}
-
 async function navigate(tab){
   // Update active state di chips
   $("mainChips").querySelectorAll("button").forEach(b =>
