@@ -217,7 +217,13 @@ tbody tr:hover{background:#fafcfb}
 .pdf-current{margin-top:9px;padding:9px 11px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-size:12.5px}
 
 /* ---------- PDF VIEWER (ringan, auto-fit) ---------- */
-.pdf-viewer{background:#202124;border-radius:14px;overflow:hidden}
+.pdf-viewer{
+  background:#202124;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  width:100%;
+}
 .pdf-toolbar{min-height:50px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#111827;color:#fff;flex-wrap:wrap}
 .pdf-toolbar-group{display:flex;align-items:center;gap:5px}
 .pdf-toolbar button{border:0;min-width:34px;height:34px;border-radius:8px;background:#374151;color:#fff;font-weight:700;font-size:15px}
@@ -227,15 +233,13 @@ tbody tr:hover{background:#fafcfb}
   position:relative;
   background:#3a3d41;
   min-height:340px;
-  max-height:calc(100vh - 200px);
+  flex:1;
   display:flex;
   align-items:flex-start;
   justify-content:center;
   overflow:auto;
   padding:6px;
   -webkit-overflow-scrolling:touch;
-  /* Biarkan scroll vertikal & horizontal bekerja normal.
-     overscroll-behavior hilangkan supaya tidak "kunci" scroll di HP. */
   touch-action: pan-x pan-y;
   overscroll-behavior: auto;
 }
@@ -254,7 +258,49 @@ tbody tr:hover{background:#fafcfb}
   background-size:200% 100%;animation:pdfShimmer 1.4s infinite;border-radius:6px;
 }
 @keyframes pdfShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.pdf-pesan-bar{
+  padding:10px 12px;
+  background:#1f2937;
+  color:#e5e7eb;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:end;
+}
+.pdf-pesan-bar label{
+  grid-column:1 / -1;
+  font-size:12.5px;
+  font-weight:600;
+  color:#cbd5e1;
+  margin-bottom:2px;
+}
+.pdf-pesan-bar textarea{
+  width:100%;
+  resize:vertical;
+  min-height:44px;
+  max-height:120px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid #374151;
+  background:#111827;
+  color:#f1f5f9;
+  font-size:13px;
+}
+.pdf-pesan-bar textarea:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(34,197,94,.15);
+}
+.pdf-pesan-bar button{
+  align-self:end;
+  height:44px;
+  white-space:nowrap;
+}
 
+@media(max-width:600px){
+  .pdf-pesan-bar{grid-template-columns:1fr;gap:6px}
+  .pdf-pesan-bar button{width:100%}
+}
 /* ---------- RESPONSIVE ---------- */
 @media(max-width:1000px){.grid,.summary-strip{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){
@@ -2007,7 +2053,8 @@ async function renderDashboardUstadzah(){
   }));
 }
 
-/* ===== Pembelajaran Ustadzah INLINE (di dalam page) ===== */
+/* ===== Editor Baca/Hafalan — MODAL FULL SCREEN ===== */
+/* ===== Editor Baca/Hafalan — MODAL FULL SCREEN ===== */
 async function renderPembelajaranUstadzahInline(santriId, tipe){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2018,48 +2065,182 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
 
   const progress = (await getCollectionData("progress")).find(x => x.santriId === santriId && x.tipe === tipe);
   let current = Math.min(total, Math.max(1, num(progress?.halaman) || 1));
-  let status = progress?.status || "mengulang";
 
-  // Render ke panel inline (bukan seluruh page)
-  const wrap = $("keuanganInlineWrap"); // reuse wrapper untuk menampilkan editor di dalam panel aktif
-  const panelAktif = $("page").querySelector(".menu-panel.show");
-  const targetPanel = panelAktif || $("page");
-  targetPanel.innerHTML = `
-    <div class="toolbar">
-      <button class="btn btn-light btn-sm" id="btnKembaliEditor">← Kembali</button>
-      <span class="muted small">${tipe === "hafalan" ? "🧠 Hafalan" : "📖 Baca"}</span>
+  openModal(`${tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"} — ${esc(santri.nama)}`, `
+    <div class="pdf-viewer" id="pdfViewerFull">
+      <div class="pdf-toolbar">
+        <div class="pdf-toolbar-group">
+          <button type="button" id="halPrev">◀</button>
+          <div class="pdf-page-indicator" id="halIndicator"></div>
+          <button type="button" id="halNext">▶</button>
+        </div>
+        <div class="pdf-toolbar-group" style="gap:8px">
+          <button type="button" class="btn btn-success btn-sm" id="btnNaikModal">↑ Naik</button>
+          <button type="button" class="btn btn-warning btn-sm" id="btnMengulangModal">↻ Mengulang</button>
+        </div>
+      </div>
+      <div class="pdf-frame-wrap" id="halFrameWrap">
+        <div class="pdf-loading" id="halLoading"><div class="pdf-skeleton"></div></div>
+        <img id="halImage" class="pdf-page-img" alt="Halaman buku" decoding="async">
+      </div>
+      <div class="pdf-info-bar">
+        <span>📄 ${esc(jilid.nama)} · ${esc(santri.nama)}</span>
+        <span id="halInfoPage"></span>
+      </div>
     </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <div>
-          <h3 style="margin:0">${tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"}</h3>
-          <div class="muted small" style="margin-top:4px">Santri: <b>${esc(santri.nama)}</b> · ${esc(jilid.nama)}</div>
-        </div>
-        <span class="badge badge-blue" id="inlinePageBadge"></span>
-      </div>
-      <div class="actions" style="margin-top:12px">
-        <button class="btn btn-sm" id="inlinePrev">◀</button>
-        <input id="inlinePageInput" type="number" min="1" max="${total}" value="${current}" style="width:80px;text-align:center">
-        <button class="btn btn-sm" id="inlineNext">▶</button>
-        <button class="btn btn-sm btn-success" id="inlineSavePage">📌 Tandai</button>
-      </div>
-      <div class="pdf-frame-wrap" style="margin-top:12px;border-radius:12px">
-        <div class="pdf-loading" id="inlinePageLoading"><div class="pdf-skeleton"></div></div>
-        <img id="inlinePageImage" class="pdf-page-img" alt="Halaman buku" decoding="async">
-      </div>
-      <div class="card soft" style="margin-top:12px">
-        <h3>Hasil Pembelajaran</h3>
-        <div class="actions" style="margin-top:8px">
-          <button class="btn btn-success" id="inlineNaik">↑ Naik</button>
-          <button class="btn btn-warning" id="inlineMengulang">↻ Mengulang</button>
-        </div>
-        ${fg("Pesan ustadzah", `<textarea id="inlinePesan" rows="3" placeholder="Catatan untuk wali...">${esc(progress?.pesan)}</textarea>`)}
-        <button class="btn btn-info" id="inlineSimpan">💾 Simpan</button>
-      </div>
-    </div>`;
+  `);
 
-  $("btnKembaliEditor").addEventListener("click", renderDashboardUstadzah);
+  // Override modal-box → full screen
+  const modalBox = $("modalContent").closest(".modal-box");
+  modalBox.style.maxWidth = "none";
+  modalBox.style.width = "100%";
+  modalBox.style.height = "100vh";
+  modalBox.style.maxHeight = "100vh";
+  modalBox.style.borderRadius = "0";
+  modalBox.style.padding = "0";
+  modalBox.style.display = "flex";
+  modalBox.style.flexDirection = "column";
+  modalBox.style.overflow = "hidden";
 
+  const observer = new MutationObserver(() => {
+    if($("modal").classList.contains("hidden")){
+      modalBox.style.cssText = "";
+      observer.disconnect();
+    }
+  });
+  observer.observe($("modal"), { attributes:true, attributeFilter:["class"] });
+
+  // Sembunyikan judul modal, sisakan tombol close
+  const modalHeader = modalBox.querySelector(".modal-header");
+  if(modalHeader){
+    modalHeader.style.position = "absolute";
+    modalHeader.style.top = "8px";
+    modalHeader.style.right = "8px";
+    modalHeader.style.zIndex = "10";
+    modalHeader.style.marginBottom = "0";
+    modalHeader.style.padding = "0";
+    const h3 = modalHeader.querySelector("h3");
+    if(h3) h3.style.display = "none";
+  }
+
+  const img = $("halImage");
+  async function load(){
+    $("halIndicator").textContent = `Halaman ${current}${total ? `/${total}` : ""}`;
+    $("halInfoPage").textContent = `Hal ${current} / ${total}`;
+    $("halLoading").classList.remove("hidden");
+    try{
+      const gambar = await fetchHalamanGambar(jilid.id, tipe, current);
+      if(gambar) img.src = gambar;
+      else{ img.removeAttribute("src"); showToast(`Halaman ${current} belum tersedia.`, true); }
+    }catch(err){ showToast("Gagal memuat: " + firebaseError(err), true); }
+    finally{ $("halLoading").classList.add("hidden"); }
+    if(current < total) fetchHalamanGambar(jilid.id, tipe, current + 1).catch(() => {});
+    if(current > 1) fetchHalamanGambar(jilid.id, tipe, current - 1).catch(() => {});
+  }
+  $("halPrev").addEventListener("click", () => { current = Math.max(1, current - 1); load(); });
+  $("halNext").addEventListener("click", () => { if(current < total){ current++; load(); } });
+
+  // Klik Naik / Mengulang → buka modal konfirmasi pesan
+  const konfirmasiDanSimpan = (status) => {
+    openKonfirmasiPesanModal({
+      santri, tipe, jilid, halaman: current, status,
+      pesanAwal: progress?.pesan || "",
+      onSaved: () => closeModal() // tutup modal full screen setelah simpan
+    });
+  };
+  $("btnNaikModal").addEventListener("click", () => konfirmasiDanSimpan("naik"));
+  $("btnMengulangModal").addEventListener("click", () => konfirmasiDanSimpan("mengulang"));
+
+  // Swipe: hanya trigger kalau jelas horizontal
+  let sx = 0, sy = 0, tracking = false;
+  const wrap = $("halFrameWrap");
+  wrap.addEventListener("touchstart", e => {
+    if(e.touches.length !== 1){ tracking = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    tracking = true;
+  }, { passive:true });
+  wrap.addEventListener("touchmove", e => {
+    if(!tracking || e.touches.length !== 1) return;
+    const dx = Math.abs(e.touches[0].clientX - sx);
+    const dy = Math.abs(e.touches[0].clientY - sy);
+    if(dy > dx + 6) tracking = false;
+  }, { passive:true });
+  wrap.addEventListener("touchend", e => {
+    if(!tracking || !e.changedTouches.length){ tracking = false; return; }
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if(Math.abs(dx) < 70) return;
+    if(Math.abs(dy) > Math.abs(dx) * 0.7) return;
+    if(dx < 0 && current < total){ current++; load(); }
+    else if(dx > 0 && current > 1){ current--; load(); }
+  }, { passive:true });
+
+  load();
+}
+
+/* ===== Modal Konfirmasi Pesan Ustadzah ===== */
+function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanAwal, onSaved }){
+  const isNaik = status === "naik";
+  const labelTipe = tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca";
+  const badgeStatus = isNaik
+    ? `<span class="badge badge-green">Naik</span>`
+    : `<span class="badge badge-yellow">Mengulang</span>`;
+
+  // Buat modal kecil untuk konfirmasi. Karena openModal mengganti konten,
+  // kita simpan konten modal utama agar bisa dikembalikan bila user batal.
+  const kontenUtama = $("modalContent").innerHTML;
+  const judulUtama = $("modalTitle").textContent;
+
+  openModal(isNaik ? "✅ Konfirmasi Naik" : "🔄 Konfirmasi Mengulang", `
+    <div class="notice">
+      <div style="margin-bottom:6px">
+        <b>${esc(santri.nama)}</b> · ${esc(jilid.nama)}
+      </div>
+      <div class="muted small">${labelTipe} · Halaman <b>${halaman}</b></div>
+      <div style="margin-top:8px">
+        Status: ${badgeStatus}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="pesanKonfirmasi">💬 Pesan Ustadzah (opsional)</label>
+      <textarea id="pesanKonfirmasi" rows="4" placeholder="Catatan untuk wali...">${esc(pesanAwal)}</textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button type="button" class="btn btn-light" id="btnBatalKonfirmasi">Batal</button>
+      <button type="button" class="btn ${isNaik ? "btn-success" : "btn-warning"}" id="btnSimpanKonfirmasi">
+        💾 Simpan
+      </button>
+    </div>
+  `);
+
+  const pesanEl = $("pesanKonfirmasi");
+  pesanEl?.focus();
+
+  // Batal → kembalikan ke modal full screen
+  $("btnBatalKonfirmasi").addEventListener("click", () => {
+    openModal(judulUtama, kontenUtama);
+  });
+
+  // Simpan → simpan progress + pesan, lalu tutup modal utama
+  $("btnSimpanKonfirmasi").addEventListener("click", async () => {
+    const btn = $("btnSimpanKonfirmasi");
+    await busy(btn, "Menyimpan...", async () => {
+      try{
+        await saveProgress({
+          santriId: santri.id, tipe,
+          halaman,
+          status,
+          pesan: $("pesanKonfirmasi").value.trim()
+        });
+        // Tutup modal utama
+        onSaved?.();
+      }catch(err){
+        showToast("Gagal menyimpan: " + firebaseError(err), true);
+      }
+    });
+  });
+}
   async function showPage(){
     current = Math.min(total, Math.max(1, num($("inlinePageInput").value) || 1));
     $("inlinePageInput").value = current;
