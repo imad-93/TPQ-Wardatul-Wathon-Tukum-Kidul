@@ -111,7 +111,68 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .stat-value{font-size:22px;font-weight:700;margin-top:2px}
 .summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
 .balance{background:var(--primary);color:#fff;border:0;margin-bottom:14px}
+/* ---------- GRID MENU (ala mobile banking) ---------- */
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:8px;
+  margin:0 0 14px;
+  padding:12px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+.menu-grid button{
+  border:0;
+  background:transparent;
+  padding:8px 4px;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--text);
+  transition:background .15s, transform .1s;
+  min-height:72px;
+}
+.menu-grid button:hover{background:#f1f5f3}
+.menu-grid button:active{transform:scale(.96)}
+.menu-grid button .ico{
+  width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:13px;
+  background:var(--primary-soft);
+  font-size:19px;
+  color:var(--primary);
+  flex-shrink:0;
+  transition:background .15s, color .15s, box-shadow .15s;
+}
+.menu-grid button.active .ico{
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(22,101,52,.25);
+}
+.menu-grid button.active{color:var(--primary)}
+.menu-grid button .lbl{text-align:center;line-height:1.2}
 
+/* Panel konten (muncul saat tombol ditap) */
+.menu-panel{
+  display:none;
+  animation:slideUp .2s;
+}
+.menu-panel.show{display:block}
+
+@media(max-width:480px){
+  .menu-grid{grid-template-columns:repeat(4, 1fr);gap:6px;padding:10px}
+  .menu-grid button{min-height:66px;font-size:10.5px}
+  .menu-grid button .ico{width:38px;height:38px;font-size:17px;border-radius:11px}
+}
+@media(min-width:700px){
+  .menu-grid{grid-template-columns:repeat(6, 1fr)}
+}
 /* ---------- TABLE ---------- */
 .table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;min-width:640px}
@@ -492,6 +553,38 @@ function bindTabs(tabsEl, onSwitch){
     buttons.forEach(x => x.classList.toggle("active", x === b));
     onSwitch(b.dataset.tab || b.dataset.f);
   }));
+}
+// Toggle grid menu → panel. Klik tombol sama = tutup.
+function bindMenuGrid(menuId){
+  const menuEl = $(menuId);
+  if(!menuEl) return;
+  let panelAktif = null;
+  menuEl.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const target = b.dataset.menu;
+    const panel = $(`panel-${target}`);
+    if(!panel) return;
+
+    if(panelAktif === target){
+      menuEl.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".menu-panel").forEach(p => p.classList.remove("show"));
+      panelAktif = null;
+      return;
+    }
+
+    menuEl.querySelectorAll("button").forEach(x => x.classList.toggle("active", x === b));
+    document.querySelectorAll(".menu-panel").forEach(p => p.classList.toggle("show", p === panel));
+    panelAktif = target;
+    setTimeout(() => panel.scrollIntoView({ behavior:"smooth", block:"start" }), 50);
+  }));
+}
+
+// Kartu peringatan singkat (bukan list panjang)
+function peringatanSantriSingkat(rekapSantri, settings){
+  const batas = batasAlphaHari(settings);
+  const list = rekapSantri.filter(r => r.alpha >= batas);
+  if(!list.length) return "";
+  return `<div class="card danger"><b style="color:#991b1b">⚠️ ${list.length} santri alpha ≥ ${batas} hari</b>
+    <div class="muted small" style="margin-top:4px">${list.slice(0,3).map(r => esc(r.item.nama)).join(", ")}${list.length > 3 ? ", dll" : ""}. Buka <b>Rekap Santri</b> untuk detail.</div></div>`;
 }
 const byCreatedDesc = (a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0);
 const rangeText = z => z.tanggalMulai === z.tanggalSelesai ? z.tanggalMulai : `${z.tanggalMulai} s/d ${z.tanggalSelesai}`;
@@ -1681,7 +1774,7 @@ async function renderDashboardUstadzah(){
     z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today)
   );
 
-  // Ringkasan SPP menunggak (kelas ini)
+  // Ringkasan SPP menunggak
   const tagihanList = await fresh("tagihanSantri");
   const sppTanggalPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanPerSantri = {};
@@ -1691,10 +1784,7 @@ async function renderDashboardUstadzah(){
     if(!isSppMenunggak(bill, sppTanggalPeringatan)) return;
     const sisa = Math.max(0, num(bill.nominal) - num(bill.terbayar));
     if(!tunggakanPerSantri[bill.santriId]){
-      tunggakanPerSantri[bill.santriId] = {
-        santriId: bill.santriId, santriNama: bill.santriNama || "-",
-        bulanList: [], totalTunggakan: 0
-      };
+      tunggakanPerSantri[bill.santriId] = { santriId: bill.santriId, santriNama: bill.santriNama || "-", bulanList: [], totalTunggakan: 0 };
     }
     tunggakanPerSantri[bill.santriId].bulanList.push({ label: formatPeriodeLabel(bill.periode), sisa });
     tunggakanPerSantri[bill.santriId].totalTunggakan += sisa;
@@ -1703,25 +1793,66 @@ async function renderDashboardUstadzah(){
   const totalTunggakanKelas = daftarMenunggak.reduce((s,x) => s + x.totalTunggakan, 0);
 
   $("page").innerHTML = `
-    ${pageHead("Dashboard ustadzah", `Selamat datang, ${esc(currentProfile.nama || "Ustadzah")}.`)}
-    <div class="grid">
-      ${statCard("👨‍🎓","Santri terkelola", santri.length)}${statCard("📚","Kelas efektif", jilidNames.length)}
-      ${statCard("🤝","Kelas diklaim", klaimAktif.length)}${statCard("🟢","Santri aktif", santri.filter(s => s.aktif !== false).length)}
+    ${pageHead("Dashboard", `Selamat datang, ${esc(currentProfile.nama || "Ustadzah")}.`)}
+
+    <!-- Kartu utama -->
+    <div class="card balance">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:12px;opacity:.85">Kelas efektif hari ini</div>
+          <div style="font-size:17px;font-weight:700;margin-top:4px">${jilidNames.length ? jilidNames.map(esc).join(", ") : "Belum ada kelas"}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;line-height:1.6">
+          <div>Santri: <b>${santri.length}</b></div>
+          <div>Klaim: <b>${klaimAktif.length}</b></div>
+        </div>
+      </div>
     </div>
+
     ${pesanDashboard(settings)}
-    <div class="stack" style="margin-top:14px">
-      <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
-        <div><h3 style="margin:0">Kelas Anda hari ini</h3>
-          ${jilidNames.length ? `<p style="margin:6px 0 0">${jilidNames.map(esc).join(", ")}</p>` : `<p class="muted" style="margin:6px 0 0">Belum ada kelas.</p>`}
-          ${klaimAktif.length ? `<div class="notice" style="margin-top:10px"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}`).join("<br>")}</div>` : ""}</div>
-        <button class="btn btn-sm" id="btnKeKlaim">🤝 Klaim kelas</button></div></div>
+    ${liburCard(settings)}
+    ${peringatanSantriSingkat(rekapSantri, settings)}
+    ${rekapSaya.alpha >= batasAlphaHari(settings)
+       ? `<div class="card danger"><b style="color:#991b1b">⚠️ Peringatan kehadiran Anda</b>
+          <div class="muted small" style="margin-top:4px">Alpha ${rekapSaya.alpha} hari dalam ${jumlahHariRekap(settings)} hari terakhir.</div></div>` : ""}
+    ${daftarMenunggak.length
+       ? `<div class="card danger"><b style="color:#991b1b">💵 ${daftarMenunggak.length} santri menunggak SPP</b>
+          <div class="muted small" style="margin-top:4px">Total ${formatRupiah(totalTunggakanKelas)}. Tap <b>Tunggakan</b> untuk detail.</div></div>` : ""}
+
+    <!-- GRID MENU -->
+    <div class="menu-grid" id="menuUstadzah" style="margin-top:14px">
+      <button data-menu="kelas"><div class="ico">📚</div><div class="lbl">Kelas</div></button>
+      <button data-menu="izin-santri"><div class="ico">📝</div><div class="lbl">Izin Santri</div></button>
+      <button data-menu="form-izin"><div class="ico">✍️</div><div class="lbl">Ajukan Izin</div></button>
+      <button data-menu="spp"><div class="ico">💵</div><div class="lbl">Tunggakan</div></button>
+      <button data-menu="rekap-santri"><div class="ico">📊</div><div class="lbl">Rekap Santri</div></button>
+      <button data-menu="rekap-saya"><div class="ico">✅</div><div class="lbl">Rekap Saya</div></button>
+      <button data-menu="riwayat-izin"><div class="ico">📋</div><div class="lbl">Riwayat Izin</div></button>
+      <button data-menu="klaim"><div class="ico">🤝</div><div class="lbl">Klaim Kelas</div></button>
+    </div>
+
+    <!-- PANEL KONTEN -->
+    <div class="menu-panel" id="panel-kelas">
+      <div class="card"><h3>Kelas Anda hari ini</h3>
+        ${jilidNames.length ? `<p>${jilidNames.map(esc).join(", ")}</p>` : `<p class="muted">Belum ada kelas.</p>`}
+        ${klaimAktif.length ? `<div class="notice" style="margin-top:8px"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}`).join("<br>")}</div>` : ""}
+        <button class="btn btn-sm" id="btnKeKlaim" style="margin-top:10px">🤝 Kelola klaim kelas</button></div>
+    </div>
+
+    <div class="menu-panel" id="panel-izin-santri">
       ${izinHariIni.length ? `<div class="card warn"><h3 style="color:#92400e">📝 Santri izin hari ini</h3><div style="margin-top:10px">
         ${dataTable("", ["Santri","Alasan","Tanggal","Pengaju"], izinHariIni.map(z => `<tr>
           <td><b style="color:#dc2626">${esc(z.santriNama)}</b></td>
           <td>${badgeAlasan(z.alasan)}${z.alasan === "kegiatan" && z.namaKegiatan ? ` ${esc(z.namaKegiatan)}` : ""}</td>
-          <td>${esc(rangeText(z))}</td><td>${esc(z.diajukanOlehNama || "-")}</td></tr>`), "")}</div></div>` : ""}
-      ${liburCard(settings)}
-      ${peringatanCard(rekapSantri, settings, "Santri kelas Anda")}
+          <td>${esc(rangeText(z))}</td><td>${esc(z.diajukanOlehNama || "-")}</td></tr>`), "")}</div></div>`
+        : `<div class="card empty">Tidak ada santri izin hari ini.</div>`}
+    </div>
+
+    <div class="menu-panel" id="panel-form-izin">
+      ${izinFormCard({ isUstadzah:true, santriList:[], settings })}
+    </div>
+
+    <div class="menu-panel" id="panel-spp">
       ${daftarMenunggak.length ? `<div class="card danger">
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
           <div><h3 style="color:#991b1b;margin:0">💵 Santri menunggak SPP</h3>
@@ -1734,20 +1865,71 @@ async function renderDashboardUstadzah(){
             <td><b style="color:#dc2626">${esc(item.santriNama)}</b></td>
             <td>${item.bulanList.map(b => `${esc(b.label)} <span class="muted small">(${formatRupiah(b.sisa)})</span>`).join("<br>")}</td>
             <td><b style="color:#dc2626">${formatRupiah(item.totalTunggakan)}</b></td></tr>`), "")}
-        </div></div>` : ""}
-      ${rekapSaya.alpha >= batasAlphaHari(settings) ? `<div class="card danger"><h3 style="color:#991b1b">⚠️ Peringatan kehadiran Anda</h3>
-        <p style="color:#7f1d1d;margin:0">Anda tercatat <b>alpha ${rekapSaya.alpha} hari</b> dalam ${jumlahHariRekap(settings)} hari terakhir.</p></div>` : ""}
-      ${izinFormCard({ isUstadzah:true, santriList:[], settings })}
+        </div></div>` : `<div class="card ok"><h3 style="color:#166534">✅ Semua SPP lunas</h3>
+          <p class="muted small" style="margin:4px 0 0">Tidak ada tunggakan SPP untuk kelas Anda.</p></div>`}
+    </div>
+
+    <div class="menu-panel" id="panel-rekap-santri">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+          <h3 style="margin:0">📊 Rekap kehadiran santri</h3>
+          <button class="btn btn-sm btn-light btn-mobile-icon" id="btnExportRekapSantri">⬇<span class="btn-label"> Excel</span></button>
+        </div>
+        <p class="muted small" style="margin:6px 0 0">${esc(periodeRekapText(settings))}</p>
+        <div style="margin-top:10px">
+          ${dataTable("", ["#","Santri","H","I","A","L","Tot"],
+            rekapSantri.map((r,i) => `<tr>
+              <td><b>${i+1}</b> ${i===0?"🥇":i===1?"🥈":i===2?"🥉":""}</td>
+              <td><b>${esc(r.item.nama || "-")}</b></td>
+              <td>${badge(r.hadir,"green")}</td><td>${badge(r.izin,"yellow")}</td>
+              <td>${badge(r.alpha, r.alpha >= batasAlphaHari(settings) ? "red" : "gray")}</td>
+              <td>${badge(r.libur,"blue")}</td><td>${r.total}</td></tr>`),
+            "Belum ada santri.")}
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-panel" id="panel-rekap-saya">
+      <div class="card"><h3>📊 Rekap kehadiran Anda</h3>
+        <p class="muted small" style="margin:6px 0 0">${esc(periodeRekapText(settings))}</p>
+        <div class="grid" style="margin-top:12px">
+          ${statCard("✅","Hadir", rekapSaya.hadir)}
+          ${statCard("🟡","Izin", rekapSaya.izin)}
+          ${statCard("🔴","Alpha", rekapSaya.alpha)}
+          ${statCard("📊","Total hari", rekapSaya.total)}
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-panel" id="panel-riwayat-izin">
       ${riwayatIzinCard(riwayatIzin)}
-      ${rekapCard("📊 Rekap kehadiran santri kelas", rekapSantri, settings, "Belum ada santri.")}
-      <div class="card"><h3>📊 Rekap kehadiran Anda</h3><p class="muted small">${esc(periodeRekapText(settings))}</p>
-        <div class="grid" style="margin-top:10px">${statCard("✅","Hadir", rekapSaya.hadir)}${statCard("🟡","Izin", rekapSaya.izin)}${statCard("🔴","Alpha", rekapSaya.alpha)}${statCard("📊","Total hari", rekapSaya.total)}</div></div>
-    </div>`;
-  $("btnKeKlaim").addEventListener("click", () => navigate("daftarSantri"));
+    </div>
+
+    <div class="menu-panel" id="panel-klaim">
+      <div class="card"><h3>🤝 Klaim kelas pengganti</h3>
+        <p class="muted small" style="margin:6px 0 0">Gunakan jika Anda menggantikan ustadzah lain yang tidak hadir.</p>
+        <button class="btn btn-sm" id="btnBukaKlaimPanel" style="margin-top:10px">+ Klaim kelas</button></div>
+    </div>
+  `;
+
+  // Handler tombol dalam panel
+  $("btnKeKlaim")?.addEventListener("click", () => navigate("daftarSantri"));
   $("btnKeKeuanganSpp")?.addEventListener("click", () => navigate("daftarSantri"));
+  $("btnBukaKlaimPanel")?.addEventListener("click", () => navigate("daftarSantri"));
+  $("btnExportRekapSantri")?.addEventListener("click", () => {
+    const rows = rekapSantri.map((r, i) => ({
+      "Peringkat": i + 1, "Nama Santri": r.item.nama || "",
+      "Hadir": r.hadir, "Izin": r.izin, "Alpha": r.alpha, "Libur": r.libur, "Total": r.total
+    }));
+    exportToExcel(rows, `rekap-kehadiran-${todayStr()}.xlsx`, "Rekap Kehadiran");
+  });
+
+  // Aktifkan menu grid
+  bindMenuGrid("menuUstadzah");
+
+  // Form izin
   bindIzinForm({ isUstadzah:true, santriList:[], settings });
 }
-
 async function renderDashboardWali(){
   const [santri, pengumuman, jilidList, ustadzahList, ctx] = await Promise.all([
     getSantriWali(), getCollectionData("pengumuman"), getCollectionData("jilid"), getCollectionData("ustadzah"), loadKehadiranContext()
