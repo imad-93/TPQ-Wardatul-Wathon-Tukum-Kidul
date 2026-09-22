@@ -1613,16 +1613,13 @@ const CHIPS = {
     { tab:"dashboard",  icon:"🏠", label:"Dashboard" },
     { tab:"dataUser",   icon:"👥", label:"Data User" },
     { tab:"ruangNgaji", icon:"📚", label:"Ruang Ngaji" },
-    { tab:"keuangan",   icon:"💰", label:"Keuangan" },
-    { tab:"pengumuman", icon:"📢", label:"Pengumuman" }
+    { tab:"keuangan",   icon:"💰", label:"Keuangan" }
   ],
   ustadzah: [
-    { tab:"dashboard",  icon:"🏠", label:"Dashboard" },
-    { tab:"pengumuman", icon:"📢", label:"Pengumuman" }
+    { tab:"dashboard",  icon:"🏠", label:"Dashboard" }
   ],
   wali: [
-    { tab:"dashboard",  icon:"🏠", label:"Dashboard" },
-    { tab:"pengumuman", icon:"📢", label:"Pengumuman" }
+    { tab:"dashboard",  icon:"🏠", label:"Dashboard" }
   ]
 };
 
@@ -1716,7 +1713,6 @@ async function renderDashboardUstadzah(){
 
   const rekapSantri = hitungRekap(santri, "santri", ctx);
   const rekapSaya = hitungRekap([{ id: currentProfile.uid, nama: currentProfile.nama || "Ustadzah" }], "ustadzah", ctx)[0];
-
   const izinHariIni = izinList.filter(z =>
     z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today));
 
@@ -1750,6 +1746,19 @@ async function renderDashboardUstadzah(){
     !(isSubstituteActive(j) && j.substituteUid !== currentProfile.uid)
   );
 
+  // Helper render kartu santri untuk Baca/Hafalan
+  const kartuSantriPerTipe = (tipe) => santri.map((s, i) => {
+    const st = statusSantri(s.id, today, ctx);
+    return `<tr data-row>
+      <td>${i+1}</td>
+      <td><b style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama || "-")}</b></td>
+      <td>${badgeStatusHarian(st)}</td>
+      <td><div class="actions">
+        <button class="btn btn-sm btn-mobile-icon" data-view="${esc(s.id)}" data-tipe="${tipe}" title="Buka ${tipe}">📖<span class="btn-label"> Buka</span></button>
+        <button class="btn btn-sm btn-info btn-mobile-icon" data-riwayat-modal="${esc(s.id)}" title="Riwayat">📊<span class="btn-label"> Riwayat</span></button>
+      </div></td></tr>`;
+  });
+
   $("page").innerHTML = `
     <div class="card balance">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -1776,7 +1785,8 @@ async function renderDashboardUstadzah(){
 
     <div class="menu-grid" id="menuUstadzah">
       <button data-menu="kelas"><div class="ico">📚</div><div class="lbl">Kelas</div></button>
-      <button data-menu="ngaji"><div class="ico">📖</div><div class="lbl">Baca & Hafalan</div></button>
+      <button data-menu="baca"><div class="ico">📖</div><div class="lbl">Baca</div></button>
+      <button data-menu="hafalan"><div class="ico">🧠</div><div class="lbl">Hafalan</div></button>
       <button data-menu="keuangan"><div class="ico">💰</div><div class="lbl">Keuangan</div></button>
       <button data-menu="izin"><div class="ico">📝</div><div class="lbl">Izin</div></button>
       <button data-menu="rekap"><div class="ico">📊</div><div class="lbl">Rekap</div></button>
@@ -1805,30 +1815,35 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: BACA & HAFALAN -->
-    <div class="menu-panel" id="panel-ngaji">
+    <!-- PANEL: BACA (langsung tampil di page) -->
+    <div class="menu-panel" id="panel-baca">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-          <h3 style="margin:0">Santri kelas Anda</h3>
-          <input id="searchSantriUstadzah" class="search-box" placeholder="Cari santri...">
+          <h3 style="margin:0">📖 Buku Baca — santri kelas Anda</h3>
+          <input id="searchSantriBaca" class="search-box" placeholder="Cari santri...">
         </div>
         <div style="margin-top:10px">
-          ${dataTable("tableSantriUstadzah", ["No.","Nama","Status","Aksi"],
-            santri.map((s,i) => {
-              const st = statusSantri(s.id, today, ctx);
-              return `<tr data-row><td>${i+1}</td>
-                <td><b style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama || "-")}</b></td>
-                <td>${badgeStatusHarian(st)}</td>
-                <td><div class="actions">
-                  <button class="btn btn-sm" data-view="${esc(s.id)}">📖 Buka</button>
-                  <button class="btn btn-sm btn-info" data-riwayat-modal="${esc(s.id)}">📊 Riwayat</button>
-                </div></td></tr>`;
-            }), "Belum ada santri.")}
+          ${dataTable("tableSantriBaca", ["No.","Nama","Status","Aksi"],
+            kartuSantriPerTipe("baca"), "Belum ada santri.")}
         </div>
       </div>
     </div>
 
-    <!-- PANEL: KEUANGAN -->
+    <!-- PANEL: HAFALAN -->
+    <div class="menu-panel" id="panel-hafalan">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <h3 style="margin:0">🧠 Buku Hafalan — santri kelas Anda</h3>
+          <input id="searchSantriHafalan" class="search-box" placeholder="Cari santri...">
+        </div>
+        <div style="margin-top:10px">
+          ${dataTable("tableSantriHafalan", ["No.","Nama","Status","Aksi"],
+            kartuSantriPerTipe("hafalan"), "Belum ada santri.")}
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: KEUANGAN (langsung tampil di page) -->
     <div class="menu-panel" id="panel-keuangan">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1847,11 +1862,13 @@ async function renderDashboardUstadzah(){
                     <td><b style="color:#dc2626">${esc(item.santriNama)}</b></td>
                     <td>${item.bulanList.map(b => `${esc(b.label)} <span class="muted small">(${formatRupiah(b.sisa)})</span>`).join("<br>")}</td>
                     <td><b style="color:#dc2626">${formatRupiah(item.totalTunggakan)}</b></td>
-                    <td><button class="btn btn-sm" data-bukakeuangan="${esc(item.santriId)}">Bayar</button></td>
+                    <td><button class="btn btn-sm" data-keuangan-inline="${esc(item.santriId)}">Lihat</button></td>
                   </tr>`).join("")}
               </tbody>
             </table>
-          </div>` : `<div class="empty" style="padding:20px">✅ Tidak ada tunggakan SPP.</div>`}
+          </div>
+        ` : `<div class="empty" style="padding:20px">✅ Tidak ada tunggakan SPP.</div>`}
+        <div id="keuanganInlineWrap" class="hidden" style="margin-top:14px"></div>
       </div>
     </div>
 
@@ -1899,28 +1916,23 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: PENGUMUMAN (lazy) -->
+    <!-- PANEL: PENGUMUMAN (satu-satunya) -->
     <div class="menu-panel" id="panel-pengumuman">
       <div class="card empty">Memuat...</div>
     </div>
   `;
 
-  // ===== HANDLER PANEL =====
-
-  // Kelas: lepas
+  // Handler panel Kelas
   $("page").querySelectorAll("[data-lepas]").forEach(b => b.addEventListener("click", async () => {
     if(!confirm("Lepas klaim kelas ini?")) return;
     try{
       await updateCollectionData("jilid", b.dataset.lepas, {
         substituteUid:null, substituteNama:null, substituteFrom:null, substituteUntil:null, substituteAlasan:""
       });
-      logAudit("UPDATE","jilid",b.dataset.lepas,{ lepasKlaim:true });
       showToast("Klaim dilepas.");
       renderDashboardUstadzah();
     }catch(err){ showToast(firebaseError(err), true); }
   }));
-
-  // Kelas: klaim
   $("page").querySelectorAll("[data-klaim]").forEach(b => b.addEventListener("click", async () => {
     const jid = b.dataset.klaim;
     if(!confirm("Klaim kelas ini untuk hari ini?")) return;
@@ -1931,24 +1943,26 @@ async function renderDashboardUstadzah(){
         substituteFrom: today, substituteUntil: today,
         substituteAlasan: "Klaim cepat dari dashboard"
       });
-      logAudit("UPDATE","jilid",jid,{ klaim:true, uid: currentProfile.uid });
-      showToast("Kelas berhasil diklaim.");
+      showToast("Kelas diklaim.");
       renderDashboardUstadzah();
     }catch(err){ showToast(firebaseError(err), true); }
   }));
 
-  // Baca & Hafalan
-  attachTableSearch("searchSantriUstadzah","tableSantriUstadzah");
-  $("page").querySelectorAll("[data-view]").forEach(b =>
-    b.addEventListener("click", () => renderPembelajaranUstadzah(b.dataset.view)));
+  // Baca & Hafalan — langsung buka editor di page
+  attachTableSearch("searchSantriBaca","tableSantriBaca");
+  attachTableSearch("searchSantriHafalan","tableSantriHafalan");
+  $("page").querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    renderPembelajaranUstadzahInline(b.dataset.view, b.dataset.tipe);
+  }));
   $("page").querySelectorAll("[data-riwayat-modal]").forEach(b =>
     b.addEventListener("click", () => openRiwayatSantriModal(b.dataset.riwayatModal)));
 
-  // Keuangan: buka modal
-  $("page").querySelectorAll("[data-bukakeuangan]").forEach(b =>
-    b.addEventListener("click", () => openKeuanganSantriModal(b.dataset.bukakeuangan)));
+  // Keuangan inline
+  $("page").querySelectorAll("[data-keuangan-inline]").forEach(b => b.addEventListener("click", () => {
+    renderKeuanganSantriInline(b.dataset.keuanganInline);
+  }));
 
-  // Rekap: export
+  // Rekap export
   $("btnExportRekapSantri")?.addEventListener("click", () => {
     const rows = rekapSantri.map((r, i) => ({
       "Peringkat": i + 1, "Nama Santri": r.item.nama || "",
@@ -1963,7 +1977,7 @@ async function renderDashboardUstadzah(){
   // Menu grid
   bindMenuGrid("menuUstadzah");
 
-  // Lazy load panel pengumuman saat pertama dibuka
+  // Pengumuman lazy-load
   const btnPgm = $("menuUstadzah").querySelector('[data-menu="pengumuman"]');
   btnPgm?.addEventListener("click", () => lazyPanel("panel-pengumuman", async panel => {
     try{
@@ -1976,6 +1990,134 @@ async function renderDashboardUstadzah(){
         : `<div class="card empty">Belum ada pengumuman.</div>`;
     }catch(err){ panel.innerHTML = `<div class="card empty">Gagal memuat pengumuman.</div>`; }
   }));
+}
+
+/* ===== Pembelajaran Ustadzah INLINE (di dalam page) ===== */
+async function renderPembelajaranUstadzahInline(santriId, tipe){
+  const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+  const jilid = (await getCollectionData("jilid")).find(j => j.id === santri.jilidId);
+  if(!jilid) return showToast("Jilid santri belum diatur.", true);
+  const total = totalHalamanJilid(jilid, tipe);
+  if(total <= 0) return showToast(`Buku ${tipe} belum diupload.`, true);
+
+  const progress = (await getCollectionData("progress")).find(x => x.santriId === santriId && x.tipe === tipe);
+  let current = Math.min(total, Math.max(1, num(progress?.halaman) || 1));
+  let status = progress?.status || "mengulang";
+
+  // Render ke panel inline (bukan seluruh page)
+  const wrap = $("keuanganInlineWrap"); // reuse wrapper untuk menampilkan editor di dalam panel aktif
+  const panelAktif = $("page").querySelector(".menu-panel.show");
+  const targetPanel = panelAktif || $("page");
+  targetPanel.innerHTML = `
+    <div class="toolbar">
+      <button class="btn btn-light btn-sm" id="btnKembaliEditor">← Kembali</button>
+      <span class="muted small">${tipe === "hafalan" ? "🧠 Hafalan" : "📖 Baca"}</span>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">${tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"}</h3>
+          <div class="muted small" style="margin-top:4px">Santri: <b>${esc(santri.nama)}</b> · ${esc(jilid.nama)}</div>
+        </div>
+        <span class="badge badge-blue" id="inlinePageBadge"></span>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn btn-sm" id="inlinePrev">◀</button>
+        <input id="inlinePageInput" type="number" min="1" max="${total}" value="${current}" style="width:80px;text-align:center">
+        <button class="btn btn-sm" id="inlineNext">▶</button>
+        <button class="btn btn-sm btn-success" id="inlineSavePage">📌 Tandai</button>
+      </div>
+      <div class="pdf-frame-wrap" style="margin-top:12px;border-radius:12px">
+        <div class="pdf-loading" id="inlinePageLoading"><div class="pdf-skeleton"></div></div>
+        <img id="inlinePageImage" class="pdf-page-img" alt="Halaman buku" decoding="async">
+      </div>
+      <div class="card soft" style="margin-top:12px">
+        <h3>Hasil Pembelajaran</h3>
+        <div class="actions" style="margin-top:8px">
+          <button class="btn btn-success" id="inlineNaik">↑ Naik</button>
+          <button class="btn btn-warning" id="inlineMengulang">↻ Mengulang</button>
+        </div>
+        ${fg("Pesan ustadzah", `<textarea id="inlinePesan" rows="3" placeholder="Catatan untuk wali...">${esc(progress?.pesan)}</textarea>`)}
+        <button class="btn btn-info" id="inlineSimpan">💾 Simpan</button>
+      </div>
+    </div>`;
+
+  $("btnKembaliEditor").addEventListener("click", renderDashboardUstadzah);
+
+  async function showPage(){
+    current = Math.min(total, Math.max(1, num($("inlinePageInput").value) || 1));
+    $("inlinePageInput").value = current;
+    $("inlinePageBadge").textContent = `Halaman ${current}/${total}`;
+    $("inlinePageLoading").classList.remove("hidden");
+    try{
+      const gambar = await fetchHalamanGambar(jilid.id, tipe, current);
+      if(gambar) $("inlinePageImage").src = gambar;
+      else $("inlinePageImage").removeAttribute("src");
+    }catch(err){ showToast("Gagal memuat halaman.", true); }
+    finally{ $("inlinePageLoading").classList.add("hidden"); }
+    if(current < total) fetchHalamanGambar(jilid.id, tipe, current + 1).catch(() => {});
+    if(current > 1) fetchHalamanGambar(jilid.id, tipe, current - 1).catch(() => {});
+  }
+  $("inlinePrev").addEventListener("click", () => { $("inlinePageInput").value = current - 1; showPage(); });
+  $("inlineNext").addEventListener("click", () => { $("inlinePageInput").value = current + 1; showPage(); });
+  $("inlinePageInput").addEventListener("change", showPage);
+  showPage();
+
+  const save = async newStatus => {
+    status = newStatus || status;
+    await saveProgress({
+      santriId: santri.id, tipe, halaman: current, status,
+      pesan: $("inlinePesan").value.trim()
+    });
+  };
+  $("inlineSavePage").addEventListener("click", () => save());
+  $("inlineNaik").addEventListener("click", () => save("naik"));
+  $("inlineMengulang").addEventListener("click", () => save("mengulang"));
+  $("inlineSimpan").addEventListener("click", () => save());
+}
+
+/* ===== Keuangan Santri INLINE (di dalam panel Keuangan) ===== */
+async function renderKeuanganSantriInline(santriId){
+  const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+  const [settings, tagihan, tabunganList] = await Promise.all([
+    getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
+  ]);
+  const bills = tagihan.filter(x => x.santriId === santriId);
+
+  const wrap = $("keuanganInlineWrap");
+  wrap.classList.remove("hidden");
+  wrap.innerHTML = `
+    <div class="card soft" style="border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <h3 style="margin:0">💰 ${esc(santri.nama)}</h3>
+        <button class="btn btn-sm btn-light" id="btnTutupKeuangan">Tutup</button>
+      </div>
+      <div id="keuanganInlineBody">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable:true })}</div>
+    </div>`;
+
+  const reload = async () => {
+    const [t, tb] = await Promise.all([fresh("tagihanSantri"), fresh("tabungan")]);
+    const b = t.filter(x => x.santriId === santriId);
+    $("keuanganInlineBody").innerHTML = keuanganSantriHtml({ bills:b, tabunganList:tb, santriId, settings, editable:true });
+    bind(b, tb);
+  };
+  const bind = (billsNow, tabunganNow) => {
+    $("keuanganInlineBody").querySelectorAll("[data-bayar]").forEach(b =>
+      b.addEventListener("click", () => {
+        const bill = billsNow.find(x => x.id === b.dataset.bayar);
+        if(bill) openCatatPembayaranModal(bill, reload);
+      }));
+    $("btnCatatTabunganSantri")?.addEventListener("click", () =>
+      openTabunganModal({ santriList:[santri], tabunganList:tabunganNow, jenis:"setor", onSaved: reload }));
+  };
+  bind(bills, tabunganList);
+
+  $("btnTutupKeuangan").addEventListener("click", () => {
+    wrap.classList.add("hidden");
+    wrap.innerHTML = "";
+  });
 }
 
 /* ===== Modal Keuangan Santri — dipakai Ustadzah & Wali ===== */
