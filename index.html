@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f3d22">
@@ -10,248 +9,471 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* ============ DESIGN TOKENS ============ */
 :root{
-  --primary:#166534; --primary-dark:#0f3d22; --primary-soft:#f0fdf4; --accent:#22c55e;
-  --bg:#f5f7f6; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e5e9ee;
+  --primary:#166534; --primary-dark:#0f3d22; --primary-soft:#f0fdf4;
+  --accent:#22c55e;
+  --bg:#f5f7f6; --card:#fff;
+  --text:#0f172a; --text-soft:#475569; --muted:#64748b;
+  --border:#e5e9ee; --border-soft:#eef2f0;
   --danger:#dc2626; --warning:#d97706; --info:#2563eb; --success:#16a34a;
-  --radius:12px;
-  --shadow:0 1px 2px rgba(15,23,42,.04),0 2px 10px rgba(15,23,42,.04);
+  --radius:14px; --radius-sm:10px; --radius-lg:18px;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 2px 8px rgba(15,23,42,.04);
+  --shadow-lg:0 8px 24px rgba(15,23,42,.10);
+  --safe-bottom:env(safe-area-inset-bottom, 0px);
+  --topbar-h:56px;
+  --bottomnav-h:62px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{ -webkit-text-size-adjust:100%; }
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-h1,h2,h3,h4{margin:0;letter-spacing:-.01em}
-h3{font-size:15px;margin-bottom:4px}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14.5px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:contain;
+}
+h1,h2,h3,h4{margin:0;letter-spacing:-.01em;color:var(--text)}
+h1{font-size:20px;font-weight:700}
+h2{font-size:17px;font-weight:700}
+h3{font-size:15px;font-weight:600;margin-bottom:6px}
+h4{font-size:13.5px;font-weight:600}
 p{margin:0 0 8px}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;font-family:inherit}
 .hidden{display:none!important}
 .muted{color:var(--muted)}
-.small{font-size:12px}
+.small{font-size:12.5px}
+.soft{color:var(--text-soft)}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
-/* ---------- LOGIN ---------- */
-#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#166534 0%,#0f3d22 60%,#052e16 100%)}
-.login-card{width:100%;max-width:390px;background:#fff;border-radius:20px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
-.login-logo{width:60px;height:60px;margin:0 auto 14px;border-radius:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px}
-.login-title,.login-subtitle{text-align:center}
-.login-subtitle{color:var(--muted);margin-top:4px}
-.login-error{min-height:18px;color:var(--danger);text-align:center;font-size:12.5px;margin-top:10px}
-.link-btn{border:0;background:none;color:var(--primary);font-weight:600;padding:6px;font-size:13px}
+/* ============ LOGIN ============ */
+#loginScreen{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:linear-gradient(165deg,#166534 0%,#0f3d22 55%,#052e16 100%);
+}
+.login-card{
+  width:100%;max-width:400px;background:#fff;
+  border-radius:22px;padding:28px 24px 22px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);
+}
+.login-logo{
+  width:64px;height:64px;margin:0 auto 16px;
+  border-radius:18px;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;box-shadow:0 8px 20px rgba(22,101,52,.3);
+}
+.login-title{text-align:center;font-size:20px;font-weight:700}
+.login-subtitle{text-align:center;color:var(--muted);margin-top:4px;font-size:13px}
+.login-error{min-height:20px;color:var(--danger);text-align:center;font-size:13px;margin-top:10px}
+.link-btn{
+  border:0;background:none;color:var(--primary);font-weight:600;
+  padding:10px;font-size:13.5px;border-radius:8px;min-height:40px;
+}
+.link-btn:hover{background:var(--primary-soft)}
 
-/* ---------- FORM ---------- */
-.form-group{margin-bottom:12px}
-.form-group>label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px;color:#334155}
-input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.12)}
-input:disabled,select:disabled,textarea:disabled{background:#f1f5f9;color:var(--muted);cursor:not-allowed}
-input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:pointer}
-.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:190px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px}
-.check-grid label{display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;margin:0}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ============ FORM ============ */
+.form-group{margin-bottom:14px}
+.form-group>label{
+  display:block;font-size:13px;font-weight:600;
+  margin-bottom:6px;color:var(--text-soft)
+}
+input,select,textarea{
+  width:100%;padding:12px 14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:#fff;color:var(--text);
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  font-size:16px; /* cegah zoom di iOS */
+  min-height:46px;
+}
+textarea{min-height:80px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(22,101,52,.12);
+}
+input:disabled,select:disabled,textarea:disabled{background:#f1f5f9;color:var(--muted)}
+input[type="checkbox"]{width:20px;height:20px;min-height:0;accent-color:var(--primary);cursor:pointer}
+input[type="number"]{font-size:16px}
+.check-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  max-height:200px;overflow:auto;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px;background:#fafbfc;
+}
+.check-grid label{
+  display:flex;align-items:center;gap:8px;
+  font-weight:500;font-size:13.5px;cursor:pointer;
+  margin:0;padding:6px 4px;border-radius:6px;
+  min-height:36px;
+}
+.check-grid label:active{background:#eef2f0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* ---------- BUTTON ---------- */
-.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--primary);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:background .15s,opacity .15s,transform .1s}
+/* ============ BUTTON ============ */
+.btn{
+  border:0;border-radius:var(--radius-sm);
+  padding:11px 16px;background:var(--primary);color:#fff;
+  font-weight:600;font-size:14px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:background .15s,opacity .15s,transform .1s;
+  min-height:44px;
+  white-space:nowrap;
+}
 .btn:hover{background:var(--primary-dark)}
-.btn:active{transform:scale(.98)}
-.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .btn-full{width:100%}
-.btn-sm{padding:6px 10px;font-size:12px;border-radius:8px}
-.btn-icon{padding:8px;min-width:36px}
+.btn-sm{padding:8px 12px;font-size:13px;border-radius:9px;min-height:38px}
+.btn-icon{padding:9px;min-width:40px}
 .btn-danger{background:var(--danger)} .btn-danger:hover{background:#b91c1c}
 .btn-warning{background:var(--warning)} .btn-warning:hover{background:#b45309}
 .btn-info{background:var(--info)} .btn-info:hover{background:#1d4ed8}
 .btn-success{background:var(--success)} .btn-success:hover{background:#15803d}
 .btn-light{background:#eef2f0;color:var(--text)} .btn-light:hover{background:#dde4e0}
+.btn-ghost{background:transparent;color:var(--primary);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--primary-soft);border-color:var(--primary)}
 
-/* ---------- LAYOUT (tanpa sidebar) ---------- */
-.main{min-height:100vh;display:flex;flex-direction:column}
-.topbar{
-  height:56px;background:#fff;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 14px;position:sticky;top:0;z-index:50;
+/* ============ LAYOUT ============ */
+.main{
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
 }
-.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar{
+  height:var(--topbar-h);
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:saturate(180%) blur(12px);
+  -webkit-backdrop-filter:saturate(180%) blur(12px);
+}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
 .topbar-logo{
   width:34px;height:34px;border-radius:10px;
   background:var(--primary);color:#fff;
   display:flex;align-items:center;justify-content:center;
   font-size:16px;flex-shrink:0;
 }
-.topbar-title{font-weight:700;font-size:13.5px;line-height:1.2}
-.topbar-role{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+.topbar-title{
+  font-weight:700;font-size:14.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .avatar{
-  width:34px;height:34px;border-radius:50%;
+  width:38px;height:38px;border-radius:50%;
   background:var(--primary-soft);color:var(--primary);
   display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:12.5px;cursor:pointer;
-  border:0;
+  font-weight:700;font-size:13px;cursor:pointer;
+  border:0;flex-shrink:0;
+  transition:transform .15s;
 }
+.avatar:active{transform:scale(.94)}
 
-/* ---------- CHIPS (tab utama per role) ---------- */
+/* Chips (desktop/hybrid) — disembunyikan di mobile murni */
 .chips{
-  display:flex;gap:6px;overflow-x:auto;
-  padding:8px 12px;background:#fff;border-bottom:1px solid var(--border);
-  position:sticky;top:56px;z-index:49;
+  display:flex;gap:8px;overflow-x:auto;
+  padding:10px 16px;
+  background:#fff;border-bottom:1px solid var(--border);
+  position:sticky;top:var(--topbar-h);z-index:49;
   scrollbar-width:none;
 }
 .chips::-webkit-scrollbar{display:none}
 .chips button{
-  border:1px solid var(--border);background:#fff;color:var(--muted);
-  padding:6px 13px;border-radius:999px;font-weight:600;font-size:12.5px;
-  white-space:nowrap;transition:.15s;display:inline-flex;align-items:center;gap:5px;
+  border:1.5px solid var(--border);background:#fff;color:var(--text-soft);
+  padding:8px 14px;border-radius:999px;font-weight:600;font-size:13px;
+  white-space:nowrap;transition:.15s;
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:38px;
 }
-.chips button:hover{background:#f1f5f3;color:var(--text)}
 .chips button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 
-.page{padding:14px;max-width:1200px;margin:0 auto;width:100%;flex:1;overflow-x:hidden}
-/* ---------- HEAD / TOOLBAR ---------- */
-.page-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+/* Bottom nav — mobile only */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;
+  border-top:1px solid var(--border);
+  padding:6px 8px calc(6px + var(--safe-bottom));
+  z-index:60;
+  box-shadow:0 -4px 16px rgba(15,23,42,.05);
+}
+.bottom-nav-inner{
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
+  max-width:560px;margin:0 auto;
+}
+.bottom-nav button{
+  border:0;background:transparent;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 4px;border-radius:12px;
+  font-size:10.5px;font-weight:600;
+  min-height:52px;
+  transition:.15s;
+}
+.bottom-nav button .ico{
+  font-size:20px;line-height:1;
+  transition:transform .15s;
+}
+.bottom-nav button.active{color:var(--primary)}
+.bottom-nav button.active .ico{transform:translateY(-1px) scale(1.08)}
+.bottom-nav button:active{background:var(--primary-soft)}
+
+.page{
+  padding:14px 14px 24px;
+  max-width:1200px;margin:0 auto;width:100%;flex:1;
+  overflow-x:hidden;
+}
+
+/* ============ PAGE HEAD ============ */
+.page-head,.toolbar{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
 .page-head h2{font-size:18px}
-.page-head p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.page-head p{margin:3px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45}
 .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.search-box{max-width:220px}
+.search-box{max-width:240px;min-width:0}
 .stack>*+*{margin-top:12px}
 
-/* ---------- TABS (dalam page konten) ---------- */
-.tabs{display:flex;gap:3px;background:#fff;padding:4px;border-radius:11px;border:1px solid var(--border);overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+/* ============ TABS (dalam page) ============ */
+.tabs{
+  display:flex;gap:4px;background:#fff;padding:5px;
+  border-radius:12px;border:1px solid var(--border);
+  overflow-x:auto;margin-bottom:14px;
+  scrollbar-width:none;
+}
 .tabs::-webkit-scrollbar{display:none}
-.tabs button{border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px;font-weight:600;font-size:12.5px;white-space:nowrap;transition:.15s}
-.tabs button:hover{background:#f1f5f3;color:var(--text)}
+.tabs button{
+  border:0;background:transparent;color:var(--muted);
+  padding:9px 14px;border-radius:9px;
+  font-weight:600;font-size:13px;
+  white-space:nowrap;transition:.15s;
+  min-height:38px;
+}
 .tabs button.active{background:var(--primary);color:#fff}
 
-/* ---------- GRID MENU (dashboard) ---------- */
+/* ============ MENU GRID (dashboard) ============ */
 .menu-grid{
-  display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;
-  padding:12px;background:#fff;border:1px solid var(--border);
-  border-radius:var(--radius);box-shadow:var(--shadow);
-  margin-bottom:12px;
+  display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;
+  padding:10px;background:#fff;
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
 }
 .menu-grid button{
-  border:0;background:transparent;padding:8px 4px;border-radius:12px;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  font-size:11px;font-weight:600;color:var(--text);
-  transition:background .15s, transform .1s;min-height:72px;
+  border:0;background:transparent;
+  padding:12px 6px;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:600;color:var(--text);
+  transition:background .15s, transform .1s;
+  min-height:84px;
 }
-.menu-grid button:hover{background:#f1f5f3}
-.menu-grid button:active{transform:scale(.96)}
+.menu-grid button:active{transform:scale(.96);background:#f1f5f3}
 .menu-grid button .ico{
-  width:42px;height:42px;display:flex;align-items:center;justify-content:center;
-  border-radius:13px;background:var(--primary-soft);font-size:19px;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  border-radius:13px;background:var(--primary-soft);font-size:20px;
   color:var(--primary);flex-shrink:0;transition:.15s;
 }
-.menu-grid button.active .ico{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(22,101,52,.25)}
+.menu-grid button.active .ico{
+  background:var(--primary);color:#fff;
+  box-shadow:0 4px 12px rgba(22,101,52,.25);
+}
 .menu-grid button.active{color:var(--primary)}
 .menu-grid button .lbl{text-align:center;line-height:1.2}
 
-.menu-panel{display:none;animation:slideUp .2s}
+.menu-panel{display:none;animation:slideUp .22s ease-out}
 .menu-panel.show{display:block}
 
-/* ---------- GRID CARD ---------- */
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+/* ============ CARDS ============ */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .grid-3{grid-template-columns:repeat(3,1fr)}
 .grid-2{grid-template-columns:repeat(2,1fr)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
-.card.soft{background:#f8faf9;box-shadow:none}
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;
+  box-shadow:var(--shadow);
+}
+.card.soft{background:#f8faf9;box-shadow:none;border-color:var(--border-soft)}
 .card.warn{background:#fffbeb;border-color:#fde68a}
 .card.danger{background:#fef2f2;border-color:#fecaca}
 .card.info{background:#eff6ff;border-color:#bfdbfe}
 .card.ok{background:var(--primary-soft);border-color:#bbf7d0}
-.stat-icon{font-size:20px}
+.stat-icon{font-size:20px;line-height:1}
 .stat-label{color:var(--muted);font-size:12.5px;margin-top:6px}
-.stat-value{font-size:22px;font-weight:700;margin-top:2px}
-.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
-.balance{background:var(--primary);color:#fff;border:0;margin-bottom:12px}
+.stat-value{font-size:20px;font-weight:700;margin-top:2px;letter-spacing:-.02em}
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.balance{
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+  color:#fff;border:0;margin-bottom:14px;
+  box-shadow:0 6px 20px rgba(22,101,52,.2);
+}
+.balance b{color:#fff}
 
-/* ---------- TABLE ---------- */
-.table-container{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;min-width:560px}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;text-align:left;vertical-align:middle}
-th{background:#f8faf9;font-size:12px;color:#475569;font-weight:600;position:sticky;top:0}
+/* ============ TABLE ============ */
+.table-container{
+  background:#fff;border:1px solid var(--border);
+  border-radius:var(--radius);overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{
+  padding:11px 12px;border-bottom:1px solid var(--border);
+  font-size:13px;text-align:left;vertical-align:middle;
+}
+th{
+  background:#f8faf9;font-size:11.5px;color:var(--text-soft);
+  font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+  position:sticky;top:0;z-index:1;
+}
 tr:last-child td{border-bottom:0}
 tbody tr:hover{background:#fafcfb}
-.empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
 
-/* ---------- BADGE / NOTICE ---------- */
-.badge{display:inline-block;padding:2.5px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+/* ============ BADGE / NOTICE ============ */
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:999px;
+  font-size:11px;font-weight:600;white-space:nowrap;
+  line-height:1.5;
+}
 .badge-green{background:#dcfce7;color:#166534}
 .badge-yellow{background:#fef3c7;color:#92400e}
 .badge-red{background:#fee2e2;color:#991b1b}
 .badge-blue{background:#dbeafe;color:#1e40af}
 .badge-gray{background:#e5e9ee;color:#334155}
-.notice{border-left:3px solid var(--primary);background:var(--primary-soft);padding:10px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
+.notice{
+  border-left:3px solid var(--primary);
+  background:var(--primary-soft);
+  padding:11px 14px;border-radius:10px;
+  margin-bottom:12px;font-size:13px;line-height:1.55;
+}
 .notice-warn{border-left-color:var(--warning);background:#fffbeb}
 .notice p:last-child{margin-bottom:0}
 
-/* ---------- MODAL ---------- */
-.modal{position:fixed;inset:0;z-index:500;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:12px;animation:fadeIn .15s}
+/* ============ MODAL (mobile sheet) ============ */
+.modal{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(15,23,42,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  animation:fadeIn .15s;
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+}
 .modal-box{
-  width:100%;max-width:680px;max-height:92vh;overflow:auto;
-  background:#fff;border-radius:16px;padding:18px;animation:slideUp .2s;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior: auto;
-}
-.modal-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;position:sticky;top:-18px;background:#fff;padding:6px 0;z-index:1}
-.modal-header h3{margin:0;font-size:16px}
-.modal-close{width:32px;height:32px;border:0;border-radius:50%;background:#eef2f0;font-size:19px;line-height:1;flex-shrink:0}
-.modal-close:hover{background:#dde4e0}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
-
-/* ---------- TOAST / SPINNER ---------- */
-.toast{position:fixed;right:16px;bottom:16px;background:#0f172a;color:#fff;padding:11px 14px;border-radius:10px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:320px;font-size:13px;animation:slideUp .2s}
-.toast.error{background:var(--danger)}
-.spinner{width:18px;height:18px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-row{display:flex;align-items:center;gap:8px;color:var(--muted);padding:32px;justify-content:center}
-
-/* ---------- PDF UPLOAD ---------- */
-.pdf-upload-box{border:1.5px dashed #cbd5e1;border-radius:12px;padding:14px;background:#f8faf9}
-.pdf-upload-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-.pdf-file-info{margin-top:9px;padding:8px 11px;background:#fff;border:1px solid var(--border);border-radius:10px;font-size:12.5px}
-.pdf-progress{display:none;margin-top:10px}
-.pdf-progress.active{display:block}
-.pdf-progress-track{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden}
-.pdf-progress-bar{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .2s}
-.pdf-progress-text{font-size:12px;color:var(--muted);margin-top:6px}
-.pdf-current{margin-top:9px;padding:9px 11px;border-radius:10px;background:var(--primary-soft);color:var(--primary);font-size:12.5px}
-
-/* ---------- PDF VIEWER (ringan, auto-fit) ---------- */
-.pdf-viewer{
-  background:#202124;
-  display:flex;
-  flex-direction:column;
-  height:100%;
-  width:100%;
-}
-.pdf-toolbar{min-height:50px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#111827;color:#fff;flex-wrap:wrap}
-.pdf-toolbar-group{display:flex;align-items:center;gap:5px}
-.pdf-toolbar button{border:0;min-width:34px;height:34px;border-radius:8px;background:#374151;color:#fff;font-weight:700;font-size:15px}
-.pdf-toolbar button:hover{background:#4b5563}
-.pdf-page-indicator{min-width:78px;text-align:center;font-size:12.5px;font-weight:600}
-.pdf-frame-wrap{
-  position:relative;
-  background:#3a3d41;
-  min-height:340px;
-  flex:1;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
+  width:100%;max-width:680px;
+  max-height:92vh;max-height:92dvh;
   overflow:auto;
-  padding:6px;
+  background:#fff;
+  border-radius:22px 22px 0 0;
+  padding:20px 18px calc(20px + var(--safe-bottom));
+  animation:slideUp .25s cubic-bezier(.16,1,.3,1);
   -webkit-overflow-scrolling:touch;
-  touch-action: pan-x pan-y;
-  overscroll-behavior: auto;
+  overscroll-behavior:contain;
+}
+.modal-header{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-bottom:16px;
+  position:sticky;top:-20px;background:#fff;
+  padding:8px 0;z-index:2;
+  border-bottom:1px solid var(--border-soft);
+  margin-bottom:14px;
+}
+.modal-header h3{margin:0;font-size:16px;font-weight:700}
+.modal-close{
+  width:36px;height:36px;border:0;border-radius:50%;
+  background:#eef2f0;font-size:20px;line-height:1;
+  flex-shrink:0;color:var(--text-soft);
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-close:active{background:#dde4e0}
+/* Grabber visual */
+.modal-box::before{
+  content:"";display:block;width:40px;height:4px;
+  background:#dde4e0;border-radius:999px;
+  margin:-10px auto 14px;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  top:calc(var(--topbar-h) + 12px);
+  background:#0f172a;color:#fff;
+  padding:12px 18px;border-radius:12px;
+  z-index:1000;
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+  max-width:calc(100% - 32px);
+  font-size:13.5px;font-weight:500;
+  animation:toastIn .25s cubic-bezier(.16,1,.3,1);
+  text-align:center;
+}
+.toast.error{background:var(--danger)}
+@keyframes toastIn{from{transform:translate(-50%,-12px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+
+/* ============ SPINNER ============ */
+.spinner{
+  width:18px;height:18px;
+  border:2.5px solid #e2e8f0;border-top-color:var(--primary);
+  border-radius:50%;animation:spin .7s linear infinite;
+  display:inline-block;vertical-align:middle;margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{
+  display:flex;align-items:center;gap:8px;color:var(--muted);
+  padding:40px;justify-content:center;font-size:13px;
+}
+
+/* ============ PDF VIEWER ============ */
+.pdf-viewer{
+  background:#1a1d21;
+  display:flex;flex-direction:column;
+  height:100%;width:100%;
+  border-radius:12px;overflow:hidden;
+}
+.pdf-toolbar{
+  min-height:52px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;padding:6px 10px;background:#111827;color:#fff;flex-wrap:wrap;
+}
+.pdf-toolbar-group{display:flex;align-items:center;gap:5px}
+.pdf-toolbar button{
+  border:0;min-width:38px;height:38px;border-radius:9px;
+  background:#374151;color:#fff;font-weight:700;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+}
+.pdf-toolbar button:active{background:#4b5563}
+.pdf-page-indicator{
+  min-width:78px;text-align:center;font-size:12.5px;font-weight:600;
+}
+.pdf-frame-wrap{
+  position:relative;background:#3a3d41;
+  min-height:340px;flex:1;
+  display:flex;align-items:flex-start;justify-content:center;
+  overflow:auto;padding:6px;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
+  overscroll-behavior:auto;
 }
 .pdf-page-img{
   display:block;width:100%;height:auto;max-width:100%;
-  max-height:calc(100vh - 220px);object-fit:contain;
-  border-radius:4px;background:#fff;transform-origin:top center;
-  transition:width .15s ease-out;will-change:width;
+  max-height:calc(100vh - 240px);
+  object-fit:contain;
+  border-radius:4px;background:#fff;
+  transform-origin:top center;
+  transition:width .15s ease-out;
 }
-.pdf-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(32,33,36,.92);color:#fff;z-index:2}
+.pdf-loading{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(26,29,33,.94);color:#fff;z-index:2;
+}
 .pdf-loading.hidden{display:none}
-.pdf-info-bar{padding:8px 12px;background:#111827;color:#cbd5e1;font-size:11.5px;line-height:1.4}
+.pdf-info-bar{
+  padding:9px 12px;background:#111827;color:#cbd5e1;
+  font-size:11.5px;line-height:1.4;
+}
 .pdf-skeleton{
   width:100%;height:80%;max-width:560px;margin:auto;
   background:linear-gradient(90deg,#2a2d31 25%,#35393e 50%,#2a2d31 75%);
@@ -259,80 +481,93 @@ tbody tr:hover{background:#fafcfb}
 }
 @keyframes pdfShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .pdf-pesan-bar{
-  padding:10px 12px;
-  background:#1f2937;
-  color:#e5e7eb;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:8px;
-  align-items:end;
+  padding:10px 12px;background:#1f2937;color:#e5e7eb;
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;
 }
 .pdf-pesan-bar label{
-  grid-column:1 / -1;
-  font-size:12.5px;
-  font-weight:600;
-  color:#cbd5e1;
-  margin-bottom:2px;
+  grid-column:1 / -1;font-size:12.5px;font-weight:600;
+  color:#cbd5e1;margin-bottom:2px;
 }
 .pdf-pesan-bar textarea{
-  width:100%;
-  resize:vertical;
-  min-height:44px;
-  max-height:120px;
-  padding:8px 10px;
-  border-radius:8px;
-  border:1px solid #374151;
-  background:#111827;
-  color:#f1f5f9;
-  font-size:13px;
+  width:100%;resize:vertical;min-height:44px;max-height:120px;
+  padding:9px 11px;border-radius:9px;
+  border:1px solid #374151;background:#111827;
+  color:#f1f5f9;font-size:14px;
 }
-.pdf-pesan-bar textarea:focus{
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(34,197,94,.15);
+.pdf-pesan-bar button{align-self:end;height:44px;white-space:nowrap}
+.pdf-upload-box{
+  border:1.5px dashed #cbd5e1;border-radius:12px;
+  padding:14px;background:#f8faf9;
 }
-.pdf-pesan-bar button{
-  align-self:end;
-  height:44px;
-  white-space:nowrap;
+.pdf-upload-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.pdf-file-info{
+  margin-top:10px;padding:9px 12px;background:#fff;
+  border:1px solid var(--border);border-radius:10px;font-size:12.5px;
+}
+.pdf-progress{display:none;margin-top:10px}
+.pdf-progress.active{display:block}
+.pdf-progress-track{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.pdf-progress-bar{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .2s}
+.pdf-progress-text{font-size:12px;color:var(--muted);margin-top:6px}
+.pdf-current{
+  margin-top:9px;padding:10px 12px;border-radius:10px;
+  background:var(--primary-soft);color:var(--primary);font-size:12.5px;
 }
 
-@media(max-width:600px){
-  .pdf-pesan-bar{grid-template-columns:1fr;gap:6px}
-  .pdf-pesan-bar button{width:100%}
+/* ============ RESPONSIVE ============ */
+@media(max-width:1000px){
+  .grid,.summary-strip{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
 }
-/* ---------- RESPONSIVE ---------- */
-@media(max-width:1000px){.grid,.summary-strip{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:701px){
+  .menu-grid{grid-template-columns:repeat(6, 1fr)}
+  .modal{align-items:center}
+  .modal-box{border-radius:18px;padding:20px;max-height:88vh}
+  .modal-box::before{display:none}
+  .modal-header{top:-20px}
+}
+@media(max-width:700px){
+  /* Mobile: aktifkan bottom nav, sembunyikan chips */
+  .chips{display:none}
+  .bottom-nav{display:block}
+  .page{padding-bottom:calc(var(--bottomnav-h) + 20px + var(--safe-bottom))}
+}
 @media(max-width:600px){
-  .page{padding:12px}
+  body{font-size:14px}
+  .page{padding:12px 12px 20px}
   .grid,.grid-3,.grid-2,.summary-strip,.row{grid-template-columns:1fr}
-  .login-card{padding:22px}
+  .login-card{padding:24px 20px 18px}
   .pdf-upload-row{grid-template-columns:1fr}
-  .page-head h2{font-size:16px}
+  .page-head h2{font-size:17px}
   .check-grid{grid-template-columns:1fr}
-  .pdf-frame-wrap{min-height:280px;max-height:calc(100vh - 180px);overflow:auto;padding:4px}
-  .pdf-page-img{max-height:calc(100vh - 200px);border-radius:2px}
-  .modal{padding:8px}
-  .modal-box{padding:14px;border-radius:14px;max-height:94vh}
-  .modal-header{top:-14px;padding:4px 0}
-  th,td{padding:9px 10px;font-size:12.5px}
-  .card{padding:12px}
-  .menu-grid{gap:6px;padding:10px}
-  .menu-grid button{min-height:66px;font-size:10.5px}
-  .menu-grid button .ico{width:38px;height:38px;font-size:17px;border-radius:11px}
+  .pdf-frame-wrap{min-height:280px;max-height:calc(100vh - 200px);padding:4px}
+  .pdf-page-img{max-height:calc(100vh - 220px);border-radius:2px}
+  .modal{padding:0}
+  .modal-box{padding:18px 16px calc(18px + var(--safe-bottom))}
+  .modal-header{top:-18px;padding:6px 0}
+  th,td{padding:10px 11px;font-size:12.5px}
+  .card{padding:13px}
+  .menu-grid{gap:6px;padding:8px}
+  .menu-grid button{min-height:78px;font-size:11px;padding:10px 4px}
+  .menu-grid button .ico{width:40px;height:40px;font-size:18px}
+  .balance{padding:16px}
+  .toast{font-size:13px;padding:11px 16px}
+  .stat-value{font-size:18px}
 }
-@media(min-width:700px){.menu-grid{grid-template-columns:repeat(6, 1fr)}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
 </style>
 </head>
 <body>
 
+<!-- ================= LOGIN ================= -->
 <section id="loginScreen">
   <div class="login-card">
     <div class="login-logo">📖</div>
     <h1 class="login-title">TPQ Wardatul Wathon</h1>
     <div class="login-subtitle">Tukum Kidul, Lumajang</div>
-    <form id="loginForm" style="margin-top:22px" autocomplete="on">
+    <form id="loginForm" style="margin-top:24px" autocomplete="on">
       <div class="form-group">
         <label for="loginEmail">Email</label>
         <input id="loginEmail" type="email" autocomplete="username" placeholder="email@contoh.com" required>
@@ -344,32 +579,39 @@ tbody tr:hover{background:#fafcfb}
       <button type="submit" class="btn btn-full" id="loginSubmitBtn">Masuk</button>
     </form>
     <div class="login-error" id="loginError"></div>
-    <div style="text-align:center;margin-top:6px">
+    <div style="text-align:center;margin-top:8px">
       <button type="button" class="link-btn" id="forgotPasswordButton">Lupa password?</button>
     </div>
     <div style="text-align:center">
-      <button type="button" class="link-btn" id="setupAdminButton">Setup admin pertama</button>
+      <button type="button" class="link-btn" id="setupAdminButton" style="font-size:12.5px;color:var(--muted)">Setup admin pertama</button>
     </div>
   </div>
 </section>
 
+<!-- ================= APP ================= -->
 <section id="app" class="hidden">
   <main class="main">
     <header class="topbar">
       <div class="topbar-left">
         <div class="topbar-logo">📖</div>
-        <div>
-          <div class="topbar-title">TPQ Wardatul Wathon</div>
-          <span class="topbar-role" id="topbarRole">Portal</span>
-        </div>
+        <div class="topbar-title">TPQ Wardatul Wathon</div>
       </div>
       <button type="button" class="avatar" id="avatarButton" aria-label="Akun">-</button>
     </header>
+
+    <!-- Chips untuk desktop/tablet -->
     <div class="chips" id="mainChips"></div>
+
     <section id="page" class="page"></section>
+
+    <!-- Bottom nav untuk mobile -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Navigasi utama">
+      <div class="bottom-nav-inner" id="bottomNavInner"></div>
+    </nav>
   </main>
 </section>
 
+<!-- ================= MODAL & TOAST ================= -->
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-box">
     <div class="modal-header">
@@ -383,7 +625,7 @@ tbody tr:hover{background:#fafcfb}
 
 <script type="module">
 /* ============================================================
-   TPQ WARDATUL WATHON — versi ringkas, tanpa sidebar
+   TPQ WARDATUL WATHON — versi ringkas, mobile-first
 ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
@@ -576,20 +818,22 @@ function showToast(message, isError=false){
   toast.classList.toggle("error", isError);
   toast.classList.remove("hidden");
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => toast.classList.add("hidden"), 3500);
+  toastTimeout = setTimeout(() => toast.classList.add("hidden"), 3200);
 }
 function openModal(title, content){
   $("modalTitle").textContent = title;
   $("modalContent").innerHTML = content;
   $("modal").classList.remove("hidden");
-  setTimeout(() => $("modalContent").querySelector("input:not([type=hidden]):not([type=file]), select, textarea")?.focus(), 50);
+  document.body.style.overflow = "hidden";
+  setTimeout(() => $("modalContent").querySelector("input:not([type=hidden]):not([type=file]), select, textarea")?.focus(), 80);
 }
 function closeModal(){
   $("modal").classList.add("hidden");
   $("modalContent").innerHTML = "";
+  document.body.style.overflow = "";
 }
 function openFormModal({ title, body, submit="Simpan", submitClass="", onSubmit }){
-  openModal(title, `<form id="modalForm">${body}<button type="submit" class="btn btn-full ${submitClass}" id="modalSubmit">${esc(submit)}</button></form>`);
+  openModal(title, `<form id="modalForm">${body}<button type="submit" class="btn btn-full ${submitClass}" id="modalSubmit" style="margin-top:8px">${esc(submit)}</button></form>`);
   $("modalForm").addEventListener("submit", async e => {
     e.preventDefault();
     await busy($("modalSubmit"), "Menyimpan...", async () => {
@@ -636,7 +880,7 @@ async function deleteCollectionData(name, id){
   invalidateCache(name);
 }
 
-// Audit buffer — kurangi write & hindari resource-exhausted.
+// Audit buffer
 const auditBuffer = [];
 let auditFlushTimer = null;
 const AUDIT_FLUSH_DELAY = 1500;
@@ -692,6 +936,7 @@ const batasAlphaHari = s => num(s?.batasAlphaHari ?? APP_CONFIG.batasAlphaHari);
 const jumlahHariRekap = s => num(s?.jumlahHariRekap ?? APP_CONFIG.jumlahHariRekap);
 const isLewatBatasIzin = s => nowWIB().getHours() >= batasIzinJam(s);
 const isLewatBatasAlpha = s => nowWIB().getHours() >= batasAlphaJam(s);
+
 /* ============ 7. HARI LIBUR ============ */
 function isHariLibur(tanggal, settings){
   const mingguan = Array.isArray(settings?.liburMingguan) ? settings.liburMingguan : [];
@@ -813,15 +1058,6 @@ function rekapCard(title, rekap, settings, emptyText="Belum ada data."){
         <td>${badge(r.alpha, r.alpha >= batas ? "red" : "gray")}</td>
         <td>${badge(r.libur,"blue")}</td><td>${r.total}</td></tr>`), emptyText)}</div></div>`;
 }
-function peringatanCard(rekap, settings, teks){
-  const batas = batasAlphaHari(settings);
-  const list = rekap.filter(r => r.alpha >= batas);
-  if(!list.length) return "";
-  return `<div class="card danger"><h3 style="color:#991b1b">⚠️ Peringatan kehadiran</h3>
-    <p style="color:#7f1d1d">${teks} tidak masuk <b>${batas} hari atau lebih</b>:</p>
-    <ul style="margin:6px 0 0 18px;padding:0;color:#991b1b">${list.map(r => `<li><b>${esc(r.item.nama)}</b>: ${r.alpha} hari alpha</li>`).join("")}</ul></div>`;
-}
-// Kartu ringkas peringatan (tanpa list panjang)
 function peringatanSantriSingkat(rekap, settings){
   const batas = batasAlphaHari(settings);
   const list = rekap.filter(r => r.alpha >= batas);
@@ -1028,7 +1264,6 @@ function hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList }){
   return { sppTerbayar, iuranTerbayar, infaqMasuk, pengeluaran, tabunganSantri, saldoKas, totalUangDiKas: saldoKas + tabunganSantri };
 }
 
-// SPP otomatis pakai writeBatch (hemat write)
 let sppEnsuredPeriode = null;
 async function ensureSppBulanIni(){
   const { key: periode } = getPeriodeSekarang();
@@ -1339,7 +1574,7 @@ function bindHalamanButtons(root){
 }
 const totalHalamanJilid = (jilid, tipe) => num(tipe === "hafalan" ? jilid?.totalHalamanHafalan : jilid?.totalHalamanBaca);
 
-/* ============ 13. PDF PER HALAMAN (RINGAN — WebP) ============ */
+/* ============ 13. PDF PER HALAMAN ============ */
 const halamanImageCache = new Map();
 const halamanDocId = (jilidId, tipe, halaman) => `${jilidId}_${tipe}_${halaman}`;
 
@@ -1428,7 +1663,7 @@ async function uploadPdfPerPage(file, jilidId, tipe, onProgress){
   return pdfDoc.numPages;
 }
 
-const PDF_INFO_DEFAULT = "PDF dikompres jadi gambar per halaman (WebP ringan), lalu tiap halaman disimpan di Firestore.";
+const PDF_INFO_DEFAULT = "PDF akan dikompres otomatis jadi gambar per halaman supaya ringan.";
 function pdfUploadBlock(type, label){
   return `<div class="pdf-upload-box"><label style="display:block;font-weight:600;margin-bottom:8px">${esc(label)}</label>
     <div class="pdf-upload-row"><input id="pdfFile_${type}" type="file" accept="application/pdf,.pdf">
@@ -1498,6 +1733,7 @@ function bindPdfUploader(type, jilidId, initialTotal, persist){
   });
   return { getTotal: () => total };
 }
+
 /* ============ 14. AKUN ============ */
 const roleLabel = r => ({ admin:"Admin", ustadzah:"Ustadzah", wali:"Wali Santri" }[r] || r);
 function requireRole(role){
@@ -1536,14 +1772,11 @@ async function deleteManagedAccountRecord(uid, role){
 }
 
 /* ============ 15. AUTH & MODAL AKUN ============ */
-// Topbar & avatar
 function renderTopbar(){
   const nama = currentProfile?.nama || currentUser?.email || "-";
   const inisial = nama.split(" ").map(x => x[0]).join("").slice(0,2).toUpperCase();
   const a = $("avatarButton");
   if(a) a.textContent = inisial;
-  const r = $("topbarRole");
-  if(r) r.textContent = "Portal " + roleLabel(currentProfile?.role);
 }
 function openAkunModal(){
   openModal("Akun & Profil", `
@@ -1576,7 +1809,6 @@ async function kirimResetPassword(btn){
   });
 }
 
-// Lupa password (login screen)
 $("forgotPasswordButton").addEventListener("click", () => {
   openFormModal({
     title: "Lupa Password", submit: "Kirim Email Reset",
@@ -1591,7 +1823,6 @@ $("forgotPasswordButton").addEventListener("click", () => {
   });
 });
 
-// Setup admin pertama
 $("setupAdminButton").addEventListener("click", () => {
   openFormModal({
     title: "Setup admin pertama", submit: "Buat akun admin",
@@ -1610,7 +1841,6 @@ $("setupAdminButton").addEventListener("click", () => {
   });
 });
 
-// Login form
 $("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
   $("loginError").textContent = "";
@@ -1620,10 +1850,8 @@ $("loginForm").addEventListener("submit", async e => {
   });
 });
 
-// Avatar klik
 $("avatarButton").addEventListener("click", () => { if(currentProfile) openAkunModal(); });
 
-// Auth state
 onAuthStateChanged(auth, async user => {
   if(!user){
     currentUser = null; currentProfile = null; sppEnsuredPeriode = null; cache.clear();
@@ -1642,7 +1870,7 @@ onAuthStateChanged(auth, async user => {
     $("loginScreen").classList.add("hidden");
     $("app").classList.remove("hidden");
     renderTopbar();
-    buildChips();
+    buildNavigation();
     navigate("dashboard");
     resetIdleTimer();
     logAudit("LOGIN","users",user.uid,{ email: user.email });
@@ -1653,7 +1881,6 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-// Idle timer
 let idleTimer = null;
 function resetIdleTimer(){
   clearTimeout(idleTimer);
@@ -1668,13 +1895,15 @@ function resetIdleTimer(){
 window.addEventListener("offline", () => showToast("⚠️ Offline.", true));
 window.addEventListener("online",  () => showToast("✅ Kembali online."));
 
-/* ============ 16. NAVIGASI (CHIPS) ============ */
+/* ============ 16. NAVIGASI ============ */
 const CHIPS = {
   admin: [
     { tab:"dashboard",  icon:"🏠", label:"Dashboard" },
     { tab:"dataUser",   icon:"👥", label:"Data User" },
     { tab:"ruangNgaji", icon:"📚", label:"Ruang Ngaji" },
-    { tab:"keuangan",   icon:"💰", label:"Keuangan" }
+    { tab:"keuangan",   icon:"💰", label:"Keuangan" },
+    { tab:"pengaturan", icon:"⚙️", label:"Pengaturan" },
+    { tab:"pengumuman", icon:"📢", label:"Pengumuman" }
   ],
   ustadzah: [
     { tab:"dashboard",  icon:"🏠", label:"Dashboard" }
@@ -1684,25 +1913,40 @@ const CHIPS = {
   ]
 };
 
-function buildChips(){
+function buildNavigation(){
   const items = CHIPS[currentProfile.role] || [];
+
+  // Chips untuk desktop
   $("mainChips").innerHTML = items.map(i =>
     `<button type="button" data-tab="${i.tab}">${i.icon} ${esc(i.label)}</button>`).join("");
   $("mainChips").querySelectorAll("button").forEach(b =>
     b.addEventListener("click", () => navigate(b.dataset.tab)));
+
+  // Bottom nav untuk mobile — maksimal 5 item
+  const navItems = items.slice(0, 5);
+  $("bottomNavInner").innerHTML = navItems.map(i =>
+    `<button type="button" data-tab="${i.tab}"><span class="ico">${i.icon}</span><span>${esc(i.label.split(" ")[0])}</span></button>`).join("");
+  $("bottomNavInner").querySelectorAll("button").forEach(b =>
+    b.addEventListener("click", () => navigate(b.dataset.tab)));
 }
 
 async function navigate(tab){
+  // Update active state di chips & bottom nav
   $("mainChips").querySelectorAll("button").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab));
+  $("bottomNavInner").querySelectorAll("button").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === tab));
+
   $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat...</div>`;
+  window.scrollTo({ top: 0, behavior: "instant" });
 
   const map = {
     dashboard:  () => renderDashboard(),
     pengumuman: () => renderPengumuman(),
     dataUser:   () => renderDataUserAdmin(),
     ruangNgaji: () => renderRuangNgajiAdmin(),
-    keuangan:   () => renderKeuanganAdmin()
+    keuangan:   () => renderKeuanganAdmin(),
+    pengaturan: () => renderPengaturanAdmin()
   };
   const fn = map[tab];
   if(!fn){ $("page").innerHTML = `<div class="card empty">Tab belum tersedia.</div>`; return; }
@@ -1740,7 +1984,6 @@ function bindMenuGrid(menuId){
   }));
 }
 
-// Helper load bertahap saat panel pertama dibuka
 function lazyPanel(panelId, loader){
   const panel = $(panelId);
   if(!panel) return;
@@ -1783,8 +2026,8 @@ async function renderDashboardUstadzah(){
       : santriKelasIds.has(z.santriId))
     .sort(byCreatedDesc).slice(0, 10);
 
-  // SPP menunggak
   const tagihanList = await fresh("tagihanSantri");
+  const tabunganAll = await fresh("tabungan");
   const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanPerSantri = {};
   tagihanList.forEach(bill => {
@@ -1807,7 +2050,6 @@ async function renderDashboardUstadzah(){
     !(isSubstituteActive(j) && j.substituteUid !== currentProfile.uid)
   );
 
-  // Helper render kartu santri untuk Baca/Hafalan
   const kartuSantriPerTipe = (tipe) => santri.map((s, i) => {
     const st = statusSantri(s.id, today, ctx);
     return `<tr data-row>
@@ -1815,8 +2057,8 @@ async function renderDashboardUstadzah(){
       <td><b style="${st.status === "izin" ? "color:#dc2626" : ""}">${esc(s.nama || "-")}</b></td>
       <td>${badgeStatusHarian(st)}</td>
       <td><div class="actions">
-        <button class="btn btn-sm btn-mobile-icon" data-view="${esc(s.id)}" data-tipe="${tipe}" title="Buka ${tipe}">📖<span class="btn-label"> Buka</span></button>
-        <button class="btn btn-sm btn-info btn-mobile-icon" data-riwayat-modal="${esc(s.id)}" title="Riwayat">📊<span class="btn-label"> Riwayat</span></button>
+        <button class="btn btn-sm" data-view="${esc(s.id)}" data-tipe="${tipe}" title="Buka ${tipe}">📖 Buka</button>
+        <button class="btn btn-sm btn-info" data-riwayat-modal="${esc(s.id)}" title="Riwayat">📊</button>
       </div></td></tr>`;
   });
 
@@ -1854,7 +2096,6 @@ async function renderDashboardUstadzah(){
       <button data-menu="pengumuman"><div class="ico">📢</div><div class="lbl">Pengumuman</div></button>
     </div>
 
-    <!-- PANEL: KELAS -->
     <div class="menu-panel" id="panel-kelas">
       <div class="card">
         <h3>Kelas Anda hari ini</h3>
@@ -1866,7 +2107,7 @@ async function renderDashboardUstadzah(){
 
         ${daftarKelasBisaKlaim.length ? `
           <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
-          <h4 style="margin:0 0 6px;font-size:14px">Klaim kelas pengganti</h4>
+          <h4 style="margin:0 0 6px">Klaim kelas pengganti</h4>
           <p class="muted small" style="margin:0 0 8px">Kelas yang bisa Anda gantikan hari ini:</p>
           <div style="display:grid;gap:6px">
             ${daftarKelasBisaKlaim.map(j =>
@@ -1876,7 +2117,6 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: BACA (langsung tampil di page) -->
     <div class="menu-panel" id="panel-baca">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1890,7 +2130,6 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: HAFALAN -->
     <div class="menu-panel" id="panel-hafalan">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1904,9 +2143,8 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: KEUANGAN (langsung tampil di page) -->
     <div class="menu-panel" id="panel-keuangan">
-      <div class="card">
+      <div class="card" style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <h3 style="margin:0">💵 Tunggakan SPP kelas Anda</h3>
           <span class="badge ${daftarMenunggak.length ? "badge-red" : "badge-green"}">
@@ -1916,24 +2154,54 @@ async function renderDashboardUstadzah(){
         ${daftarMenunggak.length ? `
           <div class="table-container" style="margin-top:10px">
             <table>
-              <thead><tr><th>Santri</th><th>Bulan</th><th>Sisa</th><th></th></tr></thead>
+              <thead><tr><th>Santri</th><th>Bulan</th><th>Sisa</th><th>Aksi</th></tr></thead>
               <tbody>
                 ${daftarMenunggak.map(item => `
                   <tr>
                     <td><b style="color:#dc2626">${esc(item.santriNama)}</b></td>
                     <td>${item.bulanList.map(b => `${esc(b.label)} <span class="muted small">(${formatRupiah(b.sisa)})</span>`).join("<br>")}</td>
                     <td><b style="color:#dc2626">${formatRupiah(item.totalTunggakan)}</b></td>
-                    <td><button class="btn btn-sm" data-keuangan-inline="${esc(item.santriId)}">Lihat</button></td>
+                    <td>
+                      <div class="actions">
+                        <button class="btn btn-sm" data-bukakeuangan="${esc(item.santriId)}" title="Bayar">💵 Bayar</button>
+                        <button class="btn btn-sm btn-info" data-riwayat-modal="${esc(item.santriId)}" title="Riwayat">📊</button>
+                      </div>
+                    </td>
                   </tr>`).join("")}
               </tbody>
             </table>
           </div>
         ` : `<div class="empty" style="padding:20px">✅ Tidak ada tunggakan SPP.</div>`}
-        <div id="keuanganInlineWrap" class="hidden" style="margin-top:14px"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <h3 style="margin:0">💰 Tabungan Santri</h3>
+          <span class="muted small">Total: <b>${formatRupiah(santri.reduce((s,x) => s + hitungSaldoTabungan(tabunganAll, x.id), 0))}</b></span>
+        </div>
+        <div class="table-container" style="margin-top:10px">
+          <table>
+            <thead><tr><th>Santri</th><th>Saldo</th><th>Aksi</th></tr></thead>
+            <tbody>
+              ${santri.length ? santri.map(s => {
+                const saldo = hitungSaldoTabungan(tabunganAll, s.id);
+                return `<tr>
+                  <td><b>${esc(s.nama)}</b></td>
+                  <td><b style="color:${saldo >= 0 ? '#166534' : '#dc2626'}">${formatRupiah(saldo)}</b></td>
+                  <td>
+                    <div class="actions">
+                      <button class="btn btn-sm btn-success" data-tabungan-setor="${esc(s.id)}">+ Setor</button>
+                      <button class="btn btn-sm btn-warning" data-tabungan-tarik="${esc(s.id)}">− Tarik</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join("") : `<tr><td colspan="3" class="empty">Belum ada santri.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- PANEL: IZIN -->
     <div class="menu-panel" id="panel-izin">
       ${izinHariIni.length ? `<div class="card warn" style="margin-bottom:10px">
         <h3 style="color:#92400e;margin:0">📝 Santri izin hari ini</h3>
@@ -1947,7 +2215,6 @@ async function renderDashboardUstadzah(){
       <div style="margin-top:10px">${riwayatIzinCard(riwayatIzin)}</div>
     </div>
 
-    <!-- PANEL: REKAP -->
     <div class="menu-panel" id="panel-rekap">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1977,13 +2244,11 @@ async function renderDashboardUstadzah(){
       </div>
     </div>
 
-    <!-- PANEL: PENGUMUMAN (satu-satunya) -->
     <div class="menu-panel" id="panel-pengumuman">
       <div class="card empty">Memuat...</div>
     </div>
   `;
 
-  // Handler panel Kelas
   $("page").querySelectorAll("[data-lepas]").forEach(b => b.addEventListener("click", async () => {
     if(!confirm("Lepas klaim kelas ini?")) return;
     try{
@@ -2009,7 +2274,6 @@ async function renderDashboardUstadzah(){
     }catch(err){ showToast(firebaseError(err), true); }
   }));
 
-  // Baca & Hafalan — langsung buka editor di page
   attachTableSearch("searchSantriBaca","tableSantriBaca");
   attachTableSearch("searchSantriHafalan","tableSantriHafalan");
   $("page").querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
@@ -2017,13 +2281,25 @@ async function renderDashboardUstadzah(){
   }));
   $("page").querySelectorAll("[data-riwayat-modal]").forEach(b =>
     b.addEventListener("click", () => openRiwayatSantriModal(b.dataset.riwayatModal)));
-
-  // Keuangan inline
-  $("page").querySelectorAll("[data-keuangan-inline]").forEach(b => b.addEventListener("click", () => {
-    renderKeuanganSantriInline(b.dataset.keuanganInline);
+  $("page").querySelectorAll("[data-bukakeuangan]").forEach(b =>
+    b.addEventListener("click", () => openKeuanganSantriModal(b.dataset.bukakeuangan)));
+  $("page").querySelectorAll("[data-tabungan-setor]").forEach(b => b.addEventListener("click", () => {
+    const s = santri.find(x => x.id === b.dataset.tabunganSetor);
+    if(!s) return;
+    openTabunganModal({
+      santriList: [s], tabunganList: tabunganAll, jenis: "setor",
+      onSaved: () => renderDashboardUstadzah()
+    });
+  }));
+  $("page").querySelectorAll("[data-tabungan-tarik]").forEach(b => b.addEventListener("click", () => {
+    const s = santri.find(x => x.id === b.dataset.tabunganTarik);
+    if(!s) return;
+    openTabunganModal({
+      santriList: [s], tabunganList: tabunganAll, jenis: "tarik",
+      onSaved: () => renderDashboardUstadzah()
+    });
   }));
 
-  // Rekap export
   $("btnExportRekapSantri")?.addEventListener("click", () => {
     const rows = rekapSantri.map((r, i) => ({
       "Peringkat": i + 1, "Nama Santri": r.item.nama || "",
@@ -2032,13 +2308,9 @@ async function renderDashboardUstadzah(){
     exportToExcel(rows, `rekap-kehadiran-${todayStr()}.xlsx`, "Rekap Kehadiran");
   });
 
-  // Form izin
   bindIzinForm({ isUstadzah:true, santriList:[], settings });
-
-  // Menu grid
   bindMenuGrid("menuUstadzah");
 
-  // Pengumuman lazy-load
   const btnPgm = $("menuUstadzah").querySelector('[data-menu="pengumuman"]');
   btnPgm?.addEventListener("click", () => lazyPanel("panel-pengumuman", async panel => {
     try{
@@ -2053,8 +2325,7 @@ async function renderDashboardUstadzah(){
   }));
 }
 
-/* ===== Editor Baca/Hafalan — MODAL FULL SCREEN ===== */
-/* ===== Editor Baca/Hafalan — MODAL FULL SCREEN ===== */
+/* ===== Editor Baca/Hafalan — Full Screen ===== */
 async function renderPembelajaranUstadzahInline(santriId, tipe){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2090,12 +2361,14 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
     </div>
   `);
 
-  // Override modal-box → full screen
+  // Override modal-box → full screen untuk viewer
   const modalBox = $("modalContent").closest(".modal-box");
   modalBox.style.maxWidth = "none";
   modalBox.style.width = "100%";
   modalBox.style.height = "100vh";
+  modalBox.style.height = "100dvh";
   modalBox.style.maxHeight = "100vh";
+  modalBox.style.maxHeight = "100dvh";
   modalBox.style.borderRadius = "0";
   modalBox.style.padding = "0";
   modalBox.style.display = "flex";
@@ -2110,7 +2383,6 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
   });
   observer.observe($("modal"), { attributes:true, attributeFilter:["class"] });
 
-  // Sembunyikan judul modal, sisakan tombol close
   const modalHeader = modalBox.querySelector(".modal-header");
   if(modalHeader){
     modalHeader.style.position = "absolute";
@@ -2119,6 +2391,8 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
     modalHeader.style.zIndex = "10";
     modalHeader.style.marginBottom = "0";
     modalHeader.style.padding = "0";
+    modalHeader.style.borderBottom = "none";
+    modalHeader.style.background = "transparent";
     const h3 = modalHeader.querySelector("h3");
     if(h3) h3.style.display = "none";
   }
@@ -2140,18 +2414,17 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
   $("halPrev").addEventListener("click", () => { current = Math.max(1, current - 1); load(); });
   $("halNext").addEventListener("click", () => { if(current < total){ current++; load(); } });
 
-  // Klik Naik / Mengulang → buka modal konfirmasi pesan
   const konfirmasiDanSimpan = (status) => {
     openKonfirmasiPesanModal({
       santri, tipe, jilid, halaman: current, status,
       pesanAwal: progress?.pesan || "",
-      onSaved: () => closeModal() // tutup modal full screen setelah simpan
+      onSaved: () => closeModal()
     });
   };
   $("btnNaikModal").addEventListener("click", () => konfirmasiDanSimpan("naik"));
   $("btnMengulangModal").addEventListener("click", () => konfirmasiDanSimpan("mengulang"));
 
-  // Swipe: hanya trigger kalau jelas horizontal
+  // Swipe navigasi
   let sx = 0, sy = 0, tracking = false;
   const wrap = $("halFrameWrap");
   wrap.addEventListener("touchstart", e => {
@@ -2179,7 +2452,6 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
   load();
 }
 
-/* ===== Modal Konfirmasi Pesan Ustadzah ===== */
 function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanAwal, onSaved }){
   const isNaik = status === "naik";
   const labelTipe = tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca";
@@ -2187,8 +2459,6 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
     ? `<span class="badge badge-green">Naik</span>`
     : `<span class="badge badge-yellow">Mengulang</span>`;
 
-  // Buat modal kecil untuk konfirmasi. Karena openModal mengganti konten,
-  // kita simpan konten modal utama agar bisa dikembalikan bila user batal.
   const kontenUtama = $("modalContent").innerHTML;
   const judulUtama = $("modalTitle").textContent;
 
@@ -2217,23 +2487,19 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
   const pesanEl = $("pesanKonfirmasi");
   pesanEl?.focus();
 
-  // Batal → kembalikan ke modal full screen
   $("btnBatalKonfirmasi").addEventListener("click", () => {
     openModal(judulUtama, kontenUtama);
   });
 
-  // Simpan → simpan progress + pesan, lalu tutup modal utama
   $("btnSimpanKonfirmasi").addEventListener("click", async () => {
     const btn = $("btnSimpanKonfirmasi");
     await busy(btn, "Menyimpan...", async () => {
       try{
         await saveProgress({
           santriId: santri.id, tipe,
-          halaman,
-          status,
+          halaman, status,
           pesan: $("pesanKonfirmasi").value.trim()
         });
-        // Tutup modal utama
         onSaved?.();
       }catch(err){
         showToast("Gagal menyimpan: " + firebaseError(err), true);
@@ -2241,82 +2507,8 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
     });
   });
 }
-  async function showPage(){
-    current = Math.min(total, Math.max(1, num($("inlinePageInput").value) || 1));
-    $("inlinePageInput").value = current;
-    $("inlinePageBadge").textContent = `Halaman ${current}/${total}`;
-    $("inlinePageLoading").classList.remove("hidden");
-    try{
-      const gambar = await fetchHalamanGambar(jilid.id, tipe, current);
-      if(gambar) $("inlinePageImage").src = gambar;
-      else $("inlinePageImage").removeAttribute("src");
-    }catch(err){ showToast("Gagal memuat halaman.", true); }
-    finally{ $("inlinePageLoading").classList.add("hidden"); }
-    if(current < total) fetchHalamanGambar(jilid.id, tipe, current + 1).catch(() => {});
-    if(current > 1) fetchHalamanGambar(jilid.id, tipe, current - 1).catch(() => {});
-  }
-  $("inlinePrev").addEventListener("click", () => { $("inlinePageInput").value = current - 1; showPage(); });
-  $("inlineNext").addEventListener("click", () => { $("inlinePageInput").value = current + 1; showPage(); });
-  $("inlinePageInput").addEventListener("change", showPage);
-  showPage();
 
-  const save = async newStatus => {
-    status = newStatus || status;
-    await saveProgress({
-      santriId: santri.id, tipe, halaman: current, status,
-      pesan: $("inlinePesan").value.trim()
-    });
-  };
-  $("inlineSavePage").addEventListener("click", () => save());
-  $("inlineNaik").addEventListener("click", () => save("naik"));
-  $("inlineMengulang").addEventListener("click", () => save("mengulang"));
-  $("inlineSimpan").addEventListener("click", () => save());
-}
-
-/* ===== Keuangan Santri INLINE (di dalam panel Keuangan) ===== */
-async function renderKeuanganSantriInline(santriId){
-  const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
-  if(!santri) return showToast("Santri tidak ditemukan.", true);
-  const [settings, tagihan, tabunganList] = await Promise.all([
-    getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
-  ]);
-  const bills = tagihan.filter(x => x.santriId === santriId);
-
-  const wrap = $("keuanganInlineWrap");
-  wrap.classList.remove("hidden");
-  wrap.innerHTML = `
-    <div class="card soft" style="border:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <h3 style="margin:0">💰 ${esc(santri.nama)}</h3>
-        <button class="btn btn-sm btn-light" id="btnTutupKeuangan">Tutup</button>
-      </div>
-      <div id="keuanganInlineBody">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable:true })}</div>
-    </div>`;
-
-  const reload = async () => {
-    const [t, tb] = await Promise.all([fresh("tagihanSantri"), fresh("tabungan")]);
-    const b = t.filter(x => x.santriId === santriId);
-    $("keuanganInlineBody").innerHTML = keuanganSantriHtml({ bills:b, tabunganList:tb, santriId, settings, editable:true });
-    bind(b, tb);
-  };
-  const bind = (billsNow, tabunganNow) => {
-    $("keuanganInlineBody").querySelectorAll("[data-bayar]").forEach(b =>
-      b.addEventListener("click", () => {
-        const bill = billsNow.find(x => x.id === b.dataset.bayar);
-        if(bill) openCatatPembayaranModal(bill, reload);
-      }));
-    $("btnCatatTabunganSantri")?.addEventListener("click", () =>
-      openTabunganModal({ santriList:[santri], tabunganList:tabunganNow, jenis:"setor", onSaved: reload }));
-  };
-  bind(bills, tabunganList);
-
-  $("btnTutupKeuangan").addEventListener("click", () => {
-    wrap.classList.add("hidden");
-    wrap.innerHTML = "";
-  });
-}
-
-/* ===== Modal Keuangan Santri — dipakai Ustadzah & Wali ===== */
+/* ===== Keuangan Santri Modal ===== */
 async function openKeuanganSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2348,7 +2540,6 @@ async function openKeuanganSantriModal(santriId){
   bind(bills, tabunganList);
 }
 
-/* ===== Modal Riwayat Santri (dari dashboard) ===== */
 async function openRiwayatSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2377,6 +2568,7 @@ async function openRiwayatSantriModal(santriId){
       }), "Belum ada riwayat.")}
   `);
 }
+
 /* ============ DASHBOARD WALI ============ */
 async function renderDashboardWali(){
   const [santri, jilidList, ustadzahList, ctx] = await Promise.all([
@@ -2388,7 +2580,6 @@ async function renderDashboardWali(){
   const santriIds = new Set(santri.map(s => s.id));
   const riwayatIzin = izinList.filter(z => santriIds.has(z.santriId)).sort(byCreatedDesc).slice(0, 10);
 
-  // Pendamping dari semua santri
   const pendampingSet = new Set();
   santri.forEach(s => {
     const j = jilidList.find(x => x.id === s.jilidId);
@@ -2396,7 +2587,6 @@ async function renderDashboardWali(){
   });
   const pendamping = [...pendampingSet].join(", ");
 
-  // Cek SPP menunggak (kartu ringkas)
   const tagihanList = await fresh("tagihanSantri");
   const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanAnanda = {};
@@ -2444,7 +2634,6 @@ async function renderDashboardWali(){
       <button data-menu="qris"><div class="ico">📱</div><div class="lbl">QRIS Bayar</div></button>
     </div>
 
-    <!-- PANEL: ANANDA -->
     <div class="menu-panel" id="panel-ananda">
       <div class="card">
         <h3>Ananda</h3>
@@ -2465,27 +2654,22 @@ async function renderDashboardWali(){
       </div>
     </div>
 
-    <!-- PANEL: FORM IZIN -->
     <div class="menu-panel" id="panel-form-izin">
       ${izinFormCard({ isUstadzah:false, santriList:santri, settings })}
     </div>
 
-    <!-- PANEL: RIWAYAT IZIN -->
     <div class="menu-panel" id="panel-riwayat">
       ${riwayatIzinCard(riwayatIzin)}
     </div>
 
-    <!-- PANEL: REKAP -->
     <div class="menu-panel" id="panel-rekap">
       ${rekapCard("📊 Rekap kehadiran ananda", rekap, settings)}
     </div>
 
-    <!-- PANEL: PENGUMUMAN (lazy) -->
     <div class="menu-panel" id="panel-pengumuman">
       <div class="card empty">Memuat...</div>
     </div>
 
-    <!-- PANEL: QRIS -->
     <div class="menu-panel" id="panel-qris">
       <div class="card">
         <h3>📱 QRIS Pembayaran</h3>
@@ -2494,19 +2678,14 @@ async function renderDashboardWali(){
     </div>
   `;
 
-  // Handler Ananda
   $("page").querySelectorAll("[data-pembelajaran]").forEach(b =>
     b.addEventListener("click", () => openPembelajaranWaliModal(b.dataset.pembelajaran)));
   $("page").querySelectorAll("[data-keuangan]").forEach(b =>
     b.addEventListener("click", () => openKeuanganSantriModal(b.dataset.keuangan)));
 
-  // Form izin
   bindIzinForm({ isUstadzah:false, santriList:santri, settings });
-
-  // Menu grid
   bindMenuGrid("menuWali");
 
-  // Lazy load pengumuman
   const btnPgm = $("menuWali").querySelector('[data-menu="pengumuman"]');
   btnPgm?.addEventListener("click", () => lazyPanel("panel-pengumuman", async panel => {
     try{
@@ -2520,7 +2699,6 @@ async function renderDashboardWali(){
     }catch(err){ panel.innerHTML = `<div class="card empty">Gagal memuat pengumuman.</div>`; }
   }));
 
-  // Lazy load QRIS
   const btnQris = $("menuWali").querySelector('[data-menu="qris"]');
   btnQris?.addEventListener("click", () => lazyPanel("panel-qris", async () => {
     const wrap = $("panelQrisContent");
@@ -2535,7 +2713,6 @@ async function renderDashboardWali(){
   }));
 }
 
-/* ===== Modal Pembelajaran Ananda (Wali) ===== */
 async function openPembelajaranWaliModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
@@ -2634,7 +2811,6 @@ async function renderDashboardAdmin(){
       <button data-menu="pengaturan"><div class="ico">⚙️</div><div class="lbl">Pengaturan</div></button>
     </div>
 
-    <!-- PANEL: DATA USER (shortcut ke tab) -->
     <div class="menu-panel" id="panel-data-user">
       <div class="card">
         <h3>Data User</h3>
@@ -2645,7 +2821,6 @@ async function renderDashboardAdmin(){
       </div>
     </div>
 
-    <!-- PANEL: RUANG NGAJI (shortcut) -->
     <div class="menu-panel" id="panel-ruang-ngaji">
       <div class="card">
         <h3>Ruang Ngaji</h3>
@@ -2656,7 +2831,6 @@ async function renderDashboardAdmin(){
       </div>
     </div>
 
-    <!-- PANEL: KEUANGAN (shortcut) -->
     <div class="menu-panel" id="panel-keuangan">
       <div class="card">
         <h3>Keuangan</h3>
@@ -2667,7 +2841,6 @@ async function renderDashboardAdmin(){
       </div>
     </div>
 
-    <!-- PANEL: REKAP -->
     <div class="menu-panel" id="panel-rekap">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2688,12 +2861,10 @@ async function renderDashboardAdmin(){
       </div>
     </div>
 
-    <!-- PANEL: PENGUMUMAN (lazy) -->
     <div class="menu-panel" id="panel-pengumuman">
       <div class="card empty">Memuat...</div>
     </div>
 
-    <!-- PANEL: PENGATURAN (shortcut) -->
     <div class="menu-panel" id="panel-pengaturan">
       <div class="card">
         <h3>Pengaturan</h3>
@@ -2705,11 +2876,9 @@ async function renderDashboardAdmin(){
     </div>
   `;
 
-  // Shortcut goto
   $("page").querySelectorAll("[data-goto]").forEach(b =>
     b.addEventListener("click", () => navigate(b.dataset.goto)));
 
-  // Export rekap
   $("btnExportRekapUstadzah")?.addEventListener("click", () => {
     const rows = rekap.map((r, i) => ({
       "Peringkat": i + 1, "Nama": r.item.nama || "",
@@ -2720,7 +2889,6 @@ async function renderDashboardAdmin(){
 
   bindMenuGrid("menuAdmin");
 
-  // Lazy load pengumuman
   const btnPgm = $("menuAdmin").querySelector('[data-menu="pengumuman"]');
   btnPgm?.addEventListener("click", () => lazyPanel("panel-pengumuman", async panel => {
     try{
@@ -3041,7 +3209,6 @@ async function openSantriForm(item, onSaved){
   });
 }
 
-/* ===== Template & Import Santri ===== */
 function downloadTemplateSantri(){
   const rows = [
     ["Nama Santri","Jenis Kelamin","Kelas / Jilid","Email Wali","Nama Wali (Tampilan)","Password Wali (opsional)","Status (Aktif/Nonaktif)"],
@@ -3363,7 +3530,7 @@ async function openJilidForm(item, onSaved){
       ${pdfUploadBlock("baca", "📖 Buku baca (PDF)")}
       <div style="height:10px"></div>
       ${pdfUploadBlock("hafalan", "🧠 Buku hafalan (PDF)")}
-      <div class="notice" style="margin-top:12px">PDF dikompres otomatis (~180 KB/halaman, WebP) supaya ringan di HP.</div>
+      <div class="notice" style="margin-top:12px">PDF dikompres otomatis (~180 KB/halaman) supaya ringan di HP.</div>
       ${fg("Status", `<select id="jilidAktif"><option value="true" ${item?.aktif !== false ? "selected" : ""}>Aktif</option><option value="false" ${item?.aktif === false ? "selected" : ""}>Nonaktif</option></select>`)}`,
     onSubmit: async () => {
       const ustadzahIds = [...document.querySelectorAll(".ustadzah-check:checked")].map(x => x.value);
@@ -3914,97 +4081,7 @@ async function jalankanMigrasiMultiUstadzah(){
   }catch(err){ showToast("Gagal migrasi: " + firebaseError(err), true); }
 }
 
-/* ============ DAFTAR SANTRI USTADZAH (fallback, jika ada yang panggil) ============ */
-async function renderDaftarSantriUstadzah(){
-  return renderDashboardUstadzah();
-}
-
-/* ============ PEMBELAJARAN USTADZAH ============ */
-async function renderPembelajaranUstadzah(santriId){
-  const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
-  if(!santri) return showToast("Santri tidak ditemukan.", true);
-  if(!(await getEffectiveJilidIds(currentProfile)).includes(santri.jilidId))
-    return showToast("Santri bukan bagian kelas Anda.", true);
-  const jilid = (await getCollectionData("jilid")).find(j => j.id === santri.jilidId);
-  if(!jilid) return showToast("Jilid santri belum diatur admin.", true);
-
-  openModal("Pilih modul", `
-    <div style="display:grid;gap:10px">
-      <button class="btn" data-tipe="baca">📖 Buku Baca</button>
-      <button class="btn btn-info" data-tipe="hafalan">🧠 Buku Hafalan</button>
-    </div>`);
-  $("modalContent").querySelectorAll("[data-tipe]").forEach(b => b.addEventListener("click", () => {
-    closeModal();
-    openPembelajaranEditor(santri, jilid, b.dataset.tipe);
-  }));
-}
-
-async function openPembelajaranEditor(santri, jilid, tipe){
-  const total = totalHalamanJilid(jilid, tipe);
-  if(total <= 0) return showToast(`Buku ${tipe === "hafalan" ? "hafalan" : "baca"} belum diupload.`, true);
-  const progress = (await getCollectionData("progress")).find(x => x.santriId === santri.id && x.tipe === tipe);
-  let current = Math.min(total, Math.max(1, num(progress?.halaman) || 1));
-  let status = progress?.status || "mengulang";
-
-  $("page").innerHTML = `
-    <div class="toolbar"><button class="btn btn-light btn-sm" id="btnKembali">← Kembali</button></div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <div><h2 style="font-size:18px">${tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"}</h2>
-          <div class="muted small" style="margin-top:4px">Santri: <b>${esc(santri.nama)}</b> · ${esc(jilid.nama)}</div></div>
-        <span class="badge badge-blue" id="pageBadge"></span>
-      </div>
-      <div class="actions" style="margin-top:14px">
-        <button class="btn btn-sm" id="btnPrev">◀</button>
-        <input id="pageInput" type="number" min="1" max="${total}" value="${current}" style="width:80px;text-align:center">
-        <button class="btn btn-sm" id="btnNext">▶</button>
-        <button class="btn btn-sm btn-success" id="btnSavePage">📌 Tandai</button>
-      </div>
-      <div class="pdf-frame-wrap" style="margin-top:12px;border-radius:12px">
-        <div class="pdf-loading" id="pageLoading"><div class="pdf-skeleton"></div></div>
-        <img id="pageImage" class="pdf-page-img" alt="Halaman buku" decoding="async">
-      </div>
-      <div class="card soft" style="margin-top:12px">
-        <h3>Hasil Pembelajaran</h3>
-        <div class="actions" style="margin-top:8px">
-          <button class="btn btn-success" id="btnNaik">↑ Naik</button>
-          <button class="btn btn-warning" id="btnMengulang">↻ Mengulang</button>
-        </div>
-        ${fg("Pesan ustadzah", `<textarea id="pesanPembelajaran" rows="3" placeholder="Catatan untuk wali...">${esc(progress?.pesan)}</textarea>`)}
-        <button class="btn btn-info" id="btnSimpanPesan">💾 Simpan Pesan</button>
-      </div>
-    </div>`;
-
-  $("btnKembali").addEventListener("click", renderDashboardUstadzah);
-  async function showPage(){
-    current = Math.min(total, Math.max(1, num($("pageInput").value) || 1));
-    $("pageInput").value = current;
-    $("pageBadge").textContent = `Halaman ${current}/${total}`;
-    $("pageLoading").classList.remove("hidden");
-    try{
-      const gambar = await fetchHalamanGambar(jilid.id, tipe, current);
-      if(gambar) $("pageImage").src = gambar;
-      else{ $("pageImage").removeAttribute("src"); showToast(`Halaman ${current} belum tersedia.`, true); }
-    }catch(err){ showToast("Gagal memuat: " + firebaseError(err), true); }
-    finally{ $("pageLoading").classList.add("hidden"); }
-    if(current < total) fetchHalamanGambar(jilid.id, tipe, current + 1).catch(() => {});
-    if(current > 1) fetchHalamanGambar(jilid.id, tipe, current - 1).catch(() => {});
-  }
-  $("btnPrev").addEventListener("click", () => { $("pageInput").value = current - 1; showPage(); });
-  $("btnNext").addEventListener("click", () => { $("pageInput").value = current + 1; showPage(); });
-  $("pageInput").addEventListener("change", showPage);
-  showPage();
-
-  const save = async newStatus => {
-    status = newStatus || status;
-    await saveProgress({ santriId: santri.id, tipe, halaman: current, status, pesan: $("pesanPembelajaran").value.trim() });
-  };
-  $("btnSavePage").addEventListener("click", () => save());
-  $("btnSimpanPesan").addEventListener("click", () => save());
-  $("btnNaik").addEventListener("click", () => save("naik"));
-  $("btnMengulang").addEventListener("click", () => save("mengulang"));
-}
-
+/* ============ PEMBELAJARAN ============ */
 async function saveProgress({ santriId, tipe, halaman, status, pesan }){
   try{
     const existing = (await getCollectionData("progress")).find(x => x.santriId === santriId && x.tipe === tipe);
@@ -4080,7 +4157,6 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
     if(!document.fullscreenElement) v?.requestFullscreen().catch(() => {}); else document.exitFullscreen();
   });
 
-  // Swipe: hanya trigger kalau jelas horizontal
   let sx = 0, sy = 0, tracking = false;
   const wrap = $("halFrameWrap");
   wrap.addEventListener("touchstart", e => {
@@ -4092,7 +4168,7 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
     if(!tracking || e.touches.length !== 1) return;
     const dx = Math.abs(e.touches[0].clientX - sx);
     const dy = Math.abs(e.touches[0].clientY - sy);
-    if(dy > dx + 6) tracking = false; // dominan vertikal → batalkan swipe
+    if(dy > dx + 6) tracking = false;
   }, { passive:true });
   wrap.addEventListener("touchend", e => {
     if(!tracking || !e.changedTouches.length){ tracking = false; return; }
