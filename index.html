@@ -104,8 +104,7 @@ input[type="checkbox"]{width:auto;margin:0;accent-color:var(--primary);cursor:po
 .chips button:hover{background:#f1f5f3;color:var(--text)}
 .chips button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 
-.page{padding:14px;max-width:1200px;margin:0 auto;width:100%;flex:1}
-
+.page{padding:14px;max-width:1200px;margin:0 auto;width:100%;flex:1;overflow-x:hidden}
 /* ---------- HEAD / TOOLBAR ---------- */
 .page-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .page-head h2{font-size:18px}
@@ -186,7 +185,12 @@ tbody tr:hover{background:#fafcfb}
 
 /* ---------- MODAL ---------- */
 .modal{position:fixed;inset:0;z-index:500;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:12px;animation:fadeIn .15s}
-.modal-box{width:100%;max-width:680px;max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:18px;animation:slideUp .2s}
+.modal-box{
+  width:100%;max-width:680px;max-height:92vh;overflow:auto;
+  background:#fff;border-radius:16px;padding:18px;animation:slideUp .2s;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior: auto;
+}
 .modal-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;position:sticky;top:-18px;background:#fff;padding:6px 0;z-index:1}
 .modal-header h3{margin:0;font-size:16px}
 .modal-close{width:32px;height:32px;border:0;border-radius:50%;background:#eef2f0;font-size:19px;line-height:1;flex-shrink:0}
@@ -220,10 +224,20 @@ tbody tr:hover{background:#fafcfb}
 .pdf-toolbar button:hover{background:#4b5563}
 .pdf-page-indicator{min-width:78px;text-align:center;font-size:12.5px;font-weight:600}
 .pdf-frame-wrap{
-  position:relative;background:#3a3d41;
-  min-height:340px;max-height:calc(100vh - 200px);
-  display:flex;align-items:flex-start;justify-content:center;
-  overflow:auto;padding:6px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  position:relative;
+  background:#3a3d41;
+  min-height:340px;
+  max-height:calc(100vh - 200px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  overflow:auto;
+  padding:6px;
+  -webkit-overflow-scrolling:touch;
+  /* Biarkan scroll vertikal & horizontal bekerja normal.
+     overscroll-behavior hilangkan supaya tidak "kunci" scroll di HP. */
+  touch-action: pan-x pan-y;
+  overscroll-behavior: auto;
 }
 .pdf-page-img{
   display:block;width:100%;height:auto;max-width:100%;
@@ -250,7 +264,7 @@ tbody tr:hover{background:#fafcfb}
   .pdf-upload-row{grid-template-columns:1fr}
   .page-head h2{font-size:16px}
   .check-grid{grid-template-columns:1fr}
-  .pdf-frame-wrap{min-height:280px;max-height:calc(100vh - 180px);padding:4px}
+  .pdf-frame-wrap{min-height:280px;max-height:calc(100vh - 180px);overflow:auto;padding:4px}
   .pdf-page-img{max-height:calc(100vh - 200px);border-radius:2px}
   .modal{padding:8px}
   .modal-box{padding:14px;border-radius:14px;max-height:94vh}
@@ -3869,6 +3883,7 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
     if(total && page < total) fetchHalamanGambar(jilidId, tipe, page + 1).catch(() => {});
     if(page > 1) fetchHalamanGambar(jilidId, tipe, page - 1).catch(() => {});
   }
+
   const applyZoom = delta => {
     zoom = Math.min(300, Math.max(50, zoom + delta));
     $("halZoom").textContent = zoom + "%";
@@ -3884,25 +3899,33 @@ function openHalamanViewer({ jilidId, tipe, halaman=1, totalHalaman=0, label="Bu
     if(!document.fullscreenElement) v?.requestFullscreen().catch(() => {}); else document.exitFullscreen();
   });
 
-  // Swipe gesture
-  let sx = 0, sy = 0;
+  // Swipe: hanya trigger kalau jelas horizontal
+  let sx = 0, sy = 0, tracking = false;
   const wrap = $("halFrameWrap");
   wrap.addEventListener("touchstart", e => {
-    if(e.touches.length !== 1) return;
+    if(e.touches.length !== 1){ tracking = false; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    tracking = true;
+  }, { passive:true });
+  wrap.addEventListener("touchmove", e => {
+    if(!tracking || e.touches.length !== 1) return;
+    const dx = Math.abs(e.touches[0].clientX - sx);
+    const dy = Math.abs(e.touches[0].clientY - sy);
+    if(dy > dx + 6) tracking = false; // dominan vertikal → batalkan swipe
   }, { passive:true });
   wrap.addEventListener("touchend", e => {
-    if(!e.changedTouches.length) return;
+    if(!tracking || !e.changedTouches.length){ tracking = false; return; }
+    tracking = false;
     const dx = e.changedTouches[0].clientX - sx;
     const dy = e.changedTouches[0].clientY - sy;
-    if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+    if(Math.abs(dx) < 70) return;
+    if(Math.abs(dy) > Math.abs(dx) * 0.7) return;
     if(dx < 0 && (!total || page < total)){ page++; load(); }
     else if(dx > 0 && page > 1){ page--; load(); }
   }, { passive:true });
 
   load();
 }
-
 /* ============ END ============ */
 </script>
 </body>
