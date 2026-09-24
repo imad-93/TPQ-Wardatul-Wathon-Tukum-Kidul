@@ -1391,21 +1391,22 @@ function keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable 
   const tabungan = tabunganList.filter(t => t.santriId === santriId).sort((a,b) => (b.tanggal?.seconds||0) - (a.tanggal?.seconds||0));
   const saldo = hitungSaldoTabungan(tabunganList, santriId);
 
-  // Cek apakah ada tagihan yang belum lunas
   const adaSppBelum = sppBills.some(b => b.status !== "lunas");
   const adaIuranBelum = iuranBills.some(b => b.status !== "lunas");
 
-  // Tabel tanpa kolom "Aksi"
   const head = label => ["No.", label, "Nominal", "Terbayar", "Status"];
   const rows = (list, labelFn) => list.map((b,i) => `<tr><td>${i+1}</td><td>${labelFn(b)}</td>
     <td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
     <td>${badgeStatusTagihan(b.status)}${isSppMenunggak(b,tgl) ? " " + badge("Menunggak","red") : ""}</td></tr>`);
 
-  // Tombol aksi utama di atas
+  // ====== TOMBOL AKSI — 5 tombol: Bayar SPP, Bayar Iuran, Backfill, Setor, Tarik ======
+  // Susunan: baris 1 = Bayar SPP + Backfill (2 kolom), baris 2 = Setor + Tarik (2 kolom)
+  // Iuran kalau ada, masuk baris 1 juga
   const aksiUtama = editable ? `
-    <div class="grid" style="grid-template-columns:repeat(${adaIuranBelum ? 4 : 3},1fr);gap:8px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
       <button class="btn btn-sm" data-aksi="spp" ${!adaSppBelum ? "disabled" : ""}>💵 Bayar SPP</button>
-      ${adaIuranBelum ? `<button class="btn btn-sm btn-info" data-aksi="iuran">🎉 Bayar Iuran</button>` : ""}
+      <button class="btn btn-sm btn-light" data-aksi="backfill">⏱ Backfill Nunggak</button>
+      ${adaIuranBelum ? `<button class="btn btn-sm btn-info" data-aksi="iuran" style="grid-column:1/-1">🎉 Bayar Iuran</button>` : ""}
       <button class="btn btn-sm btn-success" data-aksi="setor">➕ Setor Tabungan</button>
       <button class="btn btn-sm btn-warning" data-aksi="tarik">➖ Tarik Tabungan</button>
     </div>
@@ -1432,7 +1433,7 @@ function openCatatPembayaranModal(billOrList, onSaved){
   const isSpp = belumLunas[0].jenis === "SPP";
   const santriNama = belumLunas[0].santriNama || "-";
 
-  // Urutkan: SPP → per periode ascending; Iuran → per createdAt ascending
+  // Urutkan
   belumLunas.sort((a,b) => {
     if(isSpp) return (a.periode||"").localeCompare(b.periode||"");
     return (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0);
@@ -1444,44 +1445,141 @@ function openCatatPembayaranModal(billOrList, onSaved){
 
   const sisaOf = b => Math.max(0, num(b.nominal) - num(b.terbayar));
 
-  // Kalau cuma 1 tagihan → langsung pakai, tidak perlu dropdown
-  const singleBill = belumLunas.length === 1 ? belumLunas[0] : null;
+  // Kalau 1 tagihan → langsung, tanpa pilih
+  if(belumLunas.length === 1){
+    return openFormPembayaranSatu({ bill: belumLunas[0], santriNama, isSpp, labelOf, sisaOf, onSaved });
+  }
 
-  const dropdownHtml = singleBill
-    ? `<input type="hidden" id="bayarBillId" value="${esc(singleBill.id)}">
-       <div class="notice">
-         <b>${esc(santriNama)}</b><br>
-         ${esc(labelOf(singleBill))}<br>
-         Nominal ${formatRupiah(singleBill.nominal)} · Dibayar ${formatRupiah(singleBill.terbayar)}<br>
-         <b>Sisa: ${formatRupiah(sisaOf(singleBill))}</b>
-       </div>`
-    : `${fg(isSpp ? "Pilih Bulan SPP" : "Pilih Iuran", `
-        <select id="bayarBillId" required>
-          ${belumLunas.map(b => `<option value="${esc(b.id)}" data-sisa="${sisaOf(b)}">
-            ${esc(labelOf(b))} — Sisa ${formatRupiah(sisaOf(b))}
-          </option>`).join("")}
-        </select>
-      `)}
-      <div class="notice" id="bayarInfo" style="margin-top:8px"></div>`;
+  // Kalau >1 tagihan → multi-select checkbox
+  openModal(isSpp ? "Bayar SPP" : "Bayar Iuran", `
+    <div class="notice" style="margin-bottom:12px">
+      <b>${esc(santriNama)}</b><br>
+      <span class="muted small">Centang tagihan yang mau dibayar (bisa lebih dari satu).</span>
+    </div>
 
+    <div class="form-group">
+      <label>${isSpp ? "Pilih Bulan SPP" : "Pilih Iuran"}</label>
+      <div class="check-grid" id="daftarTagihan" style="grid-template-columns:1fr;max-height:280px">
+        ${belumLunas.map(b => {
+          const sisa = sisaOf(b);
+          return `<label style="justify-content:space-between;width:100%">
+            <span style="display:flex;align-items:center;gap:8px">
+              <input type="checkbox" class="tagihan-check" value="${esc(b.id)}" data-sisa="${sisa}" checked>
+              <span>${esc(labelOf(b))}</span>
+            </span>
+            <span style="font-weight:700;color:var(--primary)">${formatRupiah(sisa)}</span>
+          </label>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="notice" id="bayarInfo" style="margin-top:8px"></div>
+
+    <div class="form-group" style="margin-top:12px">
+      <label for="bayarJumlah">Jumlah Dibayar (total)</label>
+      <input id="bayarJumlah" type="number" min="1" inputmode="numeric" required>
+      <div class="muted small" style="margin-top:4px">Nominal otomatis = total sisa tagihan tercentang. Bisa diubah untuk bayar sebagian.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="bayarMetode">Metode Pembayaran</label>
+      <select id="bayarMetode"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>
+    </div>
+
+    <div class="form-group">
+      <label for="bayarKeterangan">Keterangan (opsional)</label>
+      <textarea id="bayarKeterangan" rows="2" placeholder="Contoh: bayar 5 bulan sekaligus"></textarea>
+    </div>
+
+    <button type="button" class="btn btn-full" id="btnSimpanPembayaran" style="margin-top:8px">
+      💾 Simpan Pembayaran
+    </button>
+  `);
+
+  const cekTerpilih = () => [...document.querySelectorAll(".tagihan-check:checked")]
+    .map(x => ({ billId: x.value, sisa: num(x.dataset.sisa) }));
+
+  const updateInfo = () => {
+    const terpilih = cekTerpilih();
+    const total = terpilih.reduce((s,x) => s + x.sisa, 0);
+    $("bayarJumlah").value = total;
+    const info = $("bayarInfo");
+    if(!terpilih.length){
+      info.innerHTML = `<span style="color:var(--danger)">⚠️ Pilih minimal 1 tagihan.</span>`;
+      return;
+    }
+    info.innerHTML = `<b>${terpilih.length} tagihan</b> terpilih · Total sisa: <b>${formatRupiah(total)}</b>`;
+  };
+
+  document.querySelectorAll(".tagihan-check").forEach(el =>
+    el.addEventListener("change", updateInfo));
+  updateInfo();
+
+  $("btnSimpanPembayaran").addEventListener("click", async () => {
+    const terpilih = cekTerpilih();
+    const jumlahTotal = num($("bayarJumlah").value);
+    if(!terpilih.length) return showToast("Pilih minimal 1 tagihan.", true);
+    if(jumlahTotal <= 0) return showToast("Jumlah harus lebih dari 0.", true);
+
+    const btn = $("btnSimpanPembayaran");
+    await busy(btn, "Menyimpan...", async () => {
+      try{
+        const metode = $("bayarMetode").value;
+        const keterangan = $("bayarKeterangan").value.trim();
+
+        // Jika 1 tagihan: simpan langsung dengan nominal input
+        // Jika >1 tagihan: bagi rata ke semua tagihan (dengan prioritas bulan terlama lunas dulu)
+        if(terpilih.length === 1){
+          await catatPembayaranTagihan(terpilih[0].billId, {
+            jumlah: jumlahTotal, metode, keterangan
+          });
+        } else {
+          // Alokasi dana: bayar lunas tagihan berurutan dari yang terlama
+          let sisaDana = jumlahTotal;
+          for(const t of terpilih){
+            if(sisaDana <= 0) break;
+            const bill = belumLunas.find(b => b.id === t.billId);
+            if(!bill) continue;
+            const sisaTagihan = Math.max(0, num(bill.nominal) - num(bill.terbayar));
+            const bayarSekarang = Math.min(sisaTagihan, sisaDana);
+            if(bayarSekarang > 0){
+              await catatPembayaranTagihan(t.billId, {
+                jumlah: bayarSekarang, metode,
+                keterangan: keterangan || `Bayar ${terpilih.length} tagihan sekaligus`
+              });
+              sisaDana -= bayarSekarang;
+            }
+          }
+        }
+        showToast("Pembayaran dicatat.");
+        onSaved?.();
+      }catch(err){
+        console.error(err);
+        showToast("Gagal menyimpan: " + firebaseError(err), true);
+      }
+    });
+  });
+}
+
+/* ===== Bayar SPP/Iuran — 1 tagihan saja (tanpa checkbox) ===== */
+function openFormPembayaranSatu({ bill, santriNama, isSpp, labelOf, sisaOf, onSaved }){
+  const sisa = sisaOf(bill);
   openFormModal({
     title: isSpp ? "Bayar SPP" : "Bayar Iuran",
     submit: "Simpan Pembayaran",
     body: `
       <div class="notice" style="margin-bottom:12px">
-        <b>${esc(santriNama)}</b>
+        <b>${esc(santriNama)}</b><br>
+        ${esc(labelOf(bill))}<br>
+        Nominal ${formatRupiah(bill.nominal)} · Dibayar ${formatRupiah(bill.terbayar)}<br>
+        <b>Sisa: ${formatRupiah(sisa)}</b>
       </div>
 
-      ${dropdownHtml}
-
-      ${fg("Jumlah Dibayar", `<input id="bayarJumlah" type="number" min="1" inputmode="numeric" required>`)}
+      ${fg("Jumlah Dibayar", `<input id="bayarJumlah" type="number" min="1" value="${sisa}" inputmode="numeric" required>`)}
       ${fg("Metode Pembayaran", `<select id="bayarMetode"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>`)}
       ${fg("Keterangan (opsional)", `<textarea id="bayarKeterangan" rows="2" placeholder="Contoh: cicilan ke-1"></textarea>`)}
     `,
     onSubmit: async () => {
-      const billId = $("bayarBillId").value;
-      const bill = belumLunas.find(b => b.id === billId);
-      if(!bill){ showToast("Tagihan tidak ditemukan.", true); return false; }
       const jumlah = num($("bayarJumlah").value);
       if(jumlah <= 0){ showToast("Jumlah harus lebih dari 0.", true); return false; }
       await catatPembayaranTagihan(bill.id, {
@@ -1493,28 +1591,6 @@ function openCatatPembayaranModal(billOrList, onSaved){
       onSaved?.();
     }
   });
-
-  // Update info + nominal default ketika dropdown berubah
-  const isiInfo = () => {
-    const billId = $("bayarBillId")?.value;
-    const bill = belumLunas.find(b => b.id === billId);
-    if(!bill) return;
-    const sisa = sisaOf(bill);
-    $("bayarJumlah").value = sisa;
-    const info = $("bayarInfo");
-    if(info){
-      info.innerHTML = `Nominal ${formatRupiah(bill.nominal)} · Dibayar ${formatRupiah(bill.terbayar)}<br>
-        <b>Sisa: ${formatRupiah(sisa)}</b>`;
-    }
-  };
-
-  setTimeout(() => {
-    const sel = $("bayarBillId");
-    if(sel && sel.tagName === "SELECT"){
-      sel.addEventListener("change", isiInfo);
-    }
-    isiInfo();
-  }, 30);
 }
 function openTabunganModal({ santriList, tabunganList, jenis, onSaved, santriId }){
   const tarik = jenis === "tarik";
@@ -2656,6 +2732,7 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
 async function openKeuanganSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
+
   const [settings, tagihan, tabunganList] = await Promise.all([
     getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
   ]);
@@ -2682,6 +2759,25 @@ async function openKeuanganSantriModal(santriId){
           const iuranBelum = billsNow.filter(x => x.jenis === "Iuran Kegiatan" && x.status !== "lunas");
           if(!iuranBelum.length) return showToast("Semua iuran sudah lunas.", true);
           openCatatPembayaranModal(iuranBelum, reload);
+        }
+        else if(aksi === "backfill"){
+          // Buka modal backfill, setelah selesai → auto-buka modal bayar SPP
+          openBackfillNunggakModal({
+            santri,
+            settings,
+            onSuccess: () => {
+              // Refresh data, lalu buka modal bayar SPP
+              openKeuanganSantriModal(santriId).then(() => {
+                setTimeout(async () => {
+                  const freshTagihan = await fresh("tagihanSantri");
+                  const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
+                  if(sppBelum.length){
+                    openCatatPembayaranModal(sppBelum, () => openKeuanganSantriModal(santriId));
+                  }
+                }, 300);
+              });
+            }
+          });
         }
         else if(aksi === "setor"){
           openTabunganModal({
@@ -4199,6 +4295,127 @@ function openBackfillSppForm(settings){
         const periode = $("bfBulan").value;
         await backfillSppSantri(santri.id, santri.nama, periode, num($("bfNominal").value));
         showToast(`Tagihan SPP ${formatPeriodeLabel(periode)} untuk ${santri.nama} dibuat.`);
+      }
+    });
+  });
+}
+/* ===== Backfill Nunggak (multi-bulan/tahun, dari modal bayar Ustadzah) ===== */
+function openBackfillNunggakModal({ santri, settings, onSuccess }){
+  const now = nowWIB();
+  const tahunSekarang = now.getFullYear();
+  const tahunList = [];
+  for(let y = tahunSekarang - 3; y <= tahunSekarang; y++) tahunList.push(y);
+
+  // Default: bulan ini & tahun ini tercentang
+  const bulanDefault = [now.getMonth() + 1];
+
+  openModal("⏱ Backfill SPP Nunggak", `
+    <div class="notice" style="margin-bottom:14px">
+      <b>${esc(santri.nama)}</b><br>
+      <span class="muted small">Pilih bulan & tahun yang mau ditagihkan. Bisa pilih beberapa sekaligus.</span>
+    </div>
+
+    <div class="form-group">
+      <label>📅 Bulan</label>
+      <div class="check-grid" style="grid-template-columns:repeat(3,1fr);max-height:none">
+        ${NAMA_BULAN.map((n,i) => {
+          const bln = i + 1;
+          return `<label><input type="checkbox" class="bf-bulan" value="${bln}" ${bulanDefault.includes(bln) ? "checked" : ""}>${n}</label>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>📆 Tahun</label>
+      <div class="check-grid" style="grid-template-columns:repeat(4,1fr);max-height:none">
+        ${tahunList.map(y => `<label><input type="checkbox" class="bf-tahun" value="${y}" ${y === tahunSekarang ? "checked" : ""}>${y}</label>`).join("")}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>💵 Nominal SPP / bulan</label>
+      <input id="bfNominal" type="number" min="0" value="${num(settings.sppNominal)}" required inputmode="numeric">
+    </div>
+
+    <div class="notice" id="bfPreview" style="margin-top:12px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+      <button type="button" class="btn btn-light" id="bfBatal">Batal</button>
+      <button type="button" class="btn" id="bfProses">⏱ Tagihkan Sekarang</button>
+    </div>
+  `);
+
+  const hitungKombinasi = () => {
+    const bulan = [...document.querySelectorAll(".bf-bulan:checked")].map(x => Number(x.value));
+    const tahun = [...document.querySelectorAll(".bf-tahun:checked")].map(x => Number(x.value));
+    const kombinasi = [];
+    tahun.sort((a,b) => a - b).forEach(y => {
+      bulan.sort((a,b) => a - b).forEach(b => {
+        kombinasi.push(`${y}-${String(b).padStart(2,"0")}`);
+      });
+    });
+    return kombinasi;
+  };
+
+  const updatePreview = () => {
+    const kombinasi = hitungKombinasi();
+    const nominal = num($("bfNominal").value);
+    const total = kombinasi.length * nominal;
+    const preview = $("bfPreview");
+    if(!kombinasi.length){
+      preview.innerHTML = `<span style="color:var(--danger)">⚠️ Pilih minimal 1 bulan & 1 tahun.</span>`;
+      return;
+    }
+    preview.innerHTML = `
+      <b>📋 ${kombinasi.length} tagihan akan dibuat:</b><br>
+      <span class="small">${kombinasi.map(formatPeriodeLabel).join(", ")}</span><br>
+      <span style="margin-top:6px;display:inline-block">Total: <b>${formatRupiah(total)}</b></span>
+    `;
+  };
+
+  document.querySelectorAll(".bf-bulan, .bf-tahun, #bfNominal").forEach(el =>
+    el.addEventListener("change", updatePreview));
+  $("bfNominal").addEventListener("input", updatePreview);
+  updatePreview();
+
+  $("bfBatal").addEventListener("click", closeModal);
+
+  $("bfProses").addEventListener("click", async () => {
+    const kombinasi = hitungKombinasi();
+    const nominal = num($("bfNominal").value);
+    if(!kombinasi.length) return showToast("Pilih minimal 1 bulan & 1 tahun.", true);
+    if(nominal <= 0) return showToast("Nominal harus lebih dari 0.", true);
+
+    const btn = $("bfProses");
+    await busy(btn, "Memproses...", async () => {
+      try{
+        let dibuat = 0, dilewati = 0;
+        for(const periode of kombinasi){
+          const id = `spp_${santri.id}_${periode}`;
+          const ada = await getDocument("tagihanSantri", id);
+          if(ada){ dilewati++; continue; }
+          await setDoc(doc(db, "tagihanSantri", id), {
+            santriId: santri.id, santriNama: santri.nama || "-",
+            jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`,
+            periode, kegiatanId:null, nominal,
+            terbayar:0, status:"belum", riwayat:[],
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+          dibuat++;
+        }
+        invalidateCache("tagihanSantri");
+        logAudit("BACKFILL","tagihanSantri",santri.id,{ dibuat, dilewati, nominal, periode: kombinasi });
+
+        showToast(`✅ ${dibuat} tagihan dibuat${dilewati ? `, ${dilewati} sudah ada` : ""}.`);
+        closeModal();
+
+        // Panggil callback untuk buka modal bayar SPP
+        if(dibuat > 0 || dilewati > 0){
+          setTimeout(() => onSuccess?.(), 200);
+        }
+      }catch(err){
+        console.error(err);
+        showToast("Gagal backfill: " + firebaseError(err), true);
       }
     });
   });
