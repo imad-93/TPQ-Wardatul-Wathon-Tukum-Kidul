@@ -2738,13 +2738,19 @@ async function openKeuanganSantriModal(santriId){
   ]);
   const bills = tagihan.filter(x => x.santriId === santriId);
   
-  openModal(`💰 Keuangan — ${esc(santri.nama)}`, `
-    <div id="keuanganModalContent">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable:true })}</div>
-  `);
+// Wali tidak boleh edit (bayar/backfill/setor/tarik)
+const editable = currentProfile.role !== "wali";
+
+openModal(`💰 Keuangan — ${esc(santri.nama)}`, `
+  <div id="keuanganModalContent">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable })}</div>
+`);
 
   const bind = (billsNow, tabunganNow) => {
     const scope = $("keuanganModalContent");
     if(!scope) return;
+
+  // Wali tidak boleh aksi apapun — tombol tidak dirender karena editable=false
+  if(!editable) return;
 
     scope.querySelectorAll("[data-aksi]").forEach(b =>
       b.addEventListener("click", () => {
@@ -2803,14 +2809,13 @@ else if(aksi === "backfill"){
   };
 
   const reload = async () => {
-    const [t, tb] = await Promise.all([fresh("tagihanSantri"), fresh("tabungan")]);
-    const b = t.filter(x => x.santriId === santriId);
-    const wrap = $("keuanganModalContent");
-    if(!wrap) return;
-    wrap.innerHTML = keuanganSantriHtml({ bills:b, tabunganList:tb, santriId, settings, editable:true });
-    bind(b, tb);
-  };
-
+  const [t, tb] = await Promise.all([fresh("tagihanSantri"), fresh("tabungan")]);
+  const b = t.filter(x => x.santriId === santriId);
+  const wrap = $("keuanganModalContent");
+  if(!wrap) return;
+  wrap.innerHTML = keuanganSantriHtml({ bills:b, tabunganList:tb, santriId, settings, editable });
+  bind(b, tb);
+};
   bind(bills, tabunganList);
 }
 async function openRiwayatSantriModal(santriId){
