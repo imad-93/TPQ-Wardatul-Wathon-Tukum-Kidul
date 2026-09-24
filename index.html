@@ -4050,12 +4050,88 @@ return `<div class="toolbar">${search("searchSpp","Cari santri...")}
 </div>` +
   dataTable("tableSpp", ["No","Santri","Bulan","Total","Terbayar","Sisa",""], rowsSantri, "Belum ada tagihan SPP.");
   })(),
-    iuran: `<div class="toolbar">${search("searchIuran","Cari santri...")}</div>` +
-      dataTable("tableIuran", ["No","Santri","Kegiatan","Nominal","Terbayar","Status",""], iuranBills.map((b,i) => `<tr data-row>
-        <td>${i+1}</td><td>${esc(b.santriNama)}</td><td>${esc(b.judul || "-")}</td>
-        <td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
-        <td>${badgeStatusTagihan(b.status)}</td>
-        <td>${billActions(b.id)}</td></tr>`), "Belum ada iuran kegiatan."),
+iuran: (() => {
+  // ====== GROUP TAGIHAN IURAN PER SANTRI ======
+  const groups = {};
+  iuranBills.forEach(b => {
+    const key = b.santriId;
+    if(!groups[key]){
+      groups[key] = {
+        santriId: b.santriId,
+        santriNama: b.santriNama || "-",
+        bills: [],
+        totalNominal: 0,
+        totalTerbayar: 0,
+        adaBelumLunas: false
+      };
+    }
+    groups[key].bills.push(b);
+    groups[key].totalNominal += num(b.nominal);
+    groups[key].totalTerbayar += num(b.terbayar);
+    if(b.status !== "lunas") groups[key].adaBelumLunas = true;
+  });
+
+  // Urutkan: belum lunas dulu, lalu nama
+  const listGroup = Object.values(groups).sort((a,b) => {
+    if(a.adaBelumLunas !== b.adaBelumLunas) return a.adaBelumLunas ? -1 : 1;
+    return a.santriNama.localeCompare(b.santriNama);
+  });
+
+  // Render baris per santri
+  const rowsSantri = listGroup.map((g, i) => {
+    // Urutkan iuran by createdAt ascending (kegiatan terlama dulu)
+    const billsSorted = g.bills.slice().sort((a,b) =>
+      (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)
+    );
+
+    // Chip iuran: hijau = lunas, kuning = sebagian, merah = belum
+    const chipIuran = billsSorted.map(b => {
+      const warna = b.status === "lunas" ? "#dcfce7" :
+                    b.status === "sebagian" ? "#fef3c7" : "#fee2e2";
+      const teks = b.status === "lunas" ? "#166534" :
+                   b.status === "sebagian" ? "#92400e" : "#991b1b";
+      // Potong judul max 12 char
+      const judul = String(b.judul || "Iuran");
+      const label = judul.length > 14 ? judul.slice(0, 12) + "…" : judul;
+      return `<span class="badge" style="background:${warna};color:${teks};margin:2px 2px 0 0"
+        title="${esc(judul)} — ${b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum"}">
+        ${esc(label)}
+      </span>`;
+    }).join("");
+
+    const sisa = Math.max(0, g.totalNominal - g.totalTerbayar);
+
+    return `<tr data-row data-santri-id="${esc(g.santriId)}">
+      <td>${i+1}</td>
+      <td>
+        <b style="${g.adaBelumLunas ? "color:#dc2626" : ""}">${esc(g.santriNama)}</b>
+        <div class="muted small" style="margin-top:2px">${g.bills.length} iuran</div>
+      </td>
+      <td style="max-width:280px">${chipIuran}</td>
+      <td><b>${formatRupiah(g.totalNominal)}</b></td>
+      <td><b style="color:#166534">${formatRupiah(g.totalTerbayar)}</b></td>
+      <td>
+        ${sisa > 0
+          ? `<b style="color:#dc2626">${formatRupiah(sisa)}</b>`
+          : badge("Lunas","green")}
+      </td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-sm" data-bayar-iuran-santri="${esc(g.santriId)}" title="Bayar semua">💵</button>
+          <button class="btn btn-sm btn-danger" data-hapus-iuran-santri="${esc(g.santriId)}" title="Hapus semua">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+return `<div class="toolbar">${search("searchIuran","Cari santri...")}
+    <div class="actions">
+      <button class="btn btn-sm btn-light" id="btnCetakIuran">🖨️ Cetak</button>
+      <button class="btn btn-sm btn-light" id="btnExportIuran">⬇ Excel</button>
+    </div>
+  </div>` +
+  dataTable("tableIuran", ["No","Santri","Iuran","Total","Terbayar","Sisa",""], rowsSantri, "Belum ada iuran kegiatan.");
+})(),
 tabungan: `<div class="toolbar">${search("searchTabungan","Cari santri...")}
     <div class="actions">
       <button class="btn btn-sm btn-light" id="btnCetakTabungan">🖨️ Cetak</button>
@@ -4137,6 +4213,29 @@ onClick("[data-bayar-santri]", "bayarSantri", santriId => {
   const belumLunas = tagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
   if(!belumLunas.length) return showToast("Semua SPP santri ini sudah lunas.", true);
   openCatatPembayaranModal(belumLunas, reload);
+});
+// Bayar semua Iuran santri (buka modal bayar multi-select)
+onClick("[data-bayar-iuran-santri]", "bayarIuranSantri", santriId => {
+  const belumLunas = tagihan.filter(x =>
+    x.santriId === santriId && x.jenis === "Iuran Kegiatan" && x.status !== "lunas"
+  );
+  if(!belumLunas.length) return showToast("Semua iuran santri ini sudah lunas.", true);
+  openCatatPembayaranModal(belumLunas, reload);
+});
+
+// Hapus semua Iuran santri
+onClick("[data-hapus-iuran-santri]", "hapusIuranSantri", santriId => {
+  const bills = tagihan.filter(x => x.santriId === santriId && x.jenis === "Iuran Kegiatan");
+  if(!bills.length) return;
+  const santriNama = bills[0].santriNama || "-";
+  const pesan = `Hapus semua ${bills.length} tagihan iuran untuk ${santriNama}?\n\nTindakan ini tidak bisa dibatalkan.`;
+  if(!confirm(pesan)) return;
+  guarded(async () => {
+    for(const b of bills){
+      await hapusDenganAudit("tagihanSantri", b.id, "Tidak ditemukan.",
+        x => ({ jenis:x.jenis, judul:x.judul, santriNama:x.santriNama, nominal:x.nominal, terbayar:x.terbayar }));
+    }
+  }, `${bills.length} tagihan iuran dihapus.`);
 });
 // Backfill nunggak untuk santri (multi-bulan/tahun)
 onClick("[data-backfill-santri]", "backfillSantri", santriId => {
@@ -4236,6 +4335,35 @@ $("btnCetakSpp").addEventListener("click", () => {
     title: "Rekap SPP Santri",
     subtitle: `Periode: ${sppBills.length ? formatPeriodeLabel(sppBills[sppBills.length-1].periode) : "-"} s/d ${sppBills.length ? formatPeriodeLabel(sppBills[0].periode) : "-"}`,
     headers: ["No","Nama Santri","Bulan","Nominal","Terbayar","Sisa","Status","Menunggak"],
+    rows
+  });
+});
+$("btnExportIuran").addEventListener("click", () => {
+  const rows = iuranBills.map((b, i) => ({
+    "No": i + 1,
+    "Nama Santri": b.santriNama || "",
+    "Kegiatan": b.judul || "-",
+    "Nominal": num(b.nominal),
+    "Terbayar": num(b.terbayar),
+    "Sisa": Math.max(0, num(b.nominal) - num(b.terbayar)),
+    "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar"
+  }));
+  exportToExcel(rows, `rekap-iuran-${todayStr()}.xlsx`, "Rekap Iuran");
+});
+$("btnCetakIuran").addEventListener("click", () => {
+  const rows = iuranBills.map((b, i) => ({
+    "No": i + 1,
+    "Nama Santri": b.santriNama || "",
+    "Kegiatan": b.judul || "-",
+    "Nominal": formatRupiah(b.nominal),
+    "Terbayar": formatRupiah(b.terbayar),
+    "Sisa": formatRupiah(Math.max(0, num(b.nominal) - num(b.terbayar))),
+    "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar"
+  }));
+  cetakTabel({
+    title: "Rekap Iuran Kegiatan",
+    subtitle: `${iuranBills.length} tagihan · ${iuranBills.filter(b => b.status !== "lunas").length} belum lunas`,
+    headers: ["No","Nama Santri","Kegiatan","Nominal","Terbayar","Sisa","Status"],
     rows
   });
 });
