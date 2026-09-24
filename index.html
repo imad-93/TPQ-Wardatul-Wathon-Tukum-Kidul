@@ -1515,50 +1515,49 @@ function openCatatPembayaranModal(billOrList, onSaved){
     el.addEventListener("change", updateInfo));
   updateInfo();
 
-  $("btnSimpanPembayaran").addEventListener("click", async () => {
-    const terpilih = cekTerpilih();
-    const jumlahTotal = num($("bayarJumlah").value);
-    if(!terpilih.length) return showToast("Pilih minimal 1 tagihan.", true);
-    if(jumlahTotal <= 0) return showToast("Jumlah harus lebih dari 0.", true);
+$("btnSimpanPembayaran").addEventListener("click", async () => {
+  const terpilih = cekTerpilih();
+  const jumlahTotal = num($("bayarJumlah").value);
+  if(!terpilih.length) return showToast("Pilih minimal 1 tagihan.", true);
+  if(jumlahTotal <= 0) return showToast("Jumlah harus lebih dari 0.", true);
 
-    const btn = $("btnSimpanPembayaran");
-    await busy(btn, "Menyimpan...", async () => {
-      try{
-        const metode = $("bayarMetode").value;
-        const keterangan = $("bayarKeterangan").value.trim();
+  const btn = $("btnSimpanPembayaran");
+  await busy(btn, "Menyimpan...", async () => {
+    try{
+      const metode = $("bayarMetode").value;
+      const keterangan = $("bayarKeterangan").value.trim();
 
-        // Jika 1 tagihan: simpan langsung dengan nominal input
-        // Jika >1 tagihan: bagi rata ke semua tagihan (dengan prioritas bulan terlama lunas dulu)
-        if(terpilih.length === 1){
-          await catatPembayaranTagihan(terpilih[0].billId, {
-            jumlah: jumlahTotal, metode, keterangan
-          });
-        } else {
-          // Alokasi dana: bayar lunas tagihan berurutan dari yang terlama
-          let sisaDana = jumlahTotal;
-          for(const t of terpilih){
-            if(sisaDana <= 0) break;
-            const bill = belumLunas.find(b => b.id === t.billId);
-            if(!bill) continue;
-            const sisaTagihan = Math.max(0, num(bill.nominal) - num(bill.terbayar));
-            const bayarSekarang = Math.min(sisaTagihan, sisaDana);
-            if(bayarSekarang > 0){
-              await catatPembayaranTagihan(t.billId, {
-                jumlah: bayarSekarang, metode,
-                keterangan: keterangan || `Bayar ${terpilih.length} tagihan sekaligus`
-              });
-              sisaDana -= bayarSekarang;
-            }
+      if(terpilih.length === 1){
+        await catatPembayaranTagihan(terpilih[0].billId, {
+          jumlah: jumlahTotal, metode, keterangan
+        });
+      } else {
+        let sisaDana = jumlahTotal;
+        for(const t of terpilih){
+          if(sisaDana <= 0) break;
+          const bill = belumLunas.find(b => b.id === t.billId);
+          if(!bill) continue;
+          const sisaTagihan = Math.max(0, num(bill.nominal) - num(bill.terbayar));
+          const bayarSekarang = Math.min(sisaTagihan, sisaDana);
+          if(bayarSekarang > 0){
+            await catatPembayaranTagihan(t.billId, {
+              jumlah: bayarSekarang, metode,
+              keterangan: keterangan || `Bayar ${terpilih.length} tagihan sekaligus`
+            });
+            sisaDana -= bayarSekarang;
           }
         }
-        showToast("Pembayaran dicatat.");
-        onSaved?.();
-      }catch(err){
-        console.error(err);
-        showToast("Gagal menyimpan: " + firebaseError(err), true);
       }
-    });
+
+      showToast("Pembayaran dicatat.");
+      closeModal();          // ← TAMBAH: auto-close modal pembayaran
+      onSaved?.();           // ← Callback (mis. refresh modal keuangan)
+    }catch(err){
+      console.error(err);
+      showToast("Gagal menyimpan: " + firebaseError(err), true);
+    }
   });
+});
 }
 
 /* ===== Bayar SPP/Iuran — 1 tagihan saja (tanpa checkbox) ===== */
@@ -2733,11 +2732,12 @@ async function openKeuanganSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
 
+  // Paksa fresh untuk tagihan & tabungan
   const [settings, tagihan, tabunganList] = await Promise.all([
-    getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan")
+    getAppSettings(), fresh("tagihanSantri"), fresh("tabungan")
   ]);
   const bills = tagihan.filter(x => x.santriId === santriId);
-
+  
   openModal(`💰 Keuangan — ${esc(santri.nama)}`, `
     <div id="keuanganModalContent">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable:true })}</div>
   `);
@@ -2750,35 +2750,43 @@ async function openKeuanganSantriModal(santriId){
       b.addEventListener("click", () => {
         const aksi = b.dataset.aksi;
 
-        if(aksi === "spp"){
-          const sppBelum = billsNow.filter(x => x.jenis === "SPP" && x.status !== "lunas");
-          if(!sppBelum.length) return showToast("Semua SPP sudah lunas.", true);
-          openCatatPembayaranModal(sppBelum, reload);
-        }
-        else if(aksi === "iuran"){
-          const iuranBelum = billsNow.filter(x => x.jenis === "Iuran Kegiatan" && x.status !== "lunas");
-          if(!iuranBelum.length) return showToast("Semua iuran sudah lunas.", true);
-          openCatatPembayaranModal(iuranBelum, reload);
-        }
-        else if(aksi === "backfill"){
-          // Buka modal backfill, setelah selesai → auto-buka modal bayar SPP
-          openBackfillNunggakModal({
-            santri,
-            settings,
-            onSuccess: () => {
-              // Refresh data, lalu buka modal bayar SPP
-              openKeuanganSantriModal(santriId).then(() => {
-                setTimeout(async () => {
-                  const freshTagihan = await fresh("tagihanSantri");
-                  const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
-                  if(sppBelum.length){
-                    openCatatPembayaranModal(sppBelum, () => openKeuanganSantriModal(santriId));
-                  }
-                }, 300);
-              });
-            }
+if(aksi === "spp"){
+  const sppBelum = billsNow.filter(x => x.jenis === "SPP" && x.status !== "lunas");
+  if(!sppBelum.length) return showToast("Semua SPP sudah lunas.", true);
+  openCatatPembayaranModal(sppBelum, () => openKeuanganSantriModal(santriId));
+}
+else if(aksi === "iuran"){
+  const iuranBelum = billsNow.filter(x => x.jenis === "Iuran Kegiatan" && x.status !== "lunas");
+  if(!iuranBelum.length) return showToast("Semua iuran sudah lunas.", true);
+  openCatatPembayaranModal(iuranBelum, () => openKeuanganSantriModal(santriId));
+}
+else if(aksi === "backfill"){
+  openBackfillNunggakModal({
+    santri,
+    settings,
+    onSuccess: async () => {
+      // 1. Ambil data terbaru dari Firestore
+      const freshTagihan = await fresh("tagihanSantri");
+      const billsBaru = freshTagihan.filter(x => x.santriId === santriId);
+      const sppBelum = billsBaru.filter(x => x.jenis === "SPP" && x.status !== "lunas");
+
+      // 2. Tutup modal keuangan lama, buka ulang dengan data baru
+      //    (openModal akan replace konten modal sepenuhnya)
+      await openKeuanganSantriModal(santriId);
+
+      // 3. Setelah modal keuangan ter-render dengan data baru,
+      //    baru buka modal bayar SPP
+      if(sppBelum.length){
+        setTimeout(() => {
+          openCatatPembayaranModal(sppBelum, () => {
+            // Setelah bayar, refresh modal keuangan
+            openKeuanganSantriModal(santriId);
           });
-        }
+        }, 350);
+      }
+    }
+  });
+}
         else if(aksi === "setor"){
           openTabunganModal({
             santriList: [santri], tabunganList: tabunganNow, jenis: "setor",
@@ -4406,13 +4414,14 @@ function openBackfillNunggakModal({ santri, settings, onSuccess }){
         invalidateCache("tagihanSantri");
         logAudit("BACKFILL","tagihanSantri",santri.id,{ dibuat, dilewati, nominal, periode: kombinasi });
 
-        showToast(`✅ ${dibuat} tagihan dibuat${dilewati ? `, ${dilewati} sudah ada` : ""}.`);
-        closeModal();
+showToast(`✅ ${dibuat} tagihan dibuat${dilewati ? `, ${dilewati} sudah ada` : ""}.`);
 
-        // Panggil callback untuk buka modal bayar SPP
-        if(dibuat > 0 || dilewati > 0){
-          setTimeout(() => onSuccess?.(), 200);
-        }
+// Tutup modal backfill dulu
+closeModal();
+
+// Panggil callback — callback bertanggung jawab refresh & buka modal bayar
+// Beri jeda agar animasi close selesai
+setTimeout(() => onSuccess?.(), 300);
       }catch(err){
         console.error(err);
         showToast("Gagal backfill: " + firebaseError(err), true);
