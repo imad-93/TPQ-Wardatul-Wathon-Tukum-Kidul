@@ -4167,19 +4167,26 @@ tabungan: (() => {
     }
   });
 
-  // Filter: sembunyikan santri yang tidak punya transaksi & saldo 0
-  const listGroup = Object.values(groups)
-    .filter(g => g.transaksi.length > 0 || g.saldo !== 0)
-    .sort((a,b) => b.saldo - a.saldo);
+// Tampilkan SEMUA santri aktif (yang punya transaksi maupun belum)
+const listGroup = Object.values(groups)
+  .filter(g => {
+    const santri = santriAktif.find(s => s.id === g.santriId);
+    return !!santri; // hanya santri aktif
+  })
+  .sort((a,b) => {
+    // Sort: yang punya transaksi dulu (saldo != 0), lalu alfabetis
+    if((a.saldo !== 0) !== (b.saldo !== 0)) return a.saldo !== 0 ? -1 : 1;
+    return a.santriNama.localeCompare(b.santriNama);
+  });
 
-  const totalSaldoSemua = listGroup.reduce((s,g) => s + g.saldo, 0);
+const totalSaldoSemua = listGroup.reduce((s,g) => s + g.saldo, 0);
 
   const rowsSantri = listGroup.map((g, i) => {
     // Chip transaksi terakhir (max 5)
     const trxSorted = g.transaksi.slice().sort((a,b) =>
       (b.tanggal?.seconds || 0) - (a.tanggal?.seconds || 0)
     );
-    const trxChip = trxSorted.slice(0, 3).map(t => {
+    const trxChip = trxSorted.length? trxSorted.slice(0, 3).map(t => {
       const warna = t.jenis === "tarik" ? "#fee2e2" : "#dcfce7";
       const teks = t.jenis === "tarik" ? "#991b1b" : "#166534";
       const sign = t.jenis === "tarik" ? "−" : "+";
@@ -4187,10 +4194,12 @@ tabungan: (() => {
         title="${esc(t.keterangan || t.jenis)} · ${formatTanggal(t.tanggal)}">
         ${sign}${formatRupiah(t.jumlah).replace("Rp","Rp ").trim()}
       </span>`;
-    }).join("");
-    const sisaChip = trxSorted.length > 3
-      ? `<span class="muted small" style="margin-left:4px">+${trxSorted.length - 3} lagi</span>`
-      : "";
+    }).join("")
+  : `<span class="muted small">Belum ada transaksi</span>`;
+
+const sisaChip = trxSorted.length > 3
+  ? `<span class="muted small" style="margin-left:4px">+${trxSorted.length - 3} lagi</span>`
+  : "";
 
     return `<tr data-row data-santri-id="${esc(g.santriId)}">
       <td>${i+1}</td>
