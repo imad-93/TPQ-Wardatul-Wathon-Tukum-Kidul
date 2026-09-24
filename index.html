@@ -769,33 +769,139 @@ function firebaseError(error){
   };
   return messages[error?.code] || error?.message || "Terjadi kesalahan.";
 }
-
+/* ===== EXPORT ke Excel (.xls via HTML Table — paling kompatibel) ===== */
 function exportToExcel(rows, filename, sheetName="Data"){
   if(!rows || !rows.length){ showToast("Tidak ada data untuk diexport.", true); return; }
   try{
-    if(!window.XLSX) throw new Error("Pustaka XLSX belum siap.");
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 30));
-    XLSX.writeFile(wb, filename.endsWith(".xlsx") ? filename : filename + ".xlsx");
-    showToast("File Excel berhasil diunduh.");
+    const headers = Object.keys(rows[0]);
+    const safe = s => String(s ?? "")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+
+    // Escape value untuk HTML
+    const td = v => {
+      const s = String(v ?? "");
+      // Kalau angka murni → biarkan angka (biar Excel treat as number)
+      if(/^-?\d+(\.\d+)?$/.test(s)) return `<td>${s}</td>`;
+      return `<td style="mso-number-format:'\\@'">${safe(s)}</td>`;
+    };
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <!--[if gte mso 9]><xml>
+          <x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+            <x:Name>${safe(sheetName).slice(0,30)}</x:Name>
+            <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+          </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook>
+        </xml><![endif]-->
+        <style>
+          table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt}
+          th{background:#166534;color:#fff;font-weight:700;padding:6px 10px;border:1px solid #0f3d22;text-align:left}
+          td{padding:5px 10px;border:1px solid #d0d7de;vertical-align:top}
+          tr:nth-child(even) td{background:#f5f7f6}
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead><tr>${headers.map(h => `<th>${safe(h)}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map(r => `<tr>${headers.map(h => td(r[h])).join("")}</tr>`).join("")}</tbody>
+        </table>
+      </body>
+      </html>`;
+
+    const blob = new Blob(["\uFEFF" + html], { type:"application/vnd.ms-excel;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (filename.endsWith(".xlsx") || filename.endsWith(".xls")) ? filename.replace(/\.xlsx$/i, ".xls") : filename + ".xls";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast("File Excel (.xls) berhasil diunduh.");
   }catch(err){
-    console.error(err);
-    try{
-      const headers = Object.keys(rows[0]);
-      const csv = [
-        headers.map(h => `"${h}"`).join(","),
-        ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replaceAll('"','""')}"`).join(","))
-      ].join("\r\n");
-      const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" }));
-      const a = Object.assign(document.createElement("a"), { href:url, download: filename.replace(/\.xlsx$/i, ".csv") });
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      showToast("Diexport sebagai CSV.");
-    }catch(err2){
-      showToast("Gagal export: " + err2.message, true);
-    }
+    console.error("[Export Excel]", err);
+    showToast("Gagal export: " + err.message, true);
   }
+}
+
+/* ===== CETAK / PRINT (HTML → Printer / PDF via browser) ===== */
+function cetakTabel({ title, subtitle, headers, rows, filename="Cetak" }){
+  if(!rows || !rows.length){ showToast("Tidak ada data untuk dicetak.", true); return; }
+  const safe = s => String(s ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+
+  const html = `<!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${safe(title)}</title>
+      <style>
+        *{box-sizing:border-box}
+        body{font-family:Arial,Helvetica,sans-serif;margin:20px;color:#0f172a;font-size:12px;line-height:1.4}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #166534}
+        .header h1{font-size:16px;margin:0 0 4px;color:#166534}
+        .header .sub{color:#64748b;font-size:11px;margin:0}
+        .header .meta{text-align:right;font-size:11px;color:#64748b}
+        .header .meta b{color:#0f172a}
+        table{width:100%;border-collapse:collapse;margin-top:6px}
+        th{background:#166534;color:#fff;font-weight:700;padding:7px 8px;border:1px solid #0f3d22;text-align:left;font-size:11px}
+        td{padding:6px 8px;border:1px solid #d0d7de;vertical-align:top}
+        tr:nth-child(even) td{background:#f8faf9}
+        .footer{margin-top:20px;padding-top:10px;border-top:1px solid #e5e9ee;color:#64748b;font-size:10px;text-align:center}
+        @media print{
+          body{margin:8mm}
+          .no-print{display:none !important}
+          th{background:#166534 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+          tr:nth-child(even) td{background:#f8faf9 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+          table{page-break-inside:auto}
+          tr{page-break-inside:avoid;page-break-after:auto}
+          thead{display:table-header-group}
+        }
+        .toolbar{margin-bottom:12px;display:flex;gap:8px;justify-content:flex-end}
+        .toolbar button{border:0;border-radius:8px;padding:10px 16px;font-weight:600;font-size:13px;cursor:pointer;background:#166534;color:#fff;min-height:40px}
+        .toolbar button.ghost{background:#eef2f0;color:#0f172a}
+      </style>
+    </head>
+    <body>
+      <div class="toolbar no-print">
+        <button class="ghost" onclick="window.close()">Tutup</button>
+        <button onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+      </div>
+      <div class="header">
+        <div>
+          <h1>${safe(title)}</h1>
+          ${subtitle ? `<p class="sub">${safe(subtitle)}</p>` : ""}
+        </div>
+        <div class="meta">
+          <div>Dicetak: <b>${new Date().toLocaleString("id-ID")}</b></div>
+          <div>Oleh: <b>${safe(currentProfile?.nama || "-")}</b></div>
+        </div>
+      </div>
+      <table>
+        <thead><tr>${headers.map(h => `<th>${safe(h)}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(r => `<tr>${headers.map(h => `<td>${safe(r[h])}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table>
+      <div class="footer">
+        TPQ Wardatul Wathon · Tukum Kidul, Lumajang · Dokumen ini dicetak otomatis dari sistem
+      </div>
+      <script>
+        // Auto-trigger print setelah render (opsional)
+        window.addEventListener("load", () => {
+          setTimeout(() => { try{ window.print(); }catch(e){} }, 400);
+        });
+      <\/script>
+    </body>
+    </html>`;
+
+  const win = window.open("", "_blank");
+  if(!win){ showToast("Popup diblokir. Izinkan popup untuk mencetak.", true); return; }
+  win.document.write(html);
+  win.document.close();
 }
 
 const badge = (text, color="gray") => `<span class="badge badge-${color}">${esc(text)}</span>`;
@@ -3936,8 +4042,13 @@ async function renderKeuanganAdmin(){
       </tr>`;
     });
 
-    return `<div class="toolbar">${search("searchSpp","Cari santri...")}<button class="btn btn-sm btn-light" id="btnExportSpp">⬇ Excel</button></div>` +
-      dataTable("tableSpp", ["No","Santri","Bulan","Total","Terbayar","Sisa",""], rowsSantri, "Belum ada tagihan SPP.");
+return `<div class="toolbar">${search("searchSpp","Cari santri...")}
+  <div class="actions">
+    <button class="btn btn-sm btn-light" id="btnCetakSpp">🖨️ Cetak</button>
+    <button class="btn btn-sm btn-light" id="btnExportSpp">⬇ Excel</button>
+  </div>
+</div>` +
+  dataTable("tableSpp", ["No","Santri","Bulan","Total","Terbayar","Sisa",""], rowsSantri, "Belum ada tagihan SPP.");
   })(),
     iuran: `<div class="toolbar">${search("searchIuran","Cari santri...")}</div>` +
       dataTable("tableIuran", ["No","Santri","Kegiatan","Nominal","Terbayar","Status",""], iuranBills.map((b,i) => `<tr data-row>
@@ -3945,13 +4056,14 @@ async function renderKeuanganAdmin(){
         <td>${formatRupiah(b.nominal)}</td><td>${formatRupiah(b.terbayar)}</td>
         <td>${badgeStatusTagihan(b.status)}</td>
         <td>${billActions(b.id)}</td></tr>`), "Belum ada iuran kegiatan."),
-    tabungan: `<div class="toolbar">${search("searchTabungan","Cari santri...")}
-        <div class="actions">
-          <button class="btn btn-sm btn-light" id="btnExportTabungan">⬇ Excel</button>
-          <button class="btn btn-sm btn-info" id="btnRekapTabungan">📊 Rekap</button>
-          <button class="btn btn-sm btn-success" id="btnSetor">+ Setor</button>
-          <button class="btn btn-sm btn-warning" id="btnTarik">− Tarik</button>
-        </div></div>` +
+tabungan: `<div class="toolbar">${search("searchTabungan","Cari santri...")}
+    <div class="actions">
+      <button class="btn btn-sm btn-light" id="btnCetakTabungan">🖨️ Cetak</button>
+      <button class="btn btn-sm btn-light" id="btnExportTabungan">⬇ Excel</button>
+      <button class="btn btn-sm btn-info" id="btnRekapTabungan">📊 Rekap</button>
+      <button class="btn btn-sm btn-success" id="btnSetor">+ Setor</button>
+      <button class="btn btn-sm btn-warning" id="btnTarik">− Tarik</button>
+    </div></div>` +
       dataTable("tableTabungan", ["No","Santri","Jenis","Jumlah","Keterangan","Tanggal",""], tabunganSorted.map((t,i) => `<tr data-row>
         <td>${i+1}</td><td>${esc(t.santriNama)}</td>
         <td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td>
@@ -4098,25 +4210,61 @@ onClick("[data-hapus-tagihan]", "hapusTagihan", id => {
       guarded(() => hapusDenganAudit("pengeluaran", id, "Tidak ditemukan.", p => ({ judul:p.judul, jumlah:p.jumlah })), "Pengeluaran dihapus.");
   });
 
-  $("btnExportSpp").addEventListener("click", () => {
-    const rows = sppBills.map((b, i) => ({
-      "No": i + 1, "Nama Santri": b.santriNama || "", "Bulan": formatPeriodeLabel(b.periode),
-      "Nominal": num(b.nominal), "Terbayar": num(b.terbayar),
-      "Sisa": Math.max(0, num(b.nominal) - num(b.terbayar)),
-      "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar",
-      "Menunggak": isSppMenunggak(b, tgl) ? "Ya" : "Tidak"
-    }));
-    exportToExcel(rows, `rekap-spp-${todayStr()}.xlsx`, "Rekap SPP");
+$("btnExportSpp").addEventListener("click", () => {
+  const rows = sppBills.map((b, i) => ({
+    "No": i + 1, "Nama Santri": b.santriNama || "", "Bulan": formatPeriodeLabel(b.periode),
+    "Nominal": num(b.nominal), "Terbayar": num(b.terbayar),
+    "Sisa": Math.max(0, num(b.nominal) - num(b.terbayar)),
+    "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar",
+    "Menunggak": isSppMenunggak(b, tgl) ? "Ya" : "Tidak"
+  }));
+  exportToExcel(rows, `rekap-spp-${todayStr()}.xlsx`, "Rekap SPP");
+});
+
+$("btnCetakSpp").addEventListener("click", () => {
+  const rows = sppBills.map((b, i) => ({
+    "No": i + 1,
+    "Nama Santri": b.santriNama || "",
+    "Bulan": formatPeriodeLabel(b.periode),
+    "Nominal": formatRupiah(b.nominal),
+    "Terbayar": formatRupiah(b.terbayar),
+    "Sisa": formatRupiah(Math.max(0, num(b.nominal) - num(b.terbayar))),
+    "Status": b.status === "lunas" ? "Lunas" : b.status === "sebagian" ? "Sebagian" : "Belum Bayar",
+    "Menunggak": isSppMenunggak(b, tgl) ? "Ya" : "Tidak"
+  }));
+  cetakTabel({
+    title: "Rekap SPP Santri",
+    subtitle: `Periode: ${sppBills.length ? formatPeriodeLabel(sppBills[sppBills.length-1].periode) : "-"} s/d ${sppBills.length ? formatPeriodeLabel(sppBills[0].periode) : "-"}`,
+    headers: ["No","Nama Santri","Bulan","Nominal","Terbayar","Sisa","Status","Menunggak"],
+    rows
   });
-  $("btnExportTabungan").addEventListener("click", () => {
-    const rows = tabunganSorted.map((t, i) => ({
-      "No": i + 1, "Nama Santri": t.santriNama || "",
-      "Jenis": t.jenis === "tarik" ? "Tarik" : "Setor",
-      "Jumlah": num(t.jumlah), "Keterangan": t.keterangan || "",
-      "Tanggal": formatTanggal(t.tanggal)
-    }));
-    exportToExcel(rows, `rekap-tabungan-${todayStr()}.xlsx`, "Rekap Tabungan");
+});
+$("btnExportTabungan").addEventListener("click", () => {
+  const rows = tabunganSorted.map((t, i) => ({
+    "No": i + 1, "Nama Santri": t.santriNama || "",
+    "Jenis": t.jenis === "tarik" ? "Tarik" : "Setor",
+    "Jumlah": num(t.jumlah), "Keterangan": t.keterangan || "",
+    "Tanggal": formatTanggal(t.tanggal)
+  }));
+  exportToExcel(rows, `rekap-tabungan-${todayStr()}.xlsx`, "Rekap Tabungan");
+});
+
+$("btnCetakTabungan").addEventListener("click", () => {
+  const rows = tabunganSorted.map((t, i) => ({
+    "No": i + 1,
+    "Nama Santri": t.santriNama || "",
+    "Jenis": t.jenis === "tarik" ? "Tarik" : "Setor",
+    "Jumlah": formatRupiah(t.jumlah),
+    "Keterangan": t.keterangan || "-",
+    "Tanggal": formatTanggal(t.tanggal)
+  }));
+  cetakTabel({
+    title: "Rekap Tabungan Santri",
+    subtitle: `${rows.length} transaksi`,
+    headers: ["No","Nama Santri","Jenis","Jumlah","Keterangan","Tanggal"],
+    rows
   });
+});
   $("btnSetor").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"setor", onSaved: reload }));
   $("btnTarik").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"tarik", onSaved: reload }));
   $("btnRekapTabungan").addEventListener("click", () => {
@@ -4419,7 +4567,7 @@ function openBackfillNunggakModal({ santri, settings, onSuccess }){
   const now = nowWIB();
   const tahunSekarang = now.getFullYear();
   const tahunList = [];
-  for(let y = tahunSekarang - 3; y <= tahunSekarang; y++) tahunList.push(y);
+  for(let y = tahunSekarang - 3; y <= tahunSekarang + 2; y++) tahunList.push(y);
 
   // Default: bulan ini & tahun ini tercentang
   const bulanDefault = [now.getMonth() + 1];
