@@ -4206,7 +4206,6 @@ tabungan: (() => {
           <button class="btn btn-sm btn-success" data-setor-santri="${esc(g.santriId)}" title="Setor">+</button>
           <button class="btn btn-sm btn-warning" data-tarik-santri="${esc(g.santriId)}" title="Tarik">−</button>
           <button class="btn btn-sm btn-info" data-riwayat-tabungan="${esc(g.santriId)}" title="Riwayat lengkap">📊</button>
-          <button class="btn btn-sm btn-danger" data-hapus-tabungan="${esc(t.id)}" title="Belum ada transaksi tabungan.">🗑</button>
         </div>
       </td>
     </tr>`;
@@ -4383,14 +4382,30 @@ onClick("[data-riwayat-tabungan]", "riwayatTabungan", santriId => {
     <div class="notice" style="margin-bottom:12px">
       <b>Saldo saat ini: ${formatRupiah(saldo)}</b>
     </div>
-    ${dataTable("", ["No.","Jenis","Jumlah","Keterangan","Tanggal"],
+    ${dataTable("", ["No.","Jenis","Jumlah","Keterangan","Tanggal",""],
       trx.map((t,i) => `<tr>
         <td>${i+1}</td>
         <td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td>
         <td><b>${formatRupiah(t.jumlah)}</b></td>
         <td>${esc(t.keterangan || "-")}</td>
         <td>${formatTanggal(t.tanggal)}</td>
+        <td><button class="btn btn-sm btn-danger" data-hapus-trx-tabungan="${esc(t.id)}">🗑</button></td>
       </tr>`), "Belum ada transaksi.")}`);
+
+  // Handler hapus transaksi (di dalam modal)
+  $("modalContent").querySelectorAll("[data-hapus-trx-tabungan]").forEach(b =>
+    b.addEventListener("click", async () => {
+      const t = tabunganList.find(x => x.id === b.dataset.hapusTrxTabungan);
+      if(!t) return;
+      if(!confirm(`Hapus transaksi ${t.jenis === "tarik" ? "tarik" : "setor"} ${formatRupiah(t.jumlah)}?`)) return;
+      try{
+        await hapusDenganAudit("tabungan", t.id, "Tidak ditemukan.",
+          x => ({ santriNama:x.santriNama, jenis:x.jenis, jumlah:x.jumlah }));
+        showToast("Transaksi dihapus.");
+        closeModal();
+        reload();
+      }catch(err){ showToast(firebaseError(err), true); }
+    }));
 });
 // Hapus semua SPP santri
 onClick("[data-hapus-spp-santri]", "hapusSppSantri", santriId => {
