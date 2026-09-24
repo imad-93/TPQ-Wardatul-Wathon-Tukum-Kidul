@@ -3926,12 +3926,13 @@ async function renderKeuanganAdmin(){
             ? `<b style="color:#dc2626">${formatRupiah(sisa)}</b>${g.adaMenunggak ? " " + badge("Menunggak","red") : ""}`
             : badge("Lunas","green")}
         </td>
-        <td>
-          <div class="actions">
-            <button class="btn btn-sm" data-bayar-santri="${esc(g.santriId)}" title="Bayar semua">💵</button>
-            <button class="btn btn-sm btn-danger" data-hapus-spp-santri="${esc(g.santriId)}" title="Hapus semua">🗑</button>
-          </div>
-        </td>
+<td>
+  <div class="actions">
+    <button class="btn btn-sm" data-bayar-santri="${esc(g.santriId)}" title="Bayar semua">💵</button>
+    <button class="btn btn-sm btn-light" data-backfill-santri="${esc(g.santriId)}" title="Backfill nunggak">⏱</button>
+    <button class="btn btn-sm btn-danger" data-hapus-spp-santri="${esc(g.santriId)}" title="Hapus semua">🗑</button>
+  </div>
+</td>
       </tr>`;
     });
 
@@ -4024,6 +4025,33 @@ onClick("[data-bayar-santri]", "bayarSantri", santriId => {
   const belumLunas = tagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
   if(!belumLunas.length) return showToast("Semua SPP santri ini sudah lunas.", true);
   openCatatPembayaranModal(belumLunas, reload);
+});
+// Backfill nunggak untuk santri (multi-bulan/tahun)
+onClick("[data-backfill-santri]", "backfillSantri", santriId => {
+  const santri = santriAll.find(s => s.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+
+  openBackfillNunggakModal({
+    santri,
+    settings,
+    onSuccess: async () => {
+      // 1. Ambil data terbaru
+      const freshTagihan = await fresh("tagihanSantri");
+      const sppBelum = freshTagihan.filter(x =>
+        x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas"
+      );
+
+      // 2. Refresh halaman keuangan dulu
+      await renderKeuanganAdmin();
+
+      // 3. Baru buka modal bayar SPP
+      if(sppBelum.length){
+        setTimeout(() => {
+          openCatatPembayaranModal(sppBelum, () => renderKeuanganAdmin());
+        }, 350);
+      }
+    }
+  });
 });
 
 // Hapus semua SPP santri
@@ -4280,18 +4308,17 @@ async function renderPengaturanAdmin(){
   async function renderTabTagihan(){
     const [s, kegiatanList, jilidList] = await Promise.all([getAppSettings(), fresh("kegiatan"), getCollectionData("jilid")]);
     $("pengaturanContent").innerHTML = `
-      <div class="card" style="margin-bottom:12px">
-        <h3>💵 Pengaturan SPP</h3>
-        <p class="muted small">SPP otomatis ditagihkan setiap awal bulan.</p>
-        <form id="sppSettingsForm" style="margin-top:12px">
-          <div class="row">
-            ${fg("Nominal SPP / bulan", `<input id="sppNominal" type="number" min="0" value="${num(s.sppNominal)}" required>`)}
-            ${fg("Tanggal peringatan tunggakan", `<input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${num(s.sppTanggalPeringatan || 10)}" required>`)}
-          </div>
-          <button class="btn" type="submit" id="sppSettingsSaveBtn">💾 Simpan SPP</button>
-        </form>
-        <button class="btn btn-light btn-sm" id="btnBackfillSpp" style="margin-top:12px">⏱ Backfill SPP Menunggak</button>
-      </div>
+<div class="card" style="margin-bottom:12px">
+  <h3>💵 Pengaturan SPP</h3>
+  <p class="muted small">SPP otomatis ditagihkan setiap awal bulan.</p>
+  <form id="sppSettingsForm" style="margin-top:12px">
+    <div class="row">
+      ${fg("Nominal SPP / bulan", `<input id="sppNominal" type="number" min="0" value="${num(s.sppNominal)}" required>`)}
+      ${fg("Tanggal peringatan tunggakan", `<input id="sppTanggalPeringatan" type="number" min="1" max="28" value="${num(s.sppTanggalPeringatan || 10)}" required>`)}
+    </div>
+    <button class="btn" type="submit" id="sppSettingsSaveBtn">💾 Simpan SPP</button>
+  </form>
+</div>
       <div class="toolbar">
         <h3 style="margin:0">🎉 Iuran Kegiatan</h3>
         <button class="btn btn-sm" id="btnTambahKegiatan">+ Buat Iuran</button>
@@ -4309,7 +4336,6 @@ async function renderPengaturanAdmin(){
       sppEnsuredPeriode = null;
       logAudit("UPDATE","settings","app",{ spp:true });
     }, "Pengaturan SPP disimpan.");
-    $("btnBackfillSpp").addEventListener("click", () => openBackfillSppForm(s));
     $("btnTambahKegiatan").addEventListener("click", () => openKegiatanForm(jilidList, renderTabTagihan));
     $("pengaturanContent").querySelectorAll("[data-remove-kegiatan]").forEach(b => b.addEventListener("click", async () => {
       if(!confirm("Nonaktifkan iuran ini?")) return;
@@ -4387,24 +4413,7 @@ function editLiburEvent(idx, onSaved){
     });
   });
 }
-function openBackfillSppForm(settings){
-  getCollectionData("santri").then(list => {
-    const aktif = list.filter(s => s.aktif !== false);
-    openFormModal({
-      title: "Backfill SPP Menunggak", submit: "Buat tagihan",
-      body: `${fg("Santri", `<select id="bfSantri" required><option value="">Pilih santri</option>${aktif.map(s => `<option value="${esc(s.id)}">${esc(s.nama)}</option>`).join("")}</select>`)}
-        ${fg("Bulan tertagih", `<select id="bfBulan">${daftarBulanTahunIni().map(b => `<option value="${b.key}">${b.label}</option>`).join("")}</select>`)}
-        ${fg("Nominal SPP", `<input id="bfNominal" type="number" min="0" value="${num(settings.sppNominal)}" required>`)}`,
-      onSubmit: async () => {
-        const santri = aktif.find(s => s.id === $("bfSantri").value);
-        if(!santri){ showToast("Pilih santri dulu.", true); return false; }
-        const periode = $("bfBulan").value;
-        await backfillSppSantri(santri.id, santri.nama, periode, num($("bfNominal").value));
-        showToast(`Tagihan SPP ${formatPeriodeLabel(periode)} untuk ${santri.nama} dibuat.`);
-      }
-    });
-  });
-}
+
 /* ===== Backfill Nunggak (multi-bulan/tahun, dari modal bayar Ustadzah) ===== */
 function openBackfillNunggakModal({ santri, settings, onSuccess }){
   const now = nowWIB();
