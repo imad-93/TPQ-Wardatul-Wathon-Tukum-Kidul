@@ -4132,19 +4132,100 @@ return `<div class="toolbar">${search("searchIuran","Cari santri...")}
   </div>` +
   dataTable("tableIuran", ["No","Santri","Iuran","Total","Terbayar","Sisa",""], rowsSantri, "Belum ada iuran kegiatan.");
 })(),
-tabungan: `<div class="toolbar">${search("searchTabungan","Cari santri...")}
-    <div class="actions">
-      <button class="btn btn-sm btn-light" id="btnCetakTabungan">🖨️ Cetak</button>
-      <button class="btn btn-sm btn-light" id="btnExportTabungan">⬇ Excel</button>
-      <button class="btn btn-sm btn-info" id="btnRekapTabungan">📊 Rekap</button>
-      <button class="btn btn-sm btn-success" id="btnSetor">+ Setor</button>
-      <button class="btn btn-sm btn-warning" id="btnTarik">− Tarik</button>
-    </div></div>` +
-      dataTable("tableTabungan", ["No","Santri","Jenis","Jumlah","Keterangan","Tanggal",""], tabunganSorted.map((t,i) => `<tr data-row>
-        <td>${i+1}</td><td>${esc(t.santriNama)}</td>
-        <td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td>
-        <td>${formatRupiah(t.jumlah)}</td><td>${esc(t.keterangan || "-")}</td><td>${formatTanggal(t.tanggal)}</td>
-        <td><button class="btn btn-sm btn-danger" data-hapus-tabungan="${esc(t.id)}">🗑</button></td></tr>`), "Belum ada transaksi tabungan."),
+tabungan: (() => {
+  // ====== GROUP TABUNGAN PER SANTRI ======
+  const groups = {};
+  santriAktif.forEach(s => {
+    groups[s.id] = {
+      santriId: s.id,
+      santriNama: s.nama || "-",
+      setor: 0,
+      tarik: 0,
+      saldo: 0,
+      transaksi: []
+    };
+  });
+  tabunganList.forEach(t => {
+    const key = t.santriId;
+    if(!groups[key]){
+      groups[key] = {
+        santriId: t.santriId,
+        santriNama: t.santriNama || "-",
+        setor: 0, tarik: 0, saldo: 0, transaksi: []
+      };
+    }
+    groups[key].transaksi.push(t);
+    if(t.jenis === "tarik"){
+      groups[key].tarik += num(t.jumlah);
+      groups[key].saldo -= num(t.jumlah);
+    } else {
+      groups[key].setor += num(t.jumlah);
+      groups[key].saldo += num(t.jumlah);
+    }
+  });
+
+  // Filter: sembunyikan santri yang tidak punya transaksi & saldo 0
+  const listGroup = Object.values(groups)
+    .filter(g => g.transaksi.length > 0 || g.saldo !== 0)
+    .sort((a,b) => b.saldo - a.saldo);
+
+  const totalSaldoSemua = listGroup.reduce((s,g) => s + g.saldo, 0);
+
+  const rowsSantri = listGroup.map((g, i) => {
+    // Chip transaksi terakhir (max 5)
+    const trxSorted = g.transaksi.slice().sort((a,b) =>
+      (b.tanggal?.seconds || 0) - (a.tanggal?.seconds || 0)
+    );
+    const trxChip = trxSorted.slice(0, 3).map(t => {
+      const warna = t.jenis === "tarik" ? "#fee2e2" : "#dcfce7";
+      const teks = t.jenis === "tarik" ? "#991b1b" : "#166534";
+      const sign = t.jenis === "tarik" ? "−" : "+";
+      return `<span class="badge" style="background:${warna};color:${teks};margin:2px 2px 0 0"
+        title="${esc(t.keterangan || t.jenis)} · ${formatTanggal(t.tanggal)}">
+        ${sign}${formatRupiah(t.jumlah).replace("Rp","Rp ").trim()}
+      </span>`;
+    }).join("");
+    const sisaChip = trxSorted.length > 3
+      ? `<span class="muted small" style="margin-left:4px">+${trxSorted.length - 3} lagi</span>`
+      : "";
+
+    return `<tr data-row data-santri-id="${esc(g.santriId)}">
+      <td>${i+1}</td>
+      <td>
+        <b>${esc(g.santriNama)}</b>
+        <div class="muted small" style="margin-top:2px">${g.transaksi.length} transaksi</div>
+      </td>
+      <td>
+        <div>${trxChip} ${sisaChip}</div>
+      </td>
+      <td><b style="color:#166534">${formatRupiah(g.setor)}</b></td>
+      <td><b style="color:#dc2626">${formatRupiah(g.tarik)}</b></td>
+      <td><b style="color:${g.saldo >= 0 ? '#166534' : '#dc2626'}">${formatRupiah(g.saldo)}</b></td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-sm btn-success" data-setor-santri="${esc(g.santriId)}" title="Setor">+</button>
+          <button class="btn btn-sm btn-warning" data-tarik-santri="${esc(g.santriId)}" title="Tarik">−</button>
+          <button class="btn btn-sm btn-info" data-riwayat-tabungan="${esc(g.santriId)}" title="Riwayat lengkap">📊</button>
+          <button class="btn btn-sm btn-danger" data-hapus-tabungan="${esc(t.id)}" title="Belum ada transaksi tabungan.">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  return `<div class="toolbar">${search("searchTabungan","Cari santri...")}
+      <div class="actions">
+        <button class="btn btn-sm btn-light" id="btnCetakTabungan">🖨️ Cetak</button>
+        <button class="btn btn-sm btn-light" id="btnExportTabungan">⬇ Excel</button>
+        <button class="btn btn-sm btn-info" id="btnRekapTabungan">📊 Rekap</button>
+      </div>
+    </div>
+    <div class="notice" style="margin-bottom:10px">
+      <b>Total saldo semua santri: ${formatRupiah(totalSaldoSemua)}</b>
+      <span class="muted small"> · ${listGroup.length} santri</span>
+    </div>` +
+    dataTable("tableTabungan", ["No","Santri","Transaksi Terakhir","Setor","Tarik","Saldo","Aksi"], rowsSantri, "Belum ada transaksi tabungan.");
+})(),
+    
     infaq: `<div class="toolbar">${search("searchInfaq","Cari donatur...")}<button class="btn btn-sm" id="btnCatatInfaq">+ Infaq</button></div>` +
       dataTable("tableInfaq", ["No","Donatur","Jenis","Jumlah","Tanggal",""], infaqList.slice().sort(byTanggal).map((x,i) => `<tr data-row>
         <td>${i+1}</td><td><b>${esc(x.donaturNama || "Hamba Allah")}</b></td>
@@ -4264,7 +4345,53 @@ onClick("[data-backfill-santri]", "backfillSantri", santriId => {
     }
   });
 });
+// Setor tabungan per santri
+onClick("[data-setor-santri]", "setorSantri", santriId => {
+  const santri = santriAktif.find(s => s.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+  openTabunganModal({
+    santriList: [santri],
+    tabunganList,
+    jenis: "setor",
+    santriId: santri.id,
+    onSaved: reload
+  });
+});
 
+// Tarik tabungan per santri
+onClick("[data-tarik-santri]", "tarikSantri", santriId => {
+  const santri = santriAktif.find(s => s.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+  openTabunganModal({
+    santriList: [santri],
+    tabunganList,
+    jenis: "tarik",
+    santriId: santri.id,
+    onSaved: reload
+  });
+});
+
+// Riwayat tabungan lengkap per santri
+onClick("[data-riwayat-tabungan]", "riwayatTabungan", santriId => {
+  const santri = santriAktif.find(s => s.id === santriId);
+  if(!santri) return showToast("Santri tidak ditemukan.", true);
+  const trx = tabunganList
+    .filter(t => t.santriId === santriId)
+    .sort((a,b) => (b.tanggal?.seconds || 0) - (a.tanggal?.seconds || 0));
+  const saldo = hitungSaldoTabungan(tabunganList, santriId);
+  openModal(`📊 Riwayat Tabungan — ${esc(santri.nama)}`, `
+    <div class="notice" style="margin-bottom:12px">
+      <b>Saldo saat ini: ${formatRupiah(saldo)}</b>
+    </div>
+    ${dataTable("", ["No.","Jenis","Jumlah","Keterangan","Tanggal"],
+      trx.map((t,i) => `<tr>
+        <td>${i+1}</td>
+        <td>${t.jenis === "tarik" ? badge("Tarik","red") : badge("Setor","green")}</td>
+        <td><b>${formatRupiah(t.jumlah)}</b></td>
+        <td>${esc(t.keterangan || "-")}</td>
+        <td>${formatTanggal(t.tanggal)}</td>
+      </tr>`), "Belum ada transaksi.")}`);
+});
 // Hapus semua SPP santri
 onClick("[data-hapus-spp-santri]", "hapusSppSantri", santriId => {
   const bills = tagihan.filter(x => x.santriId === santriId && x.jenis === "SPP");
@@ -4279,6 +4406,7 @@ onClick("[data-hapus-spp-santri]", "hapusSppSantri", santriId => {
     }
   }, `${bills.length} tagihan SPP dihapus.`);
 });
+  
 
 // Hapus tagihan individual (masih dipakai di panel iuran)
 onClick("[data-bayar]", "bayar", id => { const b = tagihan.find(x => x.id === id); if(b) openCatatPembayaranModal(b, reload); });
@@ -4393,8 +4521,7 @@ $("btnCetakTabungan").addEventListener("click", () => {
     rows
   });
 });
-  $("btnSetor").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"setor", onSaved: reload }));
-  $("btnTarik").addEventListener("click", () => openTabunganModal({ santriList: santriAktif, tabunganList, jenis:"tarik", onSaved: reload }));
+ 
   $("btnRekapTabungan").addEventListener("click", () => {
     const rekap = santriAktif.map(s => ({
       santri: s, saldo: hitungSaldoTabungan(tabunganList, s.id),
