@@ -696,6 +696,7 @@ const db = getFirestore(primaryApp);
 
 let currentUser = null;
 let currentProfile = null;
+let currentKeuanganTab = "spp";
 
 /* ============ 3. UTILITAS ============ */
 const $ = id => document.getElementById(id);
@@ -2261,14 +2262,16 @@ function buildNavigation(){
     b.addEventListener("click", () => navigate(b.dataset.tab)));
 }
 async function navigate(tab){
+  // Reset tab keuangan ke "spp" saat masuk fresh dari navigasi
+  if(tab === "keuangan") currentKeuanganTab = "spp";
+
   // Update active state di chips
   $("mainChips").querySelectorAll("button").forEach(b =>
     b.classList.toggle("active", b.dataset.tab === tab));
 
   $("page").innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat...</div>`;
   window.scrollTo({ top: 0, behavior: "instant" });
-
-  const map = {
+ const map = {
     dashboard:  () => renderDashboard(),
     pengumuman: () => renderPengumuman(),
     dataUser:   () => renderDataUserAdmin(),
@@ -4275,12 +4278,19 @@ tabungan: (() => {
       ${statCard("🙏","Total infaq", formatRupiah(saldo.infaqMasuk))}
       ${statCard("🏦","Saldo tabungan", formatRupiah(saldo.tabunganSantri))}
     </div>
-    <div class="tabs" id="tabKeuangan">
-      ${Object.entries(tabLabels).map(([k,l],i) => `<button data-tab="${k}" class="${i === 0 ? "active" : ""}">${l}</button>`).join("")}
-    </div>
-    ${Object.entries(panels).map(([k,h],i) => `<div id="panel_${k}" class="${i === 0 ? "" : "hidden"}">${h}</div>`).join("")}`;
+<div class="tabs" id="tabKeuangan">
+  ${Object.entries(tabLabels).map(([k,l]) =>
+    `<button data-tab="${k}" class="${k === currentKeuanganTab ? "active" : ""}">${l}</button>`
+  ).join("")}
+</div>
+${Object.entries(panels).map(([k,h]) =>
+  `<div id="panel_${k}" class="${k === currentKeuanganTab ? "" : "hidden"}">${h}</div>`
+).join("")}`;
 
-  bindTabs($("tabKeuangan"), t => Object.keys(panels).forEach(k => $(`panel_${k}`).classList.toggle("hidden", k !== t)));
+  bindTabs($("tabKeuangan"), t => {
+  currentKeuanganTab = t;  // simpan tab aktif
+  Object.keys(panels).forEach(k => $(`panel_${k}`).classList.toggle("hidden", k !== t));
+});
   [["Spp","tableSpp"],["Iuran","tableIuran"],["Tabungan","tableTabungan"],["Infaq","tableInfaq"],["Donatur","tableDonatur"],["Pengeluaran","tablePengeluaran"]]
     .forEach(([n,t]) => attachTableSearch(`search${n}`, t));
 
