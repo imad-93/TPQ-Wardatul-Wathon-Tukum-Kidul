@@ -370,13 +370,44 @@ function santriCocokAktivitas({ jilidId, jilidNama }, item, jilidList = []){
 function aktivitasUntukSantri(santri, kurikulum){
   const hari = nowWIB().getDay();
   const kur = kurikulum?.[hari];
-  if(!kur || !Array.isArray(kur.aktivitas)) return null;
-  for(const item of kur.aktivitas){
-    if(santriCocokAktivitas(santri, item)) return item.teks;
-  }
-  return null;
-}
+  if(!kur) return null;
 
+  // Normalisasi
+  let listAktivitas = [];
+  if(Array.isArray(kur.aktivitas)){
+    listAktivitas = kur.aktivitas;
+  } else if(kur.aktivitas && typeof kur.aktivitas === "object"){
+    listAktivitas = Object.entries(kur.aktivitas).map(([key, teks]) => {
+      const parts = String(key).split("-").map(x => Number(x.trim()));
+      return { jilidMin: parts[0] || 1, jilidMax: parts[parts.length - 1] || 6, teks: String(teks || "") };
+    });
+  }
+  if(!listAktivitas.length) return null;
+
+  // ===== TAHAP 1: Cari aktivitas yang secara SPESIFIK mencantumkan jilidId santri =====
+  const spesifikList = listAktivitas.filter(item =>
+    Array.isArray(item.jilidIds) &&
+    item.jilidIds.length &&
+    item.jilidIds.includes(santri.jilidId)
+  );
+
+  if(spesifikList.length){
+    // Ada aktivitas spesifik → HANYA pakai yang spesifik (tidak digabung dengan fallback)
+    return spesifikList.map(item => item.teks).filter(Boolean).join(", ");
+  }
+
+  // ===== TAHAP 2: Fallback — cari aktivitas via angka jilid (untuk format lama) =====
+  const angka = angkaJilid(santri.jilidNama);
+  if(angka === null) return null;
+
+  const fallbackList = listAktivitas.filter(item => {
+    if(Array.isArray(item.jilidIds) && item.jilidIds.length) return false; // skip yang sudah pakai jilidIds
+    return angka >= num(item.jilidMin) && angka <= num(item.jilidMax);
+  });
+
+  if(!fallbackList.length) return null;
+  return fallbackList.map(item => item.teks).filter(Boolean).join(", ");
+}
 /* Helper lama (dipertahankan untuk backward compat) */
 function aktivitasUntukJilid(jilidNama, kurikulum){
   const hari = nowWIB().getDay();
