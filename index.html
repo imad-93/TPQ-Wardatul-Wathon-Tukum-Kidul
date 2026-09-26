@@ -322,8 +322,14 @@ const NAMA_HARI = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
 const KATEGORI_PENGELUARAN = ["Honor Ustadzah","ATK & Cetak","Konsumsi Kegiatan","Sewa & Listrik","Perawatan Gedung","Bantuan Sosial","Lainnya"];
 const DAFTAR_SHOLAT = ["Subuh", "Dhuhur", "Ashar", "Maghrib", "Isya"];
 const ICON_SHOLAT = { Subuh:"🌄", Dhuhur:"☀️", Ashar:"🌤️", Maghrib:"🌆", Isya:"🌙" };
-const PIKET_LABEL = { kebersihan:"🧹 Kebersihan", adzan:"📢 Adzan", iqomah:"🕌 Iqomah", pujian:"🎵 Pujian", imam:"👨‍🏫 Imam" };
-
+/* Default jenis piket — bisa diubah admin via UI */
+const JENIS_PIKET_DEFAULT = [
+  { id: "kebersihan", icon: "🧹", label: "Kebersihan", target: "santri" },
+  { id: "adzan", icon: "📢", label: "Adzan", target: "santri" },
+  { id: "iqomah", icon: "🕌", label: "Iqomah", target: "santri" },
+  { id: "pujian", icon: "🎵", label: "Pujian", target: "santri" },
+  { id: "imam", icon: "👨‍🏫", label: "Imam", target: "ustadzah" }
+];
 /* Kurikulum default mingguan — dipakai hanya saat pertama kali init.
    Jilid diidentifikasi dengan ANGKA (fallback), nanti akan di-map ke id jilid aktual saat pertama kali editor dibuka. */
 const KURIKULUM_DEFAULT = {
@@ -342,7 +348,32 @@ const KURIKULUM_DEFAULT = {
   ]},
   5: { label: "Libur", aktivitas: [] }
 };
+// Ambil daftar jenis piket dari settings, fallback ke default
+function getJenisPiket(settings){
+  if(Array.isArray(settings?.piketJenis) && settings.piketJenis.length){
+    return settings.piketJenis;
+  }
+  return JENIS_PIKET_DEFAULT;
+}
 
+// Ambil daftar orang yang piket di hari tertentu
+function getPiketList(piketData, hari, jenisId){
+  const val = piketData?.[hari]?.[jenisId];
+  if(!val) return [];
+  // Format baru: array
+  if(Array.isArray(val)) return val.filter(Boolean);
+  // Format lama: string (single)
+  return [val];
+}
+
+// Cari nama dari id (bisa santri atau ustadzah)
+function namaPiket(id, santriList, ustadzahList){
+  const s = santriList.find(x => x.id === id);
+  if(s) return s.nama || "-";
+  const u = ustadzahList.find(x => x.id === id);
+  if(u) return u.nama || u.email || "-";
+  return "?";
+}
 /* Helper baru: Ambil angka jilid dari nama jilid (mis. "Jilid 1" → 1, "Al-Qur'an" → 6) */
 function angkaJilid(jilidNama){
   if(!jilidNama) return null;
@@ -3002,14 +3033,19 @@ async function renderPengaturanAdmin(){
         </form>
       </div>
 
-      <div class="card" style="margin-bottom:12px">
-        <h3>📋 Jadwal Piket</h3>
-        <p class="muted small">Atur petugas piket per hari. Imam khusus untuk ustadzah.</p>
-        <form id="piketForm" style="margin-top:12px">
-          <div id="piketHariContainer"></div>
-          <button class="btn" type="submit" id="piketSaveBtn">💾 Simpan Jadwal Piket</button>
-        </form>
-      </div>
+<div class="card" style="margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+    <div>
+      <h3 style="margin:0">📋 Jadwal Piket</h3>
+      <p class="muted small" style="margin:4px 0 0">Atur petugas piket per hari. Bisa lebih dari 1 orang.</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-light" id="btnKelolaJenisPiket">⚙️ Kelola Jenis Piket</button>
+  </div>
+  <form id="piketForm" style="margin-top:12px">
+    <div id="piketHariContainer"></div>
+    <button class="btn" type="submit" id="piketSaveBtn">💾 Simpan Jadwal Piket</button>
+  </form>
+</div>
 
 <div class="card" style="margin-bottom:12px">
   <h3>📚 Kurikulum Pembelajaran Mingguan</h3>
@@ -3049,46 +3085,111 @@ async function renderPengaturanAdmin(){
     const reload = renderTabUmum;
 
     // ====== PIKET FORM ======
-    async function renderPiketForm(){
-      const [settings, santriList, ustadzahList] = await Promise.all([getAppSettings(), getCollectionData("santri"), getCollectionData("ustadzah")]);
-      const santriAktif = santriList.filter(s => s.aktif !== false);
-      const piketData = settings.piket || {};
-      const hariAktif = [6, 0, 1, 2, 3, 4];
-      $("piketHariContainer").innerHTML = hariAktif.map(h => {
-        const piketHari = getPiketForDay(piketData, h);
-        return `<div class="card soft" style="margin-bottom:10px;padding:12px">
-          <h4 style="margin:0 0 8px">${NAMA_HARI[h]}</h4>
-          <div class="row" style="gap:10px">
-            ${fg("Kebersihan", `<select class="piket-select" data-hari="${h}" data-jenis="kebersihan"><option value="">— Pilih santri —</option>${santriAktif.map(s => `<option value="${esc(s.id)}" ${piketHari.kebersihan === s.id ? "selected" : ""}>${esc(s.nama)}</option>`).join("")}</select>`)}
-            ${fg("Adzan", `<select class="piket-select" data-hari="${h}" data-jenis="adzan"><option value="">— Pilih santri —</option>${santriAktif.map(s => `<option value="${esc(s.id)}" ${piketHari.adzan === s.id ? "selected" : ""}>${esc(s.nama)}</option>`).join("")}</select>`)}
-            ${fg("Iqomah", `<select class="piket-select" data-hari="${h}" data-jenis="iqomah"><option value="">— Pilih santri —</option>${santriAktif.map(s => `<option value="${esc(s.id)}" ${piketHari.iqomah === s.id ? "selected" : ""}>${esc(s.nama)}</option>`).join("")}</select>`)}
-            ${fg("Pujian", `<select class="piket-select" data-hari="${h}" data-jenis="pujian"><option value="">— Pilih santri —</option>${santriAktif.map(s => `<option value="${esc(s.id)}" ${piketHari.pujian === s.id ? "selected" : ""}>${esc(s.nama)}</option>`).join("")}</select>`)}
-            ${fg("Imam (Ustadzah)", `<select class="piket-select" data-hari="${h}" data-jenis="imam"><option value="">— Pilih ustadzah —</option>${ustadzahList.filter(u => u.aktif !== false).map(u => `<option value="${esc(u.id)}" ${piketHari.imam === u.id ? "selected" : ""}>${esc(u.nama || u.email)}</option>`).join("")}</select>`)}
-          </div>
-        </div>`;
-      }).join("");
-    }
-    renderPiketForm();
+async function renderPiketForm(){
+  const [settings, santriList, ustadzahList] = await Promise.all([
+    getAppSettings(), getCollectionData("santri"), getCollectionData("ustadzah")
+  ]);
+  const santriAktif = santriList.filter(s => s.aktif !== false);
+  const ustadzahAktif = ustadzahList.filter(u => u.aktif !== false);
+  const jenisPiket = getJenisPiket(settings);
+  const piketData = settings.piket || {};
+  const hariAktif = [6, 0, 1, 2, 3, 4]; // Sabtu–Kamis
 
-    $("piketForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      await busy($("piketSaveBtn"), "Menyimpan...", async () => {
-        try{
-          const piket = {};
-          document.querySelectorAll(".piket-select").forEach(sel => {
-            const hari = sel.dataset.hari;
-            const jenis = sel.dataset.jenis;
-            const val = sel.value.trim();
-            if(!val) return;
-            if(!piket[hari]) piket[hari] = {};
-            piket[hari][jenis] = val;
-          });
-          await saveSettings({ piket });
-          logAudit("UPDATE","settings","app",{ piket:true });
-          showToast("Jadwal piket disimpan.");
-        }catch(err){ showToast(firebaseError(err), true); }
+  // Render daftar opsi checkbox untuk satu jenis piket di hari tertentu
+  const checkboxOrang = (hari, jenisId, target, terpilih) => {
+    const listSumber = target === "ustadzah" ? ustadzahAktif : santriAktif;
+    if(!listSumber.length){
+      return `<div class="muted small">Belum ada ${target === "ustadzah" ? "ustadzah" : "santri"} aktif.</div>`;
+    }
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-height:180px;overflow:auto;padding:8px;border:1.5px solid var(--border);border-radius:10px;background:#fafbfc">
+      ${listSumber.map(p => `
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 6px;border-radius:6px;background:#fff;border:1px solid var(--border)">
+          <input type="checkbox" class="piket-check" value="${esc(p.id)}"
+            data-hari="${hari}" data-jenis="${esc(jenisId)}"
+            ${terpilih.includes(p.id) ? "checked" : ""}>
+          <span>${esc(p.nama || p.email || "-")}</span>
+        </label>
+      `).join("")}
+    </div>`;
+  };
+
+  // Render satu hari (accordion)
+  const renderHari = (h, idx) => {
+    const isOpen = idx === 0; // hari pertama default open
+    return `<div class="card soft piket-hari-card" data-hari="${h}" style="margin-bottom:8px;padding:0;overflow:hidden">
+      <button type="button" class="piket-hari-header" data-hari="${h}"
+        style="width:100%;border:0;background:transparent;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:14px;text-align:left">
+        <span>📅 ${NAMA_HARI[h]}</span>
+        <span class="piket-chevron" data-hari="${h}" style="transition:transform .2s;font-size:12px;color:var(--muted)">▼</span>
+      </button>
+      <div class="piket-hari-body" data-hari="${h}" style="display:${isOpen ? "block" : "none"};padding:0 14px 14px;border-top:1px solid var(--border-soft)">
+        <div style="display:grid;gap:12px;margin-top:12px">
+          ${jenisPiket.map(jp => {
+            const terpilih = getPiketList(piketData, h, jp.id);
+            return `<div>
+              <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-soft)">
+                ${jp.icon || "📌"} ${esc(jp.label)}
+                <span class="muted small" style="font-weight:400">— ${terpilih.length} orang</span>
+              </label>
+              ${checkboxOrang(h, jp.id, jp.target, terpilih)}
+            </div>`;
+          }).join("")}
+        </div>
+      </div>
+    </div>`;
+  };
+
+  $("piketHariContainer").innerHTML = hariAktif.map((h, i) => renderHari(h, i)).join("");
+
+  // Handler toggle accordion
+  document.querySelectorAll(".piket-hari-header").forEach(b => b.addEventListener("click", () => {
+    const hari = b.dataset.hari;
+    const body = document.querySelector(`.piket-hari-body[data-hari="${hari}"]`);
+    const chev = document.querySelector(`.piket-chevron[data-hari="${hari}"]`);
+    if(!body) return;
+    const isOpen = body.style.display !== "none";
+    body.style.display = isOpen ? "none" : "block";
+    if(chev) chev.style.transform = isOpen ? "rotate(-90deg)" : "rotate(0)";
+  }));
+
+  // Update counter jumlah orang saat checkbox berubah
+  document.querySelectorAll(".piket-check").forEach(cb => cb.addEventListener("change", () => {
+    const hari = cb.dataset.hari;
+    const jenis = cb.dataset.jenis;
+    const card = document.querySelector(`.piket-hari-card[data-hari="${hari}"]`);
+    if(!card) return;
+    const count = card.querySelectorAll(`.piket-check[data-hari="${hari}"][data-jenis="${jenis}"]:checked`).length;
+    // Update counter (cari label berdasarkan jenis)
+    const label = card.querySelector(`label:has(+ [data-jenis="${jenis}"])`) || null;
+    // Simplifikasi: cari semua label di dalam container ini
+    const jenisBlock = cb.closest("div").parentElement;
+    const labelEl = jenisBlock.querySelector("label span");
+    if(labelEl) labelEl.textContent = `— ${count} orang`;
+  }));
+}
+
+    renderPiketForm();
+$("btnKelolaJenisPiket").addEventListener("click", openJenisPiketEditor);
+$("piketForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  await busy($("piketSaveBtn"), "Menyimpan...", async () => {
+    try{
+      const piket = {};
+      // Kumpulkan checkbox per hari & jenis
+      document.querySelectorAll(".piket-check").forEach(cb => {
+        if(!cb.checked) return;
+        const hari = cb.dataset.hari;
+        const jenis = cb.dataset.jenis;
+        if(!piket[hari]) piket[hari] = {};
+        if(!Array.isArray(piket[hari][jenis])) piket[hari][jenis] = [];
+        piket[hari][jenis].push(cb.value);
       });
-    });
+      await saveSettings({ piket });
+      logAudit("UPDATE","settings","app",{ piket:true });
+      showToast("Jadwal piket disimpan.");
+    }catch(err){ showToast(firebaseError(err), true); }
+  });
+});
 
 async function renderKurikulumPreview(){
   const [s, jilidList] = await Promise.all([getAppSettings(), getCollectionData("jilid")]);
@@ -3161,7 +3262,85 @@ async function renderKurikulumPreview(){
   </table></div>`;
 }
 renderKurikulumPreview();
+    
+async function openJenisPiketEditor(){
+  const s = await getAppSettings();
+  const jenis = JSON.parse(JSON.stringify(getJenisPiket(s)));
 
+  const renderItem = (jp, idx) => `
+    <div class="piket-jenis-item" data-idx="${idx}"
+      style="display:grid;grid-template-columns:50px 1fr 120px auto;gap:6px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff">
+      <input class="pjk-icon" value="${esc(jp.icon || "📌")}" maxlength="3" style="text-align:center;padding:8px;font-size:18px" title="Icon">
+      <input class="pjk-label" value="${esc(jp.label || "")}" placeholder="Nama jenis piket" title="Nama">
+      <select class="pjk-target" title="Target">
+        <option value="santri" ${jp.target !== "ustadzah" ? "selected" : ""}>Santri</option>
+        <option value="ustadzah" ${jp.target === "ustadzah" ? "selected" : ""}>Ustadzah</option>
+      </select>
+      <button type="button" class="btn btn-sm btn-danger btn-hapus-jenis-piket" title="Hapus">🗑</button>
+    </div>
+  `;
+
+  openModal("⚙️ Kelola Jenis Piket", `
+    <div class="notice" style="margin-bottom:12px">
+      Tambah/hapus jenis piket. <b>Target</b>: santri atau ustadzah.
+    </div>
+    <div id="piketJenisList" style="display:grid;gap:8px;margin-bottom:12px">
+      ${jenis.map((jp, i) => renderItem(jp, i)).join("")}
+    </div>
+    <button type="button" class="btn btn-light btn-sm btn-full" id="btnTambahJenisPiket">+ Tambah Jenis Piket</button>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+      <button type="button" class="btn btn-light" id="btnBatalJenisPiket">Batal</button>
+      <button type="button" class="btn" id="btnSimpanJenisPiket">💾 Simpan</button>
+    </div>
+  `);
+
+  const bindHapus = root => root.querySelectorAll(".btn-hapus-jenis-piket").forEach(b => {
+    b.addEventListener("click", () => b.closest(".piket-jenis-item").remove());
+  });
+  bindHapus($("piketJenisList"));
+
+  $("btnTambahJenisPiket").addEventListener("click", () => {
+    const list = $("piketJenisList");
+    const idx = list.querySelectorAll(".piket-jenis-item").length;
+    const el = document.createElement("div");
+    el.innerHTML = renderItem({ icon: "📌", label: "", target: "santri" }, idx);
+    list.appendChild(el.firstElementChild);
+    bindHapus(list);
+  });
+
+  $("btnBatalJenisPiket").addEventListener("click", closeModal);
+
+  $("btnSimpanJenisPiket").addEventListener("click", async () => {
+    const btn = $("btnSimpanJenisPiket");
+    await busy(btn, "Menyimpan...", async () => {
+      try{
+        const items = [...document.querySelectorAll(".piket-jenis-item")].map((el, i) => {
+          const icon = el.querySelector(".pjk-icon").value.trim() || "📌";
+          const label = el.querySelector(".pjk-label").value.trim();
+          const target = el.querySelector(".pjk-target").value;
+          // ID dari label (slug), fallback timestamp
+          const id = label
+            ? label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")
+            : `piket_${Date.now()}_${i}`;
+          return { id, icon, label, target };
+        }).filter(x => x.label);
+
+        if(!items.length){ showToast("Minimal 1 jenis piket.", true); return false; }
+
+        await saveSettings({ piketJenis: items });
+        logAudit("UPDATE","settings","app",{ piketJenis:true });
+        showToast("Jenis piket disimpan.");
+        closeModal();
+        // Re-render piket form
+        await renderPiketForm();
+      }catch(err){
+        console.error(err);
+        showToast(firebaseError(err), true);
+      }
+    });
+  });
+}
 // ====== EDITOR KURIKULUM (MODAL) — Sinkron dengan Jilid/Kelas ======
 async function openKurikulumEditor(){
   const [s, jilidList] = await Promise.all([
