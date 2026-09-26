@@ -1760,60 +1760,45 @@ async function renderDashboardUstadzah(){
     </div>
     ${pesanDashboard(settings)}
     ${liburCard(settings)}
-    ${(() => {
-      const hari = nowWIB().getDay();
-      const piketHari = getPiketForDay(settings.piket, hari);
-      const kurHari = (settings.kurikulum || KURIKULUM_DEFAULT)[hari];
-      const adaPiket = Object.keys(piketHari).length > 0;
-      if(!adaPiket && !kurHari) return "";
-      return `<div class="grid grid-2" style="margin-bottom:12px">
-        ${adaPiket ? `<div class="card"><h3 style="margin:0">📋 Piket Hari Ini — ${NAMA_HARI[hari]}</h3><div style="margin-top:10px;display:grid;gap:8px">
-          ${PIKET_LABEL.kebersihan && piketHari.kebersihan ? `<div><b>${PIKET_LABEL.kebersihan}:</b> ${esc(santri.find(s => s.id === piketHari.kebersihan)?.nama || "?")}</div>` : ""}
-          ${piketHari.adzan ? `<div><b>${PIKET_LABEL.adzan}:</b> ${esc(santri.find(s => s.id === piketHari.adzan)?.nama || "?")}</div>` : ""}
-          ${piketHari.iqomah ? `<div><b>${PIKET_LABEL.iqomah}:</b> ${esc(santri.find(s => s.id === piketHari.iqomah)?.nama || "?")}</div>` : ""}
-          ${piketHari.pujian ? `<div><b>${PIKET_LABEL.pujian}:</b> ${esc(santri.find(s => s.id === piketHari.pujian)?.nama || "?")}</div>` : ""}
-          ${piketHari.imam ? `<div><b>${PIKET_LABEL.imam}:</b> ${esc(ustadzahList.find(u => u.id === piketHari.imam)?.nama || "?")}</div>` : ""}
-        </div></div>` : ""}
-${kurHari ? `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0">
-  <h3 style="margin:0;color:#166534">📚 Kurikulum — ${NAMA_HARI[hari]}</h3>
-  <div style="margin-top:10px;font-size:13px;line-height:1.6">
-    <div style="margin-bottom:8px"><b>Label:</b> ${esc(kurHari.label || "-")}</div>
-    ${(() => {
-      // Normalisasi: object lama → array baru
-      let listAktivitas = [];
-      if(Array.isArray(kurHari.aktivitas)){
-        listAktivitas = kurHari.aktivitas;
-      } else if(kurHari.aktivitas && typeof kurHari.aktivitas === "object"){
-        listAktivitas = Object.entries(kurHari.aktivitas).map(([key, teks]) => {
-          const parts = String(key).split("-").map(x => Number(x.trim()));
-          return { jilidMin: parts[0] || 1, jilidMax: parts[parts.length - 1] || 6, teks: String(teks || "") };
-        });
-      }
+${(() => {
+  const hari = nowWIB().getDay();
+  const jenisPiket = getJenisPiket(settings);
+  const kurHari = (settings.kurikulum || KURIKULUM_DEFAULT)[hari];
 
-      const jilidMap = new Map(jilidList.map(j => [j.id, j.nama || "-"]));
-      const labelJilid = a => {
-        if(Array.isArray(a.jilidIds) && a.jilidIds.length){
-          const namaList = a.jilidIds.map(id => jilidMap.get(id)).filter(Boolean);
-          if(!namaList.length) return "—";
-          if(namaList.length === 1) return namaList[0];
-          if(namaList.length === 2) return `${namaList[0]} & ${namaList[1]}`;
-          return `${namaList.slice(0,2).join(", ")} & ${namaList.length - 2} lainnya`;
-        }
-        if(a.jilidMin !== undefined && a.jilidMax !== undefined){
-          const min = num(a.jilidMin), max = num(a.jilidMax);
-          return min === max ? `Jilid ${min}` : `Jilid ${min}–${max}`;
-        }
-        return "—";
-      };
+  const adaPiketTerisi = jenisPiket.some(jp => getPiketList(settings.piket, hari, jp.id).length > 0);
+  if(!adaPiketTerisi && !kurHari) return "";
 
-      return listAktivitas.map(a =>
-        `<div style="margin-bottom:4px"><b class="muted">${esc(labelJilid(a))}:</b> ${esc(a.teks || "")}</div>`
-      ).join("");
-    })()}
-  </div>
-</div>` : ""}
-</div>`;
-    })()}
+  return `<div class="grid grid-2" style="margin-bottom:12px">
+    ${adaPiketTerisi ? `<div class="card" style="background:#fff;border:1px solid var(--border)">
+      <h3 style="margin:0">📋 Piket Hari Ini — ${NAMA_HARI[hari]}</h3>
+      <div style="margin-top:10px;display:grid;gap:10px">
+        ${jenisPiket.map(jp => {
+          const list = getPiketList(settings.piket, hari, jp.id);
+          if(!list.length) return "";
+          const namaList = list.map(id => namaPiket(id, santri, ustadzahList));
+          return `<div>
+            <div style="font-weight:600;font-size:13px">${jp.icon || "📌"} ${esc(jp.label)}:</div>
+            <div style="margin-top:4px">
+              ${namaList.map(n => `<span class="badge badge-blue" style="margin:2px 4px 0 0">${esc(n)}</span>`).join("")}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>` : ""}
+    ${kurHari ? `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0">
+      <h3 style="margin:0;color:#166534">📚 Kurikulum — ${NAMA_HARI[hari]}</h3>
+      <div style="margin-top:10px;font-size:13px;line-height:1.6">
+        <div style="margin-bottom:8px"><b>Label:</b> ${esc(kurHari.label || "-")}</div>
+        ${(() => {
+          let list = [];
+          if(Array.isArray(kurHari.aktivitas)) list = kurHari.aktivitas;
+          else if(kurHari.aktivitas && typeof kurHari.aktivitas === "object") list = Object.entries(kurHari.aktivitas).map(([k,v]) => ({teks:v}));
+          return list.map(a => `<div style="margin-bottom:4px"><b>${esc(a.teks || "")}</b></div>`).join("");
+        })()}
+      </div>
+    </div>` : ""}
+  </div>`;
+})()}
     ${jumlahWajibJamaah ? `<div class="card info" style="margin-bottom:12px"><b style="color:#1e40af">🕌 ${jumlahWajibJamaah} santri wajib sholat berjamaah</b><div class="muted small" style="margin-top:4px">Aktifkan/nonaktifkan di panel Baca/Hafalan pada kolom Wajib Jamaah.</div></div>` : ""}
     ${peringatanSantriSingkat(rekapSantri, settings)}
     ${rekapSaya.alpha >= batasAlphaHari(settings) ? `<div class="card danger" style="margin-bottom:12px"><b style="color:#991b1b">⚠️ Peringatan kehadiran Anda</b><div class="muted small" style="margin-top:4px">Alpha ${rekapSaya.alpha} hari dalam ${jumlahHariRekap(settings)} hari terakhir.</div></div>` : ""}
@@ -3086,52 +3071,102 @@ async function renderPengaturanAdmin(){
 
     // ====== PIKET FORM ======
 async function renderPiketForm(){
-  const [settings, santriList, ustadzahList] = await Promise.all([
-    getAppSettings(), getCollectionData("santri"), getCollectionData("ustadzah")
+  const [settings, santriList, ustadzahList, jilidList] = await Promise.all([
+    getAppSettings(), getCollectionData("santri"), getCollectionData("ustadzah"), getCollectionData("jilid")
   ]);
-  const santriAktif = santriList.filter(s => s.aktif !== false);
-  const ustadzahAktif = ustadzahList.filter(u => u.aktif !== false);
+  const santriAktif = santriList.filter(s => s.aktif !== false).sort((a,b) => (a.nama || "").localeCompare(b.nama || ""));
+  const ustadzahAktif = ustadzahList.filter(u => u.aktif !== false).sort((a,b) => (a.nama || "").localeCompare(b.nama || ""));
   const jenisPiket = getJenisPiket(settings);
   const piketData = settings.piket || {};
-  const hariAktif = [6, 0, 1, 2, 3, 4]; // Sabtu–Kamis
+  const hariAktif = [6, 0, 1, 2, 3, 4];
 
-  // Render daftar opsi checkbox untuk satu jenis piket di hari tertentu
-  const checkboxOrang = (hari, jenisId, target, terpilih) => {
+  // Build map santriId → jilidId untuk filter cepat
+  const santriJilidMap = new Map(santriAktif.map(s => [s.id, s.jilidId || ""]));
+
+  /**
+   * Render panel pemilih (checkbox + search + filter jilid)
+   * @param {string} hari - "6", "0", dst
+   * @param {string} jenisId - "kebersihan", "adzan", dst
+   * @param {string} target - "santri" | "ustadzah"
+   * @param {Array<string>} terpilih - array id yang sudah dipilih
+   * @param {string} uid - unique id untuk search & filter (biar tidak bentrok)
+   */
+  const panelPemilih = (hari, jenisId, target, terpilih, uid) => {
     const listSumber = target === "ustadzah" ? ustadzahAktif : santriAktif;
+
     if(!listSumber.length){
       return `<div class="muted small">Belum ada ${target === "ustadzah" ? "ustadzah" : "santri"} aktif.</div>`;
     }
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-height:180px;overflow:auto;padding:8px;border:1.5px solid var(--border);border-radius:10px;background:#fafbfc">
-      ${listSumber.map(p => `
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 6px;border-radius:6px;background:#fff;border:1px solid var(--border)">
-          <input type="checkbox" class="piket-check" value="${esc(p.id)}"
-            data-hari="${hari}" data-jenis="${esc(jenisId)}"
-            ${terpilih.includes(p.id) ? "checked" : ""}>
-          <span>${esc(p.nama || p.email || "-")}</span>
-        </label>
-      `).join("")}
+
+    // Chip "terpilih" di atas
+    const chipTerpilih = terpilih.length ? `
+      <div class="piket-chip-wrap" data-chip-for="${uid}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+        ${terpilih.map(id => {
+          const p = listSumber.find(x => x.id === id);
+          if(!p) return "";
+          return `<span class="badge badge-blue" style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11.5px">
+            ${esc(p.nama || p.email || "-")}
+            <button type="button" class="piket-chip-hapus" data-uid="${uid}" data-id="${esc(id)}"
+              style="border:0;background:transparent;color:inherit;cursor:pointer;font-weight:700;font-size:13px;line-height:1;padding:0 2px">×</button>
+          </span>`;
+        }).join("")}
+      </div>` : "";
+
+    // Filter jilid (khusus santri)
+    const filterJilid = target === "santri" ? `
+      <select class="piket-filter-jilid" data-uid="${uid}" style="margin-bottom:6px;font-size:12.5px;padding:6px 8px;min-height:34px">
+        <option value="">Semua jilid</option>
+        ${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}
+      </select>` : "";
+
+    // Search box
+    const searchBox = `<input type="text" class="piket-search" data-uid="${uid}" placeholder="🔍 Cari nama..." style="margin-bottom:6px;font-size:13px;padding:6px 10px;min-height:34px">`;
+
+    // Checkbox list
+    const checkboxList = `
+      <div class="piket-list" data-list-for="${uid}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;max-height:200px;overflow:auto;padding:8px;border:1.5px solid var(--border);border-radius:10px;background:#fafbfc">
+        ${listSumber.map(p => {
+          const isChecked = terpilih.includes(p.id);
+          const jilidId = target === "santri" ? (santriJilidMap.get(p.id) || "") : "";
+          return `<label class="piket-item" data-uid="${uid}" data-jilid="${esc(jilidId)}" data-nama="${esc((p.nama || p.email || "").toLowerCase())}"
+            style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 7px;border-radius:6px;background:#fff;border:1px solid var(--border)">
+            <input type="checkbox" class="piket-check"
+              value="${esc(p.id)}"
+              data-hari="${hari}" data-jenis="${esc(jenisId)}" data-uid="${uid}"
+              ${isChecked ? "checked" : ""}>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nama || p.email || "-")}</span>
+          </label>`;
+        }).join("")}
+      </div>`;
+
+    // Info jumlah
+    const infoJumlah = `<div class="piket-info-jumlah" data-info-for="${uid}" style="margin-top:4px;font-size:11.5px;color:var(--muted)">
+      ${listSumber.length} ${target === "ustadzah" ? "ustadzah" : "santri"} tersedia · ${terpilih.length} terpilih
     </div>`;
+
+    return `${chipTerpilih}${filterJilid}${searchBox}${checkboxList}${infoJumlah}`;
   };
 
-  // Render satu hari (accordion)
-  const renderHari = (h, idx) => {
-    const isOpen = idx === 0; // hari pertama default open
+  // Render hari (accordion)
+  const renderHari = (h, idxHari) => {
+    const isOpen = idxHari === 0;
     return `<div class="card soft piket-hari-card" data-hari="${h}" style="margin-bottom:8px;padding:0;overflow:hidden">
       <button type="button" class="piket-hari-header" data-hari="${h}"
         style="width:100%;border:0;background:transparent;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:14px;text-align:left">
         <span>📅 ${NAMA_HARI[h]}</span>
-        <span class="piket-chevron" data-hari="${h}" style="transition:transform .2s;font-size:12px;color:var(--muted)">▼</span>
+        <span class="piket-chevron" data-hari="${h}" style="transition:transform .2s;font-size:12px;color:var(--muted)">${isOpen ? "▼" : "◀"}</span>
       </button>
       <div class="piket-hari-body" data-hari="${h}" style="display:${isOpen ? "block" : "none"};padding:0 14px 14px;border-top:1px solid var(--border-soft)">
-        <div style="display:grid;gap:12px;margin-top:12px">
-          ${jenisPiket.map(jp => {
+        <div style="display:grid;gap:14px;margin-top:12px">
+          ${jenisPiket.map((jp, idxJenis) => {
+            const uid = `p_${h}_${jp.id}`;
             const terpilih = getPiketList(piketData, h, jp.id);
-            return `<div>
+            return `<div data-jenis-block="${uid}">
               <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-soft)">
                 ${jp.icon || "📌"} ${esc(jp.label)}
-                <span class="muted small" style="font-weight:400">— ${terpilih.length} orang</span>
+                <span class="muted small piket-jenis-count" data-count-for="${uid}" style="font-weight:400">— ${terpilih.length} orang</span>
               </label>
-              ${checkboxOrang(h, jp.id, jp.target, terpilih)}
+              ${panelPemilih(h, jp.id, jp.target, terpilih, uid)}
             </div>`;
           }).join("")}
         </div>
@@ -3141,7 +3176,9 @@ async function renderPiketForm(){
 
   $("piketHariContainer").innerHTML = hariAktif.map((h, i) => renderHari(h, i)).join("");
 
-  // Handler toggle accordion
+  // ===== HANDLER =====
+
+  // 1. Toggle accordion per hari
   document.querySelectorAll(".piket-hari-header").forEach(b => b.addEventListener("click", () => {
     const hari = b.dataset.hari;
     const body = document.querySelector(`.piket-hari-body[data-hari="${hari}"]`);
@@ -3149,26 +3186,114 @@ async function renderPiketForm(){
     if(!body) return;
     const isOpen = body.style.display !== "none";
     body.style.display = isOpen ? "none" : "block";
-    if(chev) chev.style.transform = isOpen ? "rotate(-90deg)" : "rotate(0)";
+    if(chev) chev.textContent = isOpen ? "◀" : "▼";
   }));
 
-  // Update counter jumlah orang saat checkbox berubah
+  // 2. Search: filter nama
+  document.querySelectorAll(".piket-search").forEach(inp => inp.addEventListener("input", () => {
+    const uid = inp.dataset.uid;
+    const term = inp.value.trim().toLowerCase();
+    document.querySelectorAll(`.piket-item[data-uid="${uid}"]`).forEach(el => {
+      const nama = el.dataset.nama || "";
+      el.style.display = nama.includes(term) ? "" : "none";
+    });
+    updateCounter(uid);
+  }));
+
+  // 3. Filter jilid
+  document.querySelectorAll(".piket-filter-jilid").forEach(sel => sel.addEventListener("change", () => {
+    const uid = sel.dataset.uid;
+    const jilidId = sel.value;
+    document.querySelectorAll(`.piket-item[data-uid="${uid}"]`).forEach(el => {
+      const cocok = !jilidId || el.dataset.jilid === jilidId;
+      // Kombinasi dengan search
+      const search = document.querySelector(`.piket-search[data-uid="${uid}"]`)?.value.trim().toLowerCase() || "";
+      const namaCocok = !search || (el.dataset.nama || "").includes(search);
+      el.style.display = (cocok && namaCocok) ? "" : "none";
+    });
+    updateCounter(uid);
+  }));
+
+  // 4. Checkbox → update chip & counter
   document.querySelectorAll(".piket-check").forEach(cb => cb.addEventListener("change", () => {
+    const uid = cb.dataset.uid;
     const hari = cb.dataset.hari;
     const jenis = cb.dataset.jenis;
-    const card = document.querySelector(`.piket-hari-card[data-hari="${hari}"]`);
-    if(!card) return;
-    const count = card.querySelectorAll(`.piket-check[data-hari="${hari}"][data-jenis="${jenis}"]:checked`).length;
-    // Update counter (cari label berdasarkan jenis)
-    const label = card.querySelector(`label:has(+ [data-jenis="${jenis}"])`) || null;
-    // Simplifikasi: cari semua label di dalam container ini
-    const jenisBlock = cb.closest("div").parentElement;
-    const labelEl = jenisBlock.querySelector("label span");
-    if(labelEl) labelEl.textContent = `— ${count} orang`;
+    const terpilih = [...document.querySelectorAll(`.piket-check[data-hari="${hari}"][data-jenis="${jenis}"]:checked`)]
+      .map(x => x.value);
+    updateChip(uid, terpilih);
+    updateCounter(uid);
   }));
-}
 
-    renderPiketForm();
+  // 5. Chip hapus
+  const bindChipHapus = () => {
+    document.querySelectorAll(".piket-chip-hapus").forEach(b => b.addEventListener("click", () => {
+      const uid = b.dataset.uid;
+      const id = b.dataset.id;
+      // Uncheck checkbox terkait
+      const cb = document.querySelector(`.piket-check[data-uid="${uid}"][value="${CSS.escape(id)}"]`);
+      if(cb){ cb.checked = false; cb.dispatchEvent(new Event("change")); }
+    }));
+  };
+  bindChipHapus();
+
+  // ===== HELPERS =====
+  function updateChip(uid, terpilih){
+    const wrap = document.querySelector(`[data-chip-for="${uid}"]`);
+    const block = document.querySelector(`[data-jenis-block="${uid}"]`);
+    if(!block) return;
+
+    const listSumber = block.querySelectorAll(`.piket-item[data-uid="${uid}"]`);
+    const map = new Map();
+    listSumber.forEach(el => {
+      const id = el.querySelector(".piket-check")?.value;
+      const nama = el.querySelector("span")?.textContent || "";
+      if(id) map.set(id, nama);
+    });
+
+    // Buat/replace chip wrapper
+    const chipHtml = terpilih.length ? `
+      <div class="piket-chip-wrap" data-chip-for="${uid}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+        ${terpilih.map(id => {
+          const nama = map.get(id) || id;
+          return `<span class="badge badge-blue" style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11.5px">
+            ${esc(nama)}
+            <button type="button" class="piket-chip-hapus" data-uid="${uid}" data-id="${esc(id)}"
+              style="border:0;background:transparent;color:inherit;cursor:pointer;font-weight:700;font-size:13px;line-height:1;padding:0 2px">×</button>
+          </span>`;
+        }).join("")}
+      </div>` : "";
+
+    const existing = document.querySelector(`[data-chip-for="${uid}"]`);
+    if(existing) existing.outerHTML = chipHtml;
+    else if(chipHtml){
+      // Insert sebelum filter jilid / search
+      const ref = block.querySelector(".piket-search") || block.querySelector(".piket-list");
+      if(ref) ref.insertAdjacentHTML("beforebegin", chipHtml);
+    }
+    bindChipHapus();
+  }
+
+  function updateCounter(uid){
+    const countEl = document.querySelector(`[data-count-for="${uid}"]`);
+    const infoEl = document.querySelector(`[data-info-for="${uid}"]`);
+    const block = document.querySelector(`[data-jenis-block="${uid}"]`);
+    if(!block || !countEl) return;
+
+    const total = block.querySelectorAll(`.piket-item[data-uid="${uid}"]`).length;
+    const terpilih = block.querySelectorAll(`.piket-check[data-uid="${uid}"]:checked`).length;
+    const tampil = [...block.querySelectorAll(`.piket-item[data-uid="${uid}"]`)].filter(el => el.style.display !== "none").length;
+
+    countEl.textContent = `— ${terpilih} orang`;
+    if(infoEl){
+      const info = total === tampil
+        ? `${total} tersedia · ${terpilih} terpilih`
+        : `${tampil} dari ${total} · ${terpilih} terpilih`;
+      infoEl.textContent = info;
+    }
+  }
+}
+renderPiketForm();
 $("btnKelolaJenisPiket").addEventListener("click", openJenisPiketEditor);
 $("piketForm").addEventListener("submit", async e => {
   e.preventDefault();
