@@ -304,6 +304,20 @@ const APP_CONFIG = {
   pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
   cacheTtlMs: 30_000,
+  cacheTtl: {
+    santri: 5 * 60_000,     // 5 menit — jarang berubah
+    ustadzah: 5 * 60_000,
+    wali: 5 * 60_000,
+    jilid: 5 * 60_000,
+    users: 5 * 60_000,
+    settings: 60_000,       // 1 menit
+    tagihanSantri: 60_000,  // 1 menit
+    tabungan: 60_000,
+    pengumuman: 2 * 60_000,
+    izin: 60_000,
+    riwayat: 60_000,
+    progress: 60_000
+  },
   batasIzinJam: 15,
   batasAlphaJam: 18,
   batasAlphaHari: 2,
@@ -412,13 +426,13 @@ function santriCocokAktivitas({ jilidId, jilidNama }, item, jilidList = []){
   return angka >= num(item.jilidMin) && angka <= num(item.jilidMax);
 }
 
-/* Helper: aktivitas untuk santri (terima santri object + kurikulum) */
+/* Helper: aktivitas untuk santri (prioritas jilid paling spesifik) */
 function aktivitasUntukSantri(santri, kurikulum){
   const hari = nowWIB().getDay();
   const kur = kurikulum?.[hari];
   if(!kur) return null;
 
-  // Normalisasi
+  // Normalisasi: array (baru) atau object (lama)
   let listAktivitas = [];
   if(Array.isArray(kur.aktivitas)){
     listAktivitas = kur.aktivitas;
@@ -430,39 +444,31 @@ function aktivitasUntukSantri(santri, kurikulum){
   }
   if(!listAktivitas.length) return null;
 
-  // ===== Kumpulkan semua yang cocok (spesifik + fallback) =====
-  const cocokList = [];
+  // PRIORITAS 1: Aktivitas SPESIFIK (yang secara eksplisit mencantumkan jilidId santri)
+  const spesifik = listAktivitas.filter(item =>
+    Array.isArray(item.jilidIds) &&
+    item.jilidIds.length > 0 &&
+    item.jilidIds.includes(santri.jilidId)
+  );
 
-  // 1. Cek yang SPESIFIK (punya jilidIds & termasuk jilidId santri)
-  listAktivitas.forEach(item => {
-    if(Array.isArray(item.jilidIds) && item.jilidIds.length && item.jilidIds.includes(santri.jilidId)){
-      cocokList.push({
-        teks: item.teks,
-        jumlahJilid: item.jilidIds.length,   // ← untuk prioritas
-        spesifik: true
-      });
-    }
-  });
-
-  // 2. Kalau TIDAK ADA yang spesifik → fallback ke angka
-  if(!cocokList.length){
-    const angka = angkaJilid(santri.jilidNama);
-    if(angka === null) return null;
-    listAktivitas.forEach(item => {
-      if(Array.isArray(item.jilidIds) && item.jilidIds.length) return; // skip, sudah tidak cocok
-      if(angka >= num(item.jilidMin) && angka <= num(item.jilidMax)){
-        cocokList.push({ teks: item.teks, jumlahJilid: num(item.jilidMax) - num(item.jilidMin) + 1, spesifik: false });
-      }
-    });
+  if(spesifik.length){
+    // Pilih yang paling sedikit jilid (paling spesifik)
+    const minimal = Math.min(...spesifik.map(x => x.jilidIds.length));
+    const terpilih = spesifik.filter(x => x.jilidIds.length === minimal);
+    return terpilih.map(x => x.teks).filter(Boolean).join(", ");
   }
 
-  if(!cocokList.length) return null;
+  // PRIORITAS 2: Fallback ke angka jilid (untuk data lama)
+  const angka = angkaJilid(santri.jilidNama);
+  if(angka === null) return null;
 
-  // ===== Prioritas: pilih yang paling SEDIKIT jilid (paling spesifik) =====
-  const minimalJilid = Math.min(...cocokList.map(x => x.jumlahJilid));
-  const terpilih = cocokList.filter(x => x.jumlahJilid === minimalJilid);
+  const fallback = listAktivitas.filter(item => {
+    if(Array.isArray(item.jilidIds) && item.jilidIds.length) return false;
+    return angka >= num(item.jilidMin) && angka <= num(item.jilidMax);
+  });
 
-  return terpilih.map(x => x.teks).filter(Boolean).join(", ");
+  if(!fallback.length) return null;
+  return fallback.map(x => x.teks).filter(Boolean).join(", ");
 }
 /* Helper lama (dipertahankan untuk backward compat) */
 function aktivitasUntukJilid(jilidNama, kurikulum){
@@ -568,15 +574,21 @@ function firebaseError(error){
 /* ===== EXPORT EXCEL ===== */
 function exportToExcel(rows, filename, sheetName="Data"){
   if(!rows || !rows.length){ showToast("Tidak ada data untuk diexport.", true); return; }
+  // Batasi 5.000 baris untuk cegah freeze
+  const MAX_ROWS = 5000;
+  const limited = rows.length > MAX_ROWS ? rows.slice(0, MAX_ROWS) : rows;
+  const truncated = rows.length > MAX_ROWS;
+
   try{
-    const headers = Object.keys(rows[0]);
+    // ... kode export tetap sama, tapi pakai `limited` bukan `rows`
+    const headers = Object.keys(limited[0]);
     const safe = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
     const td = v => {
       const s = String(v ?? "");
       if(/^-?\d+(\.\d+)?$/.test(s)) return `<td>${s}</td>`;
       return `<td style="mso-number-format:'\\@'">${safe(s)}</td>`;
     };
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>${safe(sheetName).slice(0,30)}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt}th{background:#166534;color:#fff;font-weight:700;padding:6px 10px;border:1px solid #0f3d22;text-align:left}td{padding:5px 10px;border:1px solid #d0d7de;vertical-align:top}tr:nth-child(even) td{background:#f5f7f6}</style></head><body><table><thead><tr>${headers.map(h => `<th>${safe(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${headers.map(h => td(r[h])).join("")}</tr>`).join("")}</tbody></table></body></html>`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt}th{background:#166534;color:#fff;font-weight:700;padding:6px 10px;border:1px solid #0f3d22;text-align:left}td{padding:5px 10px;border:1px solid #d0d7de;vertical-align:top}tr:nth-child(even) td{background:#f5f7f6}</style></head><body><table><thead><tr>${headers.map(h => `<th>${safe(h)}</th>`).join("")}</tr></thead><tbody>${limited.map(r => `<tr>${headers.map(h => td(r[h])).join("")}</tr>`).join("")}</tbody></table></body></html>`;
     const blob = new Blob(["\uFEFF" + html], { type:"application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -584,13 +596,14 @@ function exportToExcel(rows, filename, sheetName="Data"){
     a.download = (filename.endsWith(".xlsx") || filename.endsWith(".xls")) ? filename.replace(/\.xlsx$/i, ".xls") : filename + ".xls";
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
-    showToast("File Excel berhasil diunduh.");
+    showToast(truncated
+      ? `File Excel diunduh (${MAX_ROWS} baris pertama dari ${rows.length}).`
+      : "File Excel berhasil diunduh.");
   }catch(err){
     console.error("[Export Excel]", err);
     showToast("Gagal export: " + err.message, true);
   }
 }
-
 /* ===== CETAK ===== */
 function cetakTabel({ title, subtitle, headers, rows }){
   if(!rows || !rows.length){ showToast("Tidak ada data untuk dicetak.", true); return; }
@@ -671,7 +684,8 @@ document.addEventListener("keydown", e => { if(e.key === "Escape" && !$("modal")
 const cache = new Map();
 async function getCollectionData(name, { forceRefresh=false } = {}){
   const cached = cache.get(name);
-  if(!forceRefresh && cached && Date.now() - cached.time < APP_CONFIG.cacheTtlMs) return cached.data;
+  const ttl = APP_CONFIG.cacheTtl?.[name] || APP_CONFIG.cacheTtlMs;
+  if(!forceRefresh && cached && Date.now() - cached.time < ttl) return cached.data;
   const snap = await getDocs(collection(db, name));
   const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   cache.set(name, { data, time: Date.now() });
@@ -817,7 +831,13 @@ function badgeStatusHarian(st){
 const periodeRekapText = s => `${s.mulaiPembelajaran ? `Sejak ${s.mulaiPembelajaran}` : "Seluruh periode"} · ${jumlahHariRekap(s)} hari terakhir`;
 
 async function loadKehadiranContext(){
-  const [izinList, riwayat, progress, settings] = await Promise.all([fresh("izin"), fresh("riwayat"), fresh("progress"), getAppSettings()]);
+  // PAKAI CACHE — jangan fresh() di sini
+  const [izinList, riwayat, progress, settings] = await Promise.all([
+    getCollectionData("izin"),        // cache 30 detik
+    getCollectionData("riwayat"),     // cache 30 detik
+    getCollectionData("progress"),    // cache 30 detik
+    getAppSettings()
+  ]);
   const index = new Set();
   [...riwayat, ...progress].forEach(r => {
     const key = tsKey(r.createdAt || r.updatedAt);
@@ -855,10 +875,25 @@ function daftarTanggalRekap(settings){
 }
 function hitungRekap(list, kind, ctx){
   const days = daftarTanggalRekap(ctx.settings);
+
+  // PRE-INDEX: { santriId: [izin1, izin2, ...], ustadzahId: [...] }
+  const izinByKey = new Map();
+  ctx.izinList.forEach(z => {
+    const key = kind === "santri"
+      ? (z.jenis !== "ustadzah" ? z.santriId : null)
+      : (z.jenis === "ustadzah" ? z.ustadzahId : null);
+    if(!key) return;
+    if(!izinByKey.has(key)) izinByKey.set(key, []);
+    izinByKey.get(key).push(z);
+  });
+
   return list.map(item => {
     const r = { hadir:0, izin:0, alpha:0, libur:0 };
+    const izinSantri = izinByKey.get(item.id) || [];  // ← hanya izin milik santri ini
     days.forEach(t => {
-      const st = kind === "santri" ? statusSantri(item.id, t, ctx) : statusUstadzah(item.id, t, ctx);
+      const izin = izinSantri.find(z => izinCocok(z, t)) || null;
+      const hadir = ctx.index.has(kind === "santri" ? `s:${item.id}:${t}` : `u:${item.id}:${t}`);
+      const st = statusHarian({ tanggal: t, izin, hadir, settings: ctx.settings });
       if(r[st.status] !== undefined) r[st.status]++;
     });
     return { item, ...r, total: r.hadir + r.izin + r.alpha };
@@ -867,7 +902,32 @@ function hitungRekap(list, kind, ctx){
 function rekapCard(title, rekap, settings, emptyText="Belum ada data."){
   const batas = batasAlphaHari(settings);
   const medal = i => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-  return `<div class="card"><h3>${title}</h3><p class="muted small">${esc(periodeRekapText(settings))}</p><div style="margin-top:10px">${dataTable("", ["#","Nama","H","I","A","L","Tot"], rekap.map((r,i) => `<tr><td><b>${i+1}</b> ${medal(i)}</td><td><b>${esc(r.item.nama || "-")}</b></td><td>${badge(r.hadir,"green")}</td><td>${badge(r.izin,"yellow")}</td><td>${badge(r.alpha, r.alpha >= batas ? "red" : "gray")}</td><td>${badge(r.libur,"blue")}</td><td>${r.total}</td></tr>`), emptyText)}</div></div>`;
+  // Tampilkan 20 teratas saja — sisanya pakai export
+  const top20 = rekap.slice(0, 20);
+  const sisa = rekap.length - top20.length;
+
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <h3 style="margin:0">${title}</h3>
+      <span class="muted small">${rekap.length} data</span>
+    </div>
+    <p class="muted small">${esc(periodeRekapText(settings))}</p>
+    <div style="margin-top:10px">
+      ${dataTable("", ["#","Nama","H","I","A","L","Tot"],
+        top20.map((r,i) => `<tr>
+          <td><b>${i+1}</b> ${medal(i)}</td>
+          <td><b>${esc(r.item.nama || "-")}</b></td>
+          <td>${badge(r.hadir,"green")}</td>
+          <td>${badge(r.izin,"yellow")}</td>
+          <td>${badge(r.alpha, r.alpha >= batas ? "red" : "gray")}</td>
+          <td>${badge(r.libur,"blue")}</td>
+          <td>${r.total}</td>
+        </tr>`), emptyText)}
+    </div>
+    ${sisa > 0 ? `<div class="muted small" style="text-align:center;margin-top:8px">
+      + ${sisa} data lainnya — gunakan tombol Excel untuk lihat semua
+    </div>` : ""}
+  </div>`;
 }
 function peringatanSantriSingkat(rekap, settings){
   const batas = batasAlphaHari(settings);
@@ -906,7 +966,7 @@ function izinFormCard({ isUstadzah, santriList, settings }){
 async function bindIzinForm({ isUstadzah, santriList, settings }){
   const form = $("izinForm");
   if(!form) return;
-  const izinList = await fresh("izin");
+  const izinList = await getCollectionData("izin");
   $("izinAlasan").addEventListener("change", () => {
     const v = $("izinAlasan").value;
     $("izinKegiatanWrap").classList.toggle("hidden", v !== "kegiatan");
@@ -1039,22 +1099,49 @@ let sppEnsuredPeriode = null;
 async function ensureSppBulanIni(){
   const { key: periode } = getPeriodeSekarang();
   if(sppEnsuredPeriode === periode) return;
+
   try{
-    const nominal = num((await getAppSettings()).sppNominal);
+    // Cek di SETTINGS (bukan variable global) — biar tahan refresh
+    const settings = await getAppSettings();
+    if(settings.sppEnsuredPeriode === periode){
+      sppEnsuredPeriode = periode;
+      return;
+    }
+
+    const nominal = num(settings.sppNominal);
     if(nominal <= 0){ sppEnsuredPeriode = periode; return; }
-    const [santriList, bills] = await Promise.all([getCollectionData("santri"), getCollectionData("tagihanSantri")]);
-    const ada = new Set(bills.map(b => b.id));
-    const baru = santriList.filter(s => s.aktif !== false && !ada.has(`spp_${s.id}_${periode}`));
+
+    // Cek tagihan bulan ini saja
+    const [santriList, bills] = await Promise.all([
+      getCollectionData("santri"),
+      getCollectionData("tagihanSantri")
+    ]);
+    // Filter hanya SPP bulan ini
+    const sppBulanIni = bills.filter(b => b.jenis === "SPP" && b.periode === periode);
+    const sudahAda = new Set(sppBulanIni.map(b => b.santriId));
+    const baru = santriList.filter(s => s.aktif !== false && !sudahAda.has(s.id));
+
     for(let i = 0; i < baru.length; i += 450){
       const batch = writeBatch(db);
       baru.slice(i, i + 450).forEach(s => {
-        batch.set(doc(db, "tagihanSantri", `spp_${s.id}_${periode}`), { santriId: s.id, santriNama: s.nama || "-", jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`, periode, kegiatanId:null, nominal, terbayar:0, status:"belum", riwayat:[], createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        batch.set(doc(db, "tagihanSantri", `spp_${s.id}_${periode}`), {
+          santriId: s.id, santriNama: s.nama || "-",
+          jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`,
+          periode, kegiatanId:null, nominal, terbayar:0, status:"belum", riwayat:[],
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        });
       });
       await batch.commit();
     }
+
     if(baru.length) invalidateCache("tagihanSantri");
+
+    // Simpan flag di settings — ustadzah lain tidak perlu generate lagi
+    await saveSettings({ sppEnsuredPeriode: periode });
     sppEnsuredPeriode = periode;
-  }catch(err){ console.warn("Gagal SPP otomatis:", err); }
+  }catch(err){
+    console.warn("Gagal SPP otomatis:", err);
+  }
 }
 async function catatPembayaranTagihan(billId, { jumlah, metode, keterangan }){
   const bill = await getDocument("tagihanSantri", billId);
@@ -1744,8 +1831,8 @@ async function renderDashboardUstadzah(){
   const izinHariIni = izinList.filter(z => z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today));
   const ustadzahKlaim = new Set(klaimAktif.flatMap(getJilidUstadzahIds));
   const riwayatIzin = izinList.filter(z => z.jenis === "ustadzah" ? (z.ustadzahId === currentProfile.uid || ustadzahKlaim.has(z.ustadzahId)) : santriKelasIds.has(z.santriId)).sort(byCreatedDesc).slice(0, 10);
-  const tagihanList = await fresh("tagihanSantri");
-  const tabunganAll = await fresh("tabungan");
+  const tagihanList = await getCollectionData("tagihanSantri");
+  const tabunganAll = await getCollectionData("tabungan");
   const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanPerSantri = {};
   tagihanList.forEach(bill => {
@@ -2082,7 +2169,11 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
 async function openKeuanganSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
-  const [settings, tagihan, tabunganList] = await Promise.all([getAppSettings(), fresh("tagihanSantri"), fresh("tabungan")]);
+  const [settings, tagihan, tabunganList] = await Promise.all([
+    getAppSettings(),
+    getCollectionData("tagihanSantri"),    // ← bukan fresh
+    getCollectionData("tabungan")          // ← bukan fresh
+  ]);
   const bills = tagihan.filter(x => x.santriId === santriId);
   const editable = currentProfile.role !== "wali";
   openModal(`💰 Keuangan — ${esc(santri.nama)}`, `<div id="keuanganModalContent">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable })}</div>`);
@@ -2101,19 +2192,21 @@ async function openKeuanganSantriModal(santriId){
         if(!iuranBelum.length) return showToast("Semua iuran sudah lunas.", true);
         openCatatPembayaranModal(iuranBelum, () => openKeuanganSantriModal(santriId));
       }
-      else if(aksi === "backfill"){
-        openBackfillNunggakModal({
-          santri, settings,
-          onSuccess: async () => {
-            const freshTagihan = await fresh("tagihanSantri");
-            const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
-            await openKeuanganSantriModal(santriId);
-            if(sppBelum.length){
-              setTimeout(() => openCatatPembayaranModal(sppBelum, () => openKeuanganSantriModal(santriId)), 350);
-            }
-          }
-        });
+else if(aksi === "backfill"){
+  openBackfillNunggakModal({
+    santri, settings,
+    onSuccess: async () => {
+      // Cukup 1x fresh — pakai hasilnya untuk 2 keperluan
+      const freshTagihan = await fresh("tagihanSantri");
+      const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
+      // Buka ulang modal keuangan (data sudah di-cache dari fresh di atas)
+      await openKeuanganSantriModal(santriId);
+      if(sppBelum.length){
+        setTimeout(() => openCatatPembayaranModal(sppBelum, () => openKeuanganSantriModal(santriId)), 350);
       }
+    }
+  });
+}
       else if(aksi === "setor"){
         openTabunganModal({ santriList: [santri], tabunganList: tabunganNow, jenis: "setor", santriId: santri.id, onSaved: () => openKeuanganSantriModal(santriId) });
       }
@@ -2128,7 +2221,10 @@ async function openKeuanganSantriModal(santriId){
 async function openRiwayatSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
-  const [riwayatList, jilidList] = await Promise.all([fresh("riwayat"), getCollectionData("jilid")]);
+  const [riwayatList, jilidList] = await Promise.all([
+    getCollectionData("riwayat"),      // ← bukan fresh
+    getCollectionData("jilid")
+  ]);
   const jilid = jilidList.find(j => j.id === santri.jilidId) || null;
   const riwayat = riwayatList.filter(r => r.santriId === santriId).sort(byCreatedDesc);
   const rekap = hitungRekapPembelajaran(riwayat);
@@ -2153,7 +2249,7 @@ async function renderDashboardWali(){
     if(j) namaPengampu(j, ustadzahList).forEach(n => pendampingSet.add(n));
   });
   const pendamping = [...pendampingSet].join(", ");
-  const tagihanList = await fresh("tagihanSantri");
+  const tagihanList = await getCollectionData("tagihanSantri");
   const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanAnanda = {};
   tagihanList.forEach(bill => {
@@ -2347,7 +2443,7 @@ async function openPembelajaranWaliModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
   if(santri.waliUid !== currentProfile.uid) return showToast("Akses ditolak.", true);
-  const [jilidList, ustadzahList, progress, riwayatList] = await Promise.all([getCollectionData("jilid"), getCollectionData("ustadzah"), getCollectionData("progress"), fresh("riwayat")]);
+  const [jilidList, ustadzahList, progress, riwayatList] = await Promise.all([getCollectionData("jilid"), getCollectionData("ustadzah"), getCollectionData("progress"), getCollectionData("riwayat")]);
   const jilid = jilidList.find(j => j.id === santri.jilidId) || null;
   const pendamping = jilid ? namaPengampu(jilid, ustadzahList).join(", ") : "";
   const riwayat = riwayatList.filter(r => r.santriId === santri.id).sort(byCreatedDesc).slice(0, 10);
@@ -2423,7 +2519,7 @@ async function renderDashboardAdmin(){
 /* ============ PENGUMUMAN ============ */
 async function renderPengumuman(){
   const isAdmin = currentProfile.role === "admin";
-  const all = await fresh("pengumuman");
+  const all = await getCollectionData("pengumuman");
   let filterStatus = "semua";
   const terapkanFilter = list => {
     if(!isAdmin) return list.filter(isPengumumanTampil);
@@ -2518,7 +2614,7 @@ async function renderDataUserAdmin(){
   };
 
   async function renderTabSantri(){
-    const [data, ctx] = await Promise.all([fresh("santri"), loadKehadiranContext()]);
+    const [data, ctx] = await Promise.all([getCollectionData("santri"), loadKehadiranContext()]);
     const today = todayStr();
     $("dataUserContent").innerHTML = `
       <div class="toolbar"><input id="searchSantri" class="search-box" placeholder="Cari nama santri..."><div class="actions"><button class="btn btn-light btn-sm" id="btnTemplateSantri">⬇ Template</button><button class="btn btn-info btn-sm" id="btnImportSantri">⬆ Import</button><button class="btn btn-sm" id="addSantri">+ Santri</button></div></div>
@@ -2541,7 +2637,7 @@ async function renderDataUserAdmin(){
   }
 
   async function renderTabWali(){
-    const data = await fresh("wali");
+    const data = await getCollectionData("wali");
     $("dataUserContent").innerHTML = `<div class="toolbar"><input id="searchWali" class="search-box" placeholder="Cari nama/email..."><button class="btn btn-sm" id="addWali">+ Wali</button></div>${dataTable("tableWali", ["No","Nama","Email","Telepon","Status",""], data.map((w,i) => `<tr data-row><td>${i+1}</td><td><b>${esc(w.nama)}</b></td><td>${esc(w.email)}</td><td>${esc(w.telepon || "-")}</td><td>${badgeAktif(w)}</td><td>${rowActions(w.id)}</td></tr>`), "Belum ada akun wali.")}`;
     attachTableSearch("searchWali","tableWali");
     $("addWali").addEventListener("click", () => openAkunForm("wali", null, renderTabWali));
@@ -2555,7 +2651,7 @@ async function renderDataUserAdmin(){
   }
 
   async function renderTabUstadzah(){
-    const [data, jilid] = await Promise.all([fresh("ustadzah"), fresh("jilid")]);
+    const [data, jilid] = await Promise.all([getCollectionData("ustadzah"), getCollectionData("jilid")]);
     const kelasDari = u => jilid.filter(j => getJilidUstadzahIds(j).includes(u.id)).map(j => j.nama).join(", ") || (u.jilidNames || []).join(", ") || "Belum diatur";
     $("dataUserContent").innerHTML = `<div class="toolbar"><input id="searchUstadzah" class="search-box" placeholder="Cari nama/email..."><button class="btn btn-sm" id="addUstadzah">+ Ustadzah</button></div>${dataTable("tableUstadzah", ["No","Nama","Email","Kelas","Status",""], data.map((u,i) => `<tr data-row><td>${i+1}</td><td><b>${esc(u.nama)}</b></td><td>${esc(u.email)}</td><td>${esc(kelasDari(u))}</td><td>${badgeAktif(u)}</td><td>${rowActions(u.id)}</td></tr>`), "Belum ada akun ustadzah.")}`;
     attachTableSearch("searchUstadzah","tableUstadzah");
@@ -2736,7 +2832,7 @@ async function renderRuangNgajiAdmin(){
   }
 
   async function renderTabHasil(){
-    const [santriList, jilidList, riwayatList] = await Promise.all([fresh("santri"), fresh("jilid"), fresh("riwayat")]);
+    const [santriList, jilidList, riwayatList] = await Promise.all([getCollectionData("santri"), getCollectionData("jilid"), getCollectionData("riwayat")]);
     $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div><div id="hasilBelajarBody"></div>`;
     function renderKonten(){
       const jid = $("filterJilidHasil").value;
@@ -2755,7 +2851,7 @@ async function renderRuangNgajiAdmin(){
   }
 
   async function renderTabHarian(){
-    const [jilidList, santriList, ctx] = await Promise.all([fresh("jilid"), fresh("santri"), loadKehadiranContext()]);
+    const [jilidList, santriList, ctx] = await Promise.all([getCollectionData("jilid"), getCollectionData("santri"), loadKehadiranContext()]);
     const today = todayStr();
     const kelasAktif = jilidList.filter(j => j.aktif !== false);
     $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px"><div class="row">${fg("Tanggal", `<input id="rekapTanggal" type="date" value="${today}" max="${today}">`)}${fg("Kelas / jilid", `<select id="rekapJilid"><option value="">Semua kelas</option>${kelasAktif.map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`)}</div></div><div id="rekapHarianBody"></div>`;
@@ -2800,7 +2896,7 @@ async function openJilidForm(item, onSaved){
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
   await ensureSppBulanIni();
-  const [settings, tagihan, tabunganList, infaqList, donaturList, pengeluaranList, santriAll] = await Promise.all([getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan"), fresh("infaq"), fresh("donatur"), fresh("pengeluaran"), getCollectionData("santri")]);
+  const [settings, tagihan, tabunganList, infaqList, donaturList, pengeluaranList, santriAll] = await Promise.all([getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan"), getCollectionData("infaq"), getCollectionData("donatur"), getCollectionData("pengeluaran"), getCollectionData("santri")]);
   const tgl = num(settings.sppTanggalPeringatan || 10);
   const { key: periodeIni } = getPeriodeSekarang();
   const santriAktif = santriAll.filter(s => s.aktif !== false);
