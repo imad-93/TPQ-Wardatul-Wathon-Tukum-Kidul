@@ -324,17 +324,85 @@ const DAFTAR_SHOLAT = ["Subuh", "Dhuhur", "Ashar", "Maghrib", "Isya"];
 const ICON_SHOLAT = { Subuh:"🌄", Dhuhur:"☀️", Ashar:"🌤️", Maghrib:"🌆", Isya:"🌙" };
 const PIKET_LABEL = { kebersihan:"🧹 Kebersihan", adzan:"📢 Adzan", iqomah:"🕌 Iqomah", pujian:"🎵 Pujian", imam:"👨‍🏫 Imam" };
 
-/* Kurikulum default mingguan */
+/* Kurikulum default mingguan (dipakai hanya saat pertama kali init) */
 const KURIKULUM_DEFAULT = {
-  6: { label: "Dirosati", aktivitas: { "1-6": "Membaca Dirosati" } },
-  0: { label: "Dirosati", aktivitas: { "1-6": "Membaca Dirosati" } },
-  1: { label: "Dirosati", aktivitas: { "1-6": "Membaca Dirosati" } },
-  2: { label: "Dirosati", aktivitas: { "1-6": "Membaca Dirosati" } },
-  3: { label: "Menulis", aktivitas: { "1": "Belajar menulis Hijaiyah", "2-3": "Belajar menulis pego", "4-6": "Belajar menulis pego, fiqih, dan tauhid" } },
-  4: { label: "Ubudiyah & Amaliyah", aktivitas: { "1-3": "Belajar ubudiyah", "4-6": "Membaca Yasin, tahlil, istighosah, diba', barzanji, dan ubudiyah bergantian" } },
-  5: { label: "Libur", aktivitas: {} }
+  6: { // Sabtu
+    label: "Dirosati",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 6, teks: "Membaca Dirosati" }
+    ]
+  },
+  0: { // Minggu
+    label: "Dirosati",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 6, teks: "Membaca Dirosati" }
+    ]
+  },
+  1: { // Senin
+    label: "Dirosati",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 6, teks: "Membaca Dirosati" }
+    ]
+  },
+  2: { // Selasa
+    label: "Dirosati",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 6, teks: "Membaca Dirosati" }
+    ]
+  },
+  3: { // Rabu
+    label: "Menulis",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 1, teks: "Belajar menulis Hijaiyah" },
+      { jilidMin: 2, jilidMax: 3, teks: "Belajar menulis pego" },
+      { jilidMin: 4, jilidMax: 6, teks: "Belajar menulis pego, fiqih, dan tauhid" }
+    ]
+  },
+  4: { // Kamis
+    label: "Ubudiyah & Amaliyah",
+    aktivitas: [
+      { jilidMin: 1, jilidMax: 3, teks: "Belajar ubudiyah" },
+      { jilidMin: 4, jilidMax: 6, teks: "Membaca Yasin, tahlil, istighosah, diba', barzanji, dan ubudiyah bergantian" }
+    ]
+  },
+  5: { // Jumat
+    label: "Libur",
+    aktivitas: []
+  }
 };
 
+// Helper: cek apakah jilidName cocok dengan range
+function jilidDalamRange(jilidNama, min, max){
+  if(!jilidNama) return false;
+  const nama = String(jilidNama).toLowerCase();
+  let angka = null;
+  const match = nama.match(/(\d+)/);
+  if(match) angka = Number(match[1]);
+  else if(/qur|quran|al-qur/i.test(nama)) angka = 6;
+  else if(/dirosati/i.test(nama)) angka = 1;
+  if(angka === null) return false;
+  return angka >= min && angka <= max;
+}
+
+// Helper: ambil aktivitas untuk jilid tertentu di hari tertentu
+function aktivitasUntukJilid(jilidNama, kurikulum){
+  const hari = nowWIB().getDay();
+  const kur = kurikulum?.[hari];
+  if(!kur || !Array.isArray(kur.aktivitas)) return null;
+  for(const item of kur.aktivitas){
+    if(jilidDalamRange(jilidNama, num(item.jilidMin), num(item.jilidMax))){
+      return item.teks;
+    }
+  }
+  return null;
+}
+
+// Helper: dapatkan label kurikulum hari ini
+function labelKurikulumHariIni(kurikulum){
+  const hari = nowWIB().getDay();
+  const kur = kurikulum?.[hari];
+  return kur?.label || "—";
+}
 /* ============ FIREBASE ============ */
 const primaryApp = initializeApp(firebaseConfig);
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
@@ -613,32 +681,6 @@ function isWaktuJamaah(settings){
   return jam >= jamaahJamMulai(settings) && jam < jamaahJamSelesai(settings);
 }
 
-/* ===== KURIKULUM HELPER ===== */
-function cocokkanJilid(kurikulumKey, jilidNama){
-  if(!jilidNama) return false;
-  const nama = String(jilidNama).toLowerCase();
-  let angka = null;
-  const match = nama.match(/(\d+)/);
-  if(match) angka = Number(match[1]);
-  else if(/qur|quran|al-qur/i.test(nama)) angka = 6;
-  else if(/dirosati/i.test(nama)) angka = 1;
-  if(angka === null) return false;
-  const clean = String(kurikulumKey).trim();
-  const parts = clean.split("-").map(x => x.trim());
-  if(parts.length === 1) return Number(parts[0]) === angka;
-  const min = Number(parts[0]);
-  const max = Number(parts[1]);
-  return angka >= min && angka <= max;
-}
-function aktivitasUntukJilid(jilidNama, kurikulum){
-  const hari = nowWIB().getDay();
-  const kur = kurikulum?.[hari];
-  if(!kur || !kur.aktivitas) return null;
-  for(const key of Object.keys(kur.aktivitas)){
-    if(cocokkanJilid(key, jilidNama)) return kur.aktivitas[key];
-  }
-  return null;
-}
 
 /* ===== PIKET HELPER ===== */
 function getPiketForDay(piketData, hari){
@@ -1679,8 +1721,16 @@ async function renderDashboardUstadzah(){
           ${piketHari.pujian ? `<div><b>${PIKET_LABEL.pujian}:</b> ${esc(santri.find(s => s.id === piketHari.pujian)?.nama || "?")}</div>` : ""}
           ${piketHari.imam ? `<div><b>${PIKET_LABEL.imam}:</b> ${esc(ustadzahList.find(u => u.id === piketHari.imam)?.nama || "?")}</div>` : ""}
         </div></div>` : ""}
-        ${kurHari ? `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0"><h3 style="margin:0;color:#166534">📚 Kurikulum — ${NAMA_HARI[hari]}</h3><div style="margin-top:10px;font-size:13px;line-height:1.6"><div style="margin-bottom:8px"><b>Label:</b> ${esc(kurHari.label || "-")}</div>${Object.entries(kurHari.aktivitas || {}).map(([key, val]) => `<div style="margin-bottom:4px"><b class="muted">Jilid ${esc(key)}:</b> ${esc(val)}</div>`).join("")}</div></div>` : ""}
-      </div>`;
+${kurHari ? `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0">
+  <h3 style="margin:0;color:#166534">📚 Kurikulum — ${NAMA_HARI[hari]}</h3>
+  <div style="margin-top:10px;font-size:13px;line-height:1.6">
+    <div style="margin-bottom:8px"><b>Label:</b> ${esc(kurHari.label || "-")}</div>
+    ${(kurHari.aktivitas || []).map(a =>
+      `<div style="margin-bottom:4px"><b class="muted">Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`
+    ).join("")}
+  </div>
+</div>` : ""}
+</div>`;
     })()}
     ${jumlahWajibJamaah ? `<div class="card info" style="margin-bottom:12px"><b style="color:#1e40af">🕌 ${jumlahWajibJamaah} santri wajib sholat berjamaah</b><div class="muted small" style="margin-top:4px">Aktifkan/nonaktifkan di panel Baca/Hafalan pada kolom Wajib Jamaah.</div></div>` : ""}
     ${peringatanSantriSingkat(rekapSantri, settings)}
@@ -2068,7 +2118,7 @@ async function renderDashboardWali(){
         const kur = settings.kurikulum || KURIKULUM_DEFAULT;
         const kurHari = kur[nowWIB().getDay()];
         if(!kurHari || !kurHari.label || kurHari.label === "Libur") return "";
-        return `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:12px"><h3 style="margin:0;color:#166534">📚 Aktivitas Hari Ini — ${NAMA_HARI[nowWIB().getDay()]}</h3><div class="muted small" style="margin-top:4px">${esc(kurHari.label)}</div><div style="margin-top:10px;font-size:13px;line-height:1.6">${Object.entries(kurHari.aktivitas || {}).map(([key, val]) => `<div style="margin-bottom:4px"><b class="muted">Jilid ${esc(key)}:</b> ${esc(val)}</div>`).join("")}</div></div>`;
+        return `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:12px"><h3 style="margin:0;color:#166534">📚 Aktivitas Hari Ini — ${NAMA_HARI[nowWIB().getDay()]}</h3><div class="muted small" style="margin-top:4px">${esc(kurHari.label)}</div><div style="margin-top:10px;font-size:13px;line-height:1.6">${(kurHari.aktivitas || []).map(a => `<div style="margin-bottom:4px"><b class="muted">Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`).join("")}</div></div>`;
       })()}
       <div class="card">
         <h3>Ananda</h3>
@@ -2874,12 +2924,15 @@ async function renderPengaturanAdmin(){
         </form>
       </div>
 
-      <div class="card" style="margin-bottom:12px">
-        <h3>📚 Kurikulum Pembelajaran Mingguan</h3>
-        <p class="muted small">Aktivitas otomatis muncul di dashboard sesuai hari & jilid santri.</p>
-        <div id="kurikulumPreview" style="margin-top:12px"></div>
-        <button class="btn" id="btnResetKurikulum" style="margin-top:12px">↺ Reset ke Default</button>
-      </div>
+<div class="card" style="margin-bottom:12px">
+  <h3>📚 Kurikulum Pembelajaran Mingguan</h3>
+  <p class="muted small">Aktivitas otomatis muncul di dashboard sesuai hari & jilid santri.</p>
+  <div id="kurikulumPreview" style="margin-top:12px"></div>
+  <div class="actions" style="margin-top:12px">
+    <button class="btn" id="btnEditKurikulum">✏️ Edit Kurikulum</button>
+    <button class="btn btn-light" id="btnResetKurikulum">↺ Reset ke Default</button>
+  </div>
+</div>
 
       <div class="card" style="margin-bottom:12px">
         <h3>🏖️ Hari Libur</h3>
@@ -2951,20 +3004,160 @@ async function renderPengaturanAdmin(){
     });
 
     // ====== KURIKULUM PREVIEW ======
-    async function renderKurikulumPreview(){
-      const s = await getAppSettings();
-      const kur = s.kurikulum || KURIKULUM_DEFAULT;
-      $("kurikulumPreview").innerHTML = `<div class="table-container"><table><thead><tr><th>Hari</th><th>Label</th><th>Aktivitas per Jilid</th></tr></thead><tbody>${[6,0,1,2,3,4,5].map(h => { const item = kur[h]; if(!item) return ""; const aktivitas = Object.entries(item.aktivitas || {}).map(([key, val]) => `<div style="margin-bottom:4px"><b>Jilid ${esc(key)}:</b> ${esc(val)}</div>`).join("") || `<span class="muted small">—</span>`; return `<tr><td><b>${NAMA_HARI[h]}</b></td><td>${esc(item.label || "-")}</td><td>${aktivitas}</td></tr>`; }).join("")}</tbody></table></div>`;
+// ====== KURIKULUM PREVIEW (BARU) ======
+async function renderKurikulumPreview(){
+  const s = await getAppSettings();
+  const kur = s.kurikulum || KURIKULUM_DEFAULT;
+  const urutanHari = [6, 0, 1, 2, 3, 4, 5]; // Sabtu..Jumat
+
+  $("kurikulumPreview").innerHTML = `<div class="table-container"><table>
+    <thead><tr><th>Hari</th><th>Label</th><th>Aktivitas per Jilid</th></tr></thead>
+    <tbody>
+      ${urutanHari.map(h => {
+        const item = kur[h];
+        if(!item) return "";
+        const aktivitas = Array.isArray(item.aktivitas) && item.aktivitas.length
+          ? item.aktivitas.map(a => `<div style="margin-bottom:4px"><b>Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`).join("")
+          : `<span class="muted small">—</span>`;
+        return `<tr>
+          <td><b>${NAMA_HARI[h]}</b></td>
+          <td>${esc(item.label || "-")}</td>
+          <td>${aktivitas}</td>
+        </tr>`;
+      }).join("")}
+    </tbody>
+  </table></div>`;
+}
+
+renderKurikulumPreview();
+
+// ====== EDITOR KURIKULUM (MODAL) ======
+async function openKurikulumEditor(){
+  const s = await getAppSettings();
+  const kur = JSON.parse(JSON.stringify(s.kurikulum || KURIKULUM_DEFAULT));
+  const urutanHari = [6, 0, 1, 2, 3, 4, 5];
+
+  // Normalisasi: pastikan struktur array
+  urutanHari.forEach(h => {
+    if(!kur[h]) kur[h] = { label: "", aktivitas: [] };
+    if(!Array.isArray(kur[h].aktivitas)){
+      // Migrasi dari format lama (object) ke array baru
+      const old = kur[h].aktivitas || {};
+      kur[h].aktivitas = Object.entries(old).map(([key, teks]) => {
+        const parts = String(key).split("-").map(x => Number(x.trim()));
+        return {
+          jilidMin: parts[0] || 1,
+          jilidMax: parts[parts.length - 1] || 6,
+          teks: String(teks)
+        };
+      });
     }
-    renderKurikulumPreview();
-    $("btnResetKurikulum").addEventListener("click", async () => {
-      if(!confirm("Reset kurikulum ke default?")) return;
+  });
+
+  const renderHariEditor = (h, data) => {
+    const aktivitas = data.aktivitas || [];
+    return `<div class="card soft" style="margin-bottom:10px;padding:12px" data-hari-block="${h}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+        <h4 style="margin:0">📅 ${NAMA_HARI[h]}</h4>
+      </div>
+
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Label hari</label>
+        <input class="kur-label" data-hari="${h}" value="${esc(data.label || "")}" placeholder="Contoh: Dirosati, Menulis, Libur...">
+      </div>
+
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-soft)">Aktivitas per jilid</label>
+      <div class="kur-aktivitas-list" data-hari="${h}" style="display:grid;gap:8px;margin-bottom:8px">
+        ${aktivitas.map((a, idx) => `
+          <div class="kur-item" data-idx="${idx}" style="display:grid;grid-template-columns:70px 70px 1fr auto;gap:6px;align-items:center">
+            <input class="kur-min" type="number" min="1" max="12" value="${num(a.jilidMin) || 1}" title="Jilid min">
+            <input class="kur-max" type="number" min="1" max="12" value="${num(a.jilidMax) || 6}" title="Jilid max">
+            <input class="kur-teks" value="${esc(a.teks || "")}" placeholder="Aktivitas...">
+            <button type="button" class="btn btn-sm btn-danger btn-hapus-aktivitas" title="Hapus">🗑</button>
+          </div>
+        `).join("")}
+      </div>
+
+      <button type="button" class="btn btn-light btn-sm btn-tambah-aktivitas" data-hari="${h}">+ Tambah Aktivitas</button>
+    </div>`;
+  };
+
+  openModal("✏️ Edit Kurikulum Mingguan", `
+    <div class="notice" style="margin-bottom:12px">
+      <b>Tips:</b> Atur aktivitas per jilid. Contoh <b>Jilid 1–3</b> = isi min <b>1</b>, max <b>3</b>. 
+      Untuk <b>Al-Qur'an</b>, gunakan angka <b>6</b>.
+    </div>
+    <div id="kurikulumEditorBody">
+      ${urutanHari.map(h => renderHariEditor(h, kur[h])).join("")}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+      <button type="button" class="btn btn-light" id="btnBatalKurikulum">Batal</button>
+      <button type="button" class="btn" id="btnSimpanKurikulum">💾 Simpan Kurikulum</button>
+    </div>
+  `);
+
+  // Handler tambah aktivitas
+  document.querySelectorAll(".btn-tambah-aktivitas").forEach(b => b.addEventListener("click", () => {
+    const hari = b.dataset.hari;
+    const list = document.querySelector(`.kur-aktivitas-list[data-hari="${hari}"]`);
+    const idx = list.querySelectorAll(".kur-item").length;
+    const el = document.createElement("div");
+    el.className = "kur-item";
+    el.dataset.idx = idx;
+    el.style.cssText = "display:grid;grid-template-columns:70px 70px 1fr auto;gap:6px;align-items:center";
+    el.innerHTML = `<input class="kur-min" type="number" min="1" max="12" value="1" title="Jilid min"><input class="kur-max" type="number" min="1" max="12" value="6" title="Jilid max"><input class="kur-teks" placeholder="Aktivitas..."><button type="button" class="btn btn-sm btn-danger btn-hapus-aktivitas" title="Hapus">🗑</button>`;
+    list.appendChild(el);
+    el.querySelector(".btn-hapus-aktivitas").addEventListener("click", () => el.remove());
+  }));
+
+  // Handler hapus aktivitas (existing)
+  document.querySelectorAll(".btn-hapus-aktivitas").forEach(b => b.addEventListener("click", () => b.closest(".kur-item").remove()));
+
+  // Batal
+  $("btnBatalKurikulum").addEventListener("click", closeModal);
+
+  // Simpan
+  $("btnSimpanKurikulum").addEventListener("click", async () => {
+    const btn = $("btnSimpanKurikulum");
+    await busy(btn, "Menyimpan...", async () => {
       try{
-        await saveSettings({ kurikulum: KURIKULUM_DEFAULT });
-        showToast("Kurikulum direset ke default.");
+        const kurikulumBaru = {};
+        urutanHari.forEach(h => {
+          const block = document.querySelector(`[data-hari-block="${h}"]`);
+          if(!block) return;
+          const label = block.querySelector(".kur-label").value.trim();
+          const items = [...block.querySelectorAll(".kur-item")].map(item => ({
+            jilidMin: Math.max(1, num(item.querySelector(".kur-min").value) || 1),
+            jilidMax: Math.max(1, num(item.querySelector(".kur-max").value) || 1),
+            teks: item.querySelector(".kur-teks").value.trim()
+          })).filter(a => a.teks);
+          kurikulumBaru[h] = { label, aktivitas: items };
+        });
+        await saveSettings({ kurikulum: kurikulumBaru });
+        logAudit("UPDATE","settings","app",{ kurikulum:true });
+        showToast("Kurikulum disimpan.");
+        closeModal();
         renderKurikulumPreview();
-      }catch(err){ showToast(firebaseError(err), true); }
+      }catch(err){
+        console.error(err);
+        showToast(firebaseError(err), true);
+      }
     });
+  });
+}
+
+// Tombol Edit
+$("btnEditKurikulum")?.addEventListener("click", openKurikulumEditor);
+
+// Tombol Reset
+$("btnResetKurikulum").addEventListener("click", async () => {
+  if(!confirm("Reset kurikulum ke default?")) return;
+  try{
+    await saveSettings({ kurikulum: KURIKULUM_DEFAULT });
+    showToast("Kurikulum direset ke default.");
+    renderKurikulumPreview();
+  }catch(err){ showToast(firebaseError(err), true); }
+});
 
     onSave("settingsForm","settingsSaveBtn", async () => {
       await saveSettings({ nama: $("settingNama").value.trim(), alamat: $("settingAlamat").value.trim(), whatsapp: $("settingWhatsapp").value.trim(), periode: $("settingPeriode").value.trim(), pesan: $("settingPesan").value.trim() });
