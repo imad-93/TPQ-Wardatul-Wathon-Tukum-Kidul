@@ -430,29 +430,39 @@ function aktivitasUntukSantri(santri, kurikulum){
   }
   if(!listAktivitas.length) return null;
 
-  // ===== TAHAP 1: Cari aktivitas yang secara SPESIFIK mencantumkan jilidId santri =====
-  const spesifikList = listAktivitas.filter(item =>
-    Array.isArray(item.jilidIds) &&
-    item.jilidIds.length &&
-    item.jilidIds.includes(santri.jilidId)
-  );
+  // ===== Kumpulkan semua yang cocok (spesifik + fallback) =====
+  const cocokList = [];
 
-  if(spesifikList.length){
-    // Ada aktivitas spesifik → HANYA pakai yang spesifik (tidak digabung dengan fallback)
-    return spesifikList.map(item => item.teks).filter(Boolean).join(", ");
-  }
-
-  // ===== TAHAP 2: Fallback — cari aktivitas via angka jilid (untuk format lama) =====
-  const angka = angkaJilid(santri.jilidNama);
-  if(angka === null) return null;
-
-  const fallbackList = listAktivitas.filter(item => {
-    if(Array.isArray(item.jilidIds) && item.jilidIds.length) return false; // skip yang sudah pakai jilidIds
-    return angka >= num(item.jilidMin) && angka <= num(item.jilidMax);
+  // 1. Cek yang SPESIFIK (punya jilidIds & termasuk jilidId santri)
+  listAktivitas.forEach(item => {
+    if(Array.isArray(item.jilidIds) && item.jilidIds.length && item.jilidIds.includes(santri.jilidId)){
+      cocokList.push({
+        teks: item.teks,
+        jumlahJilid: item.jilidIds.length,   // ← untuk prioritas
+        spesifik: true
+      });
+    }
   });
 
-  if(!fallbackList.length) return null;
-  return fallbackList.map(item => item.teks).filter(Boolean).join(", ");
+  // 2. Kalau TIDAK ADA yang spesifik → fallback ke angka
+  if(!cocokList.length){
+    const angka = angkaJilid(santri.jilidNama);
+    if(angka === null) return null;
+    listAktivitas.forEach(item => {
+      if(Array.isArray(item.jilidIds) && item.jilidIds.length) return; // skip, sudah tidak cocok
+      if(angka >= num(item.jilidMin) && angka <= num(item.jilidMax)){
+        cocokList.push({ teks: item.teks, jumlahJilid: num(item.jilidMax) - num(item.jilidMin) + 1, spesifik: false });
+      }
+    });
+  }
+
+  if(!cocokList.length) return null;
+
+  // ===== Prioritas: pilih yang paling SEDIKIT jilid (paling spesifik) =====
+  const minimalJilid = Math.min(...cocokList.map(x => x.jumlahJilid));
+  const terpilih = cocokList.filter(x => x.jumlahJilid === minimalJilid);
+
+  return terpilih.map(x => x.teks).filter(Boolean).join(", ");
 }
 /* Helper lama (dipertahankan untuk backward compat) */
 function aktivitasUntukJilid(jilidNama, kurikulum){
