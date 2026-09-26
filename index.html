@@ -393,25 +393,7 @@ function labelKurikulumHariIni(kurikulum){
   return kurikulum?.[hari]?.label || "—";
 }
 
-// Helper: ambil aktivitas untuk jilid tertentu di hari tertentu
-function aktivitasUntukJilid(jilidNama, kurikulum){
-  const hari = nowWIB().getDay();
-  const kur = kurikulum?.[hari];
-  if(!kur || !Array.isArray(kur.aktivitas)) return null;
-  for(const item of kur.aktivitas){
-    if(jilidDalamRange(jilidNama, num(item.jilidMin), num(item.jilidMax))){
-      return item.teks;
-    }
-  }
-  return null;
-}
 
-// Helper: dapatkan label kurikulum hari ini
-function labelKurikulumHariIni(kurikulum){
-  const hari = nowWIB().getDay();
-  const kur = kurikulum?.[hari];
-  return kur?.label || "—";
-}
 /* ============ FIREBASE ============ */
 const primaryApp = initializeApp(firebaseConfig);
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
