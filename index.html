@@ -2994,12 +2994,35 @@ async function renderPengaturanAdmin(){
       });
     });
 
-    // ====== KURIKULUM PREVIEW ======
-// ====== KURIKULUM PREVIEW (BARU) ======
 async function renderKurikulumPreview(){
-  const s = await getAppSettings();
+  const [s, jilidList] = await Promise.all([getAppSettings(), getCollectionData("jilid")]);
   const kur = s.kurikulum || KURIKULUM_DEFAULT;
-  const urutanHari = [6, 0, 1, 2, 3, 4, 5]; // Sabtu..Jumat
+  const jilidMap = new Map(jilidList.map(j => [j.id, j.nama || "-"]));
+  const urutanHari = [6, 0, 1, 2, 3, 4, 5];
+
+  // Helper: konversi item aktivitas ke text jilid (handle SEMUA format lama & baru)
+  const labelJilid = (a) => {
+    // Format 1: jilidIds array (BARU) — prioritas
+    if(Array.isArray(a.jilidIds) && a.jilidIds.length){
+      const namaList = a.jilidIds.map(id => jilidMap.get(id)).filter(Boolean);
+      if(namaList.length === 1) return namaList[0];
+      if(namaList.length === 2) return `${namaList[0]} & ${namaList[1]}`;
+      if(namaList.length === 3) return `${namaList[0]}, ${namaList[1]} & ${namaList[2]}`;
+      return `${namaList.slice(0,2).join(", ")} & ${namaList.length - 2} lainnya`;
+    }
+    // Format 2: jilidMin/jilidMax (LAMA)
+    if(a.jilidMin !== undefined && a.jilidMax !== undefined){
+      const min = num(a.jilidMin), max = num(a.jilidMax);
+      return min === max ? `Jilid ${min}` : `Jilid ${min}–${max}`;
+    }
+    // Format 3: single jilidId
+    if(a.jilidId){
+      return jilidMap.get(a.jilidId) || "—";
+    }
+    // Format 4: key object (paling lama)
+    if(typeof a === "string") return "—";
+    return "—";
+  };
 
   $("kurikulumPreview").innerHTML = `<div class="table-container"><table>
     <thead><tr><th>Hari</th><th>Label</th><th>Aktivitas per Jilid</th></tr></thead>
@@ -3007,9 +3030,31 @@ async function renderKurikulumPreview(){
       ${urutanHari.map(h => {
         const item = kur[h];
         if(!item) return "";
-        const aktivitas = Array.isArray(item.aktivitas) && item.aktivitas.length
-          ? item.aktivitas.map(a => `<div style="margin-bottom:4px"><b>Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`).join("")
+        let listAktivitas = [];
+        // Handle aktivitas sebagai array (format baru)
+        if(Array.isArray(item.aktivitas)){
+          listAktivitas = item.aktivitas;
+        }
+        // Handle aktivitas sebagai object (format lama: { "1-6": "..." })
+        else if(item.aktivitas && typeof item.aktivitas === "object"){
+          listAktivitas = Object.entries(item.aktivitas).map(([key, teks]) => {
+            // Parse key "1-6" → { jilidMin: 1, jilidMax: 6 }
+            const parts = String(key).split("-").map(x => Number(x.trim()));
+            return {
+              jilidMin: parts[0] || 1,
+              jilidMax: parts[parts.length - 1] || 6,
+              teks: String(teks || "")
+            };
+          });
+        }
+
+        const aktivitas = listAktivitas.length
+          ? listAktivitas.map(a => {
+              const nama = labelJilid(a);
+              return `<div style="margin-bottom:4px"><b>${esc(nama)}:</b> ${esc(a.teks || "")}</div>`;
+            }).join("")
           : `<span class="muted small">—</span>`;
+
         return `<tr>
           <td><b>${NAMA_HARI[h]}</b></td>
           <td>${esc(item.label || "-")}</td>
@@ -3019,7 +3064,6 @@ async function renderKurikulumPreview(){
     </tbody>
   </table></div>`;
 }
-
 renderKurikulumPreview();
 
 // ====== EDITOR KURIKULUM (MODAL) — Sinkron dengan Jilid/Kelas ======
