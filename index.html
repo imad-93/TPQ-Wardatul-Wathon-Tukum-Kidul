@@ -1716,9 +1716,38 @@ ${kurHari ? `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d
   <h3 style="margin:0;color:#166534">📚 Kurikulum — ${NAMA_HARI[hari]}</h3>
   <div style="margin-top:10px;font-size:13px;line-height:1.6">
     <div style="margin-bottom:8px"><b>Label:</b> ${esc(kurHari.label || "-")}</div>
-    ${(kurHari.aktivitas || []).map(a =>
-      `<div style="margin-bottom:4px"><b class="muted">Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`
-    ).join("")}
+    ${(() => {
+      // Normalisasi: object lama → array baru
+      let listAktivitas = [];
+      if(Array.isArray(kurHari.aktivitas)){
+        listAktivitas = kurHari.aktivitas;
+      } else if(kurHari.aktivitas && typeof kurHari.aktivitas === "object"){
+        listAktivitas = Object.entries(kurHari.aktivitas).map(([key, teks]) => {
+          const parts = String(key).split("-").map(x => Number(x.trim()));
+          return { jilidMin: parts[0] || 1, jilidMax: parts[parts.length - 1] || 6, teks: String(teks || "") };
+        });
+      }
+
+      const jilidMap = new Map(jilidList.map(j => [j.id, j.nama || "-"]));
+      const labelJilid = a => {
+        if(Array.isArray(a.jilidIds) && a.jilidIds.length){
+          const namaList = a.jilidIds.map(id => jilidMap.get(id)).filter(Boolean);
+          if(!namaList.length) return "—";
+          if(namaList.length === 1) return namaList[0];
+          if(namaList.length === 2) return `${namaList[0]} & ${namaList[1]}`;
+          return `${namaList.slice(0,2).join(", ")} & ${namaList.length - 2} lainnya`;
+        }
+        if(a.jilidMin !== undefined && a.jilidMax !== undefined){
+          const min = num(a.jilidMin), max = num(a.jilidMax);
+          return min === max ? `Jilid ${min}` : `Jilid ${min}–${max}`;
+        }
+        return "—";
+      };
+
+      return listAktivitas.map(a =>
+        `<div style="margin-bottom:4px"><b class="muted">${esc(labelJilid(a))}:</b> ${esc(a.teks || "")}</div>`
+      ).join("");
+    })()}
   </div>
 </div>` : ""}
 </div>`;
@@ -2105,12 +2134,48 @@ async function renderDashboardWali(){
     </div>
 
     <div class="menu-panel" id="panel-ananda">
-      ${(() => {
-        const kur = settings.kurikulum || KURIKULUM_DEFAULT;
-        const kurHari = kur[nowWIB().getDay()];
-        if(!kurHari || !kurHari.label || kurHari.label === "Libur") return "";
-        return `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:12px"><h3 style="margin:0;color:#166534">📚 Aktivitas Hari Ini — ${NAMA_HARI[nowWIB().getDay()]}</h3><div class="muted small" style="margin-top:4px">${esc(kurHari.label)}</div><div style="margin-top:10px;font-size:13px;line-height:1.6">${(kurHari.aktivitas || []).map(a => `<div style="margin-bottom:4px"><b class="muted">Jilid ${a.jilidMin}${a.jilidMax !== a.jilidMin ? `–${a.jilidMax}` : ""}:</b> ${esc(a.teks || "")}</div>`).join("")}</div></div>`;
-      })()}
+${(() => {
+  const kur = settings.kurikulum || KURIKULUM_DEFAULT;
+  const kurHari = kur[nowWIB().getDay()];
+  if(!kurHari || !kurHari.label || kurHari.label === "Libur") return "";
+
+  // Normalisasi: object lama → array baru
+  let listAktivitas = [];
+  if(Array.isArray(kurHari.aktivitas)){
+    listAktivitas = kurHari.aktivitas;
+  } else if(kurHari.aktivitas && typeof kurHari.aktivitas === "object"){
+    listAktivitas = Object.entries(kurHari.aktivitas).map(([key, teks]) => {
+      const parts = String(key).split("-").map(x => Number(x.trim()));
+      return { jilidMin: parts[0] || 1, jilidMax: parts[parts.length - 1] || 6, teks: String(teks || "") };
+    });
+  }
+
+  const jilidMap = new Map(jilidList.map(j => [j.id, j.nama || "-"]));
+  const labelJilid = a => {
+    if(Array.isArray(a.jilidIds) && a.jilidIds.length){
+      const namaList = a.jilidIds.map(id => jilidMap.get(id)).filter(Boolean);
+      if(!namaList.length) return "—";
+      if(namaList.length === 1) return namaList[0];
+      if(namaList.length === 2) return `${namaList[0]} & ${namaList[1]}`;
+      return `${namaList.slice(0,2).join(", ")} & ${namaList.length - 2} lainnya`;
+    }
+    if(a.jilidMin !== undefined && a.jilidMax !== undefined){
+      const min = num(a.jilidMin), max = num(a.jilidMax);
+      return min === max ? `Jilid ${min}` : `Jilid ${min}–${max}`;
+    }
+    return "—";
+  };
+
+  return `<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:12px">
+    <h3 style="margin:0;color:#166534">📚 Aktivitas Hari Ini — ${NAMA_HARI[nowWIB().getDay()]}</h3>
+    <div class="muted small" style="margin-top:4px">${esc(kurHari.label)}</div>
+    <div style="margin-top:10px;font-size:13px;line-height:1.6">
+      ${listAktivitas.map(a =>
+        `<div style="margin-bottom:4px"><b class="muted">${esc(labelJilid(a))}:</b> ${esc(a.teks || "")}</div>`
+      ).join("")}
+    </div>
+  </div>`;
+})()}
       <div class="card">
         <h3>Ananda</h3>
         ${santri.length ? `<div class="grid grid-2" style="margin-top:10px">${santri.map(s => {
