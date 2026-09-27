@@ -2517,7 +2517,7 @@ else if(aksi === "backfill"){
     santri, settings,
     onSuccess: async () => {
       // Cukup 1x fresh — pakai hasilnya untuk 2 keperluan
-      const freshTagihan = await fresh("tagihanSantri");
+      const freshTagihan = await getTagihanBySantriIds("tagihanSantri");
       const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
       // Buka ulang modal keuangan (data sudah di-cache dari fresh di atas)
       await openKeuanganSantriModal(santriId);
@@ -3169,30 +3169,52 @@ async function renderTabHasil(){
     getCollectionData("santri"),
     getCollectionData("jilid")
   ]);
-  // Load riwayat hanya saat filter dipilih
-  $("filterJilidHasil").addEventListener("change", async () => {
+
+  $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div><div id="hasilBelajarBody"><div class="loading-row"><span class="spinner"></span> Memuat data...</div></div>`;
+
+  function renderKonten(santriArr, riwayatArr){
+    const santri = santriArr.filter(s => s.aktif !== false);
+    if(!santri.length){
+      $("hasilBelajarBody").innerHTML = `<div class="card empty">Belum ada santri.</div>`;
+      return;
+    }
+    const rekap = santri.map(s => ({
+      santri: s,
+      ...hitungRekapPembelajaran(riwayatArr.filter(r => r.santriId === s.id))
+    })).sort((a,b) => b.persenNaik - a.persenNaik || b.total - a.total);
+    const totalNaik = rekap.reduce((s,r) => s + r.naik, 0);
+    const totalCatatan = rekap.reduce((s,r) => s + r.total, 0);
+    const kelas = hitungRekapPembelajaran(riwayatArr.filter(r => santri.some(s => s.id === r.santriId)));
+    const warna = p => p >= 70 ? "#166534" : p >= 40 ? "#d97706" : "#dc2626";
+    const medal = i => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
+    $("hasilBelajarBody").innerHTML = `
+      <div class="grid">${statCard("👨‍🎓","Santri", santri.length)}${statCard("📚","Catatan", totalCatatan)}${statCard("⬆️","Naik", totalNaik)}${statCard("🎯","% Naik", (totalCatatan ? Math.round(totalNaik / totalCatatan * 100) : 0) + "%")}</div>
+      <div class="card" style="margin-top:12px"><h3>📈 Tren kelas 7 hari</h3>${chartTren(kelas.tren)}</div>
+      <div class="card" style="margin-top:12px"><h3>🏆 Peringkat</h3><div style="margin-top:10px">${dataTable("", ["#","Santri","Total","📖","🧠","⬆️","🔄","%",""], rekap.map((r,i) => `<tr><td><b>${i+1}</b> ${medal(i)}</td><td><b>${esc(r.santri.nama)}</b></td><td>${r.total}</td><td>${r.baca}</td><td>${r.hafalan}</td><td>${badge(r.naik,"green")}</td><td>${badge(r.mengulang,"yellow")}</td><td><b style="color:${warna(r.persenNaik)}">${r.persenNaik}%</b></td><td><button class="btn btn-sm btn-info" data-riwayat-modal="${esc(r.santri.id)}">📊</button></td></tr>`), "Belum ada data.")}</div></div>`;
+    $("hasilBelajarBody").querySelectorAll("[data-riwayat-modal]").forEach(b => b.addEventListener("click", () => openRiwayatSantriModal(b.dataset.riwayatModal)));
+  }
+
+  async function loadDanRender(){
     const jid = $("filterJilidHasil").value;
     const santriFiltered = santriList.filter(s => s.aktif !== false && (!jid || s.jilidId === jid));
-    const riwayatList = await getRiwayatBySantriIds(santriFiltered.map(s => s.id), 50);
-    renderKonten(santriFiltered, riwayatList);
-  });
-
-  $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div><div id="hasilBelajarBody"></div>`;
-    function renderKonten(){
-      const jid = $("filterJilidHasil").value;
-      const santri = santriList.filter(s => s.aktif !== false && (!jid || s.jilidId === jid));
-      if(!santri.length){ $("hasilBelajarBody").innerHTML = `<div class="card empty">Belum ada santri.</div>`; return; }
-      const rekap = santri.map(s => ({ santri: s, ...hitungRekapPembelajaran(riwayatList.filter(r => r.santriId === s.id)) })).sort((a,b) => b.persenNaik - a.persenNaik || b.total - a.total);
-      const totalNaik = rekap.reduce((s,r) => s + r.naik, 0), totalCatatan = rekap.reduce((s,r) => s + r.total, 0);
-      const kelas = hitungRekapPembelajaran(riwayatList.filter(r => santri.some(s => s.id === r.santriId)));
-      const warna = p => p >= 70 ? "#166534" : p >= 40 ? "#d97706" : "#dc2626";
-      const medal = i => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-      $("hasilBelajarBody").innerHTML = `<div class="grid">${statCard("👨‍🎓","Santri", santri.length)}${statCard("📚","Catatan", totalCatatan)}${statCard("⬆️","Naik", totalNaik)}${statCard("🎯","% Naik", (totalCatatan ? Math.round(totalNaik / totalCatatan * 100) : 0) + "%")}</div><div class="card" style="margin-top:12px"><h3>📈 Tren kelas 7 hari</h3>${chartTren(kelas.tren)}</div><div class="card" style="margin-top:12px"><h3>🏆 Peringkat</h3><div style="margin-top:10px">${dataTable("", ["#","Santri","Total","📖","🧠","⬆️","🔄","%",""], rekap.map((r,i) => `<tr><td><b>${i+1}</b> ${medal(i)}</td><td><b>${esc(r.santri.nama)}</b></td><td>${r.total}</td><td>${r.baca}</td><td>${r.hafalan}</td><td>${badge(r.naik,"green")}</td><td>${badge(r.mengulang,"yellow")}</td><td><b style="color:${warna(r.persenNaik)}">${r.persenNaik}%</b></td><td><button class="btn btn-sm btn-info" data-riwayat-modal="${esc(r.santri.id)}">📊</button></td></tr>`), "Belum ada data.")}</div></div>`;
-      $("hasilBelajarBody").querySelectorAll("[data-riwayat-modal]").forEach(b => b.addEventListener("click", () => openRiwayatSantriModal(b.dataset.riwayatModal)));
+    const body = $("hasilBelajarBody");
+    if(!santriFiltered.length){
+      body.innerHTML = `<div class="card empty">Belum ada santri.</div>`;
+      return;
     }
-    $("filterJilidHasil").addEventListener("change", renderKonten);
-    renderKonten();
+    body.innerHTML = `<div class="loading-row"><span class="spinner"></span> Memuat data...</div>`;
+    try{
+      const riwayatArr = await getRiwayatBySantriIds(santriFiltered.map(s => s.id), 50);
+      renderKonten(santriFiltered, riwayatArr);
+    }catch(err){
+      console.error(err);
+      body.innerHTML = `<div class="card empty">Gagal memuat: ${esc(firebaseError(err))}</div>`;
+    }
   }
+
+  $("filterJilidHasil").addEventListener("change", loadDanRender);
+  loadDanRender();
+}
 
   async function renderTabHarian(){
     const [jilidList, santriList, ctx] = await Promise.all([getCollectionData("jilid"), getCollectionData("santri"), loadKehadiranContext()]);
@@ -3384,7 +3406,7 @@ async function renderKeuanganAdmin(){
     openBackfillNunggakModal({
       santri, settings,
       onSuccess: async () => {
-        const freshTagihan = await fresh("tagihanSantri");
+        const freshTagihan = await getTagihanBySantriIds("tagihanSantri");
         const sppBelum = freshTagihan.filter(x => x.santriId === santriId && x.jenis === "SPP" && x.status !== "lunas");
         await renderKeuanganAdmin();
         if(sppBelum.length) setTimeout(() => openCatatPembayaranModal(sppBelum, () => renderKeuanganAdmin()), 350);
