@@ -1194,7 +1194,8 @@ function izinFormCard({ isUstadzah, santriList, settings }){
 async function bindIzinForm({ isUstadzah, santriList, settings }){
   const form = $("izinForm");
   if(!form) return;
-  const izinList = await getCollectionData("izin");
+  const santriIds = santriList.map(s => s.id);
+  const izinList = await getIzinBySantriIds(santriIds, isUstadzah ? currentProfile.uid : null);
   $("izinAlasan").addEventListener("change", () => {
     const v = $("izinAlasan").value;
     $("izinKegiatanWrap").classList.toggle("hidden", v !== "kegiatan");
@@ -2150,8 +2151,8 @@ async function renderDashboardUstadzah(){
   const izinHariIni = izinList.filter(z => z.jenis !== "ustadzah" && santriKelasIds.has(z.santriId) && izinCocok(z, today));
   const ustadzahKlaim = new Set(klaimAktif.flatMap(getJilidUstadzahIds));
   const riwayatIzin = izinList.filter(z => z.jenis === "ustadzah" ? (z.ustadzahId === currentProfile.uid || ustadzahKlaim.has(z.ustadzahId)) : santriKelasIds.has(z.santriId)).sort(byCreatedDesc).slice(0, 10);
-  const tagihanList = await getCollectionData("tagihanSantri");
-  const tabunganAll = await getCollectionData("tabungan");
+  const santriIds = santri.map(s => s.id);
+  const [tagihanList, tabunganAll] = await Promise.all([ getTagihanBySantriIds(santriIds), getTabunganBySantriIds(santriIds)]);
   const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanPerSantri = {};
   tagihanList.forEach(bill => {
@@ -2568,8 +2569,7 @@ async function renderDashboardWali(){
     if(j) namaPengampu(j, ustadzahList).forEach(n => pendampingSet.add(n));
   });
   const pendamping = [...pendampingSet].join(", ");
-  const tagihanList = await getCollectionData("tagihanSantri");
-  const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
+  const tagihanList = await getTagihanBySantriIds(santri.map(s => s.id));  const sppTglPeringatan = num(settings.sppTanggalPeringatan || 10);
   const tunggakanAnanda = {};
   tagihanList.forEach(bill => {
     if(bill.jenis !== "SPP") return;
@@ -3163,10 +3163,21 @@ async function renderRuangNgajiAdmin(){
       }catch(err){ showToast(firebaseError(err), true); }
     }));
   }
+  
+async function renderTabHasil(){
+  const [santriList, jilidList] = await Promise.all([
+    getCollectionData("santri"),
+    getCollectionData("jilid")
+  ]);
+  // Load riwayat hanya saat filter dipilih
+  $("filterJilidHasil").addEventListener("change", async () => {
+    const jid = $("filterJilidHasil").value;
+    const santriFiltered = santriList.filter(s => s.aktif !== false && (!jid || s.jilidId === jid));
+    const riwayatList = await getRiwayatBySantriIds(santriFiltered.map(s => s.id), 50);
+    renderKonten(santriFiltered, riwayatList);
+  });
 
-  async function renderTabHasil(){
-    const [santriList, jilidList, riwayatList] = await Promise.all([getCollectionData("santri"), getCollectionData("jilid"), getCollectionData("riwayat")]);
-    $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div><div id="hasilBelajarBody"></div>`;
+  $("ruangNgajiContent").innerHTML = `<div class="card" style="margin-bottom:12px">${fg("Filter kelas / jilid", `<select id="filterJilidHasil"><option value="">Semua kelas</option>${jilidList.filter(j => j.aktif !== false).map(j => `<option value="${esc(j.id)}">${esc(j.nama)}</option>`).join("")}</select>`, "")}</div><div id="hasilBelajarBody"></div>`;
     function renderKonten(){
       const jid = $("filterJilidHasil").value;
       const santri = santriList.filter(s => s.aktif !== false && (!jid || s.jilidId === jid));
