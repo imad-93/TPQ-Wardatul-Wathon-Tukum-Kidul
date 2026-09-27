@@ -2138,9 +2138,16 @@ $("setupAdminButton").addEventListener("click", () => {
     onSubmit: async () => {
       const email = $("adminEmail").value.trim(), nama = $("adminName").value.trim();
       const cred = await createUserWithEmailAndPassword(auth, email, $("adminPassword").value);
-      const profile = { uid: cred.user.uid, nama, email, role:"admin", aktif:true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-      await setDoc(doc(db, "users", cred.user.uid), profile);
-      await setDoc(doc(db, "admin", cred.user.uid), profile);
+      const uid = cred.user.uid;
+      const profile = { uid, nama, email, role:"admin", aktif:true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+      
+      // 1. Buat dokumen users
+      await setDoc(doc(db, "users", uid), profile);
+      // 2. Buat mirror di koleksi admin
+      await setDoc(doc(db, "admin", uid), profile);
+      // 3. Set flag bootstrapDone — INI KUNCI AGAR BOOTSTRAP TERTUTUP
+      await setDoc(doc(db, "settings", "app"), { bootstrapDone: true, updatedAt: serverTimestamp() }, { merge:true });
+      
       showToast("Akun admin berhasil dibuat.");
     }
   });
