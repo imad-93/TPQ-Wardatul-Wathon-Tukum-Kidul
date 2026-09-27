@@ -1235,67 +1235,14 @@ async function bindIzinForm({ isUstadzah, santriList, settings }){
           : { ...base, jenis:"santri", santriId: santri.id, santriNama: santri.nama, santriJilidId: santri.jilidId || null, ustadzahId:null };
         const ref = await addCollectionData("izin", payload);
         const penggantiUid = isUstadzah && $("izinKlaimUstadzah") ? $("izinKlaimUstadzah").value : "";
-if(penggantiUid){
-  const penggantiNama = $("izinKlaimUstadzah").selectedOptions[0]?.textContent || "";
-  const jilidDiampu = (await fresh("jilid")).filter(j => getJilidUstadzahIds(j).includes(currentProfile.uid));
-  const daftarJilidNama = jilidDiampu.map(j => j.nama).join(", ");
-  
-  for(const j of jilidDiampu){
-    await updateCollectionData("jilid", j.id, {
-      substituteUid: penggantiUid,
-      substituteNama: penggantiNama,
-      substituteFrom: mulai,
-      substituteUntil: selesai,
-      substituteAlasan: `Izin ${labelAlasan(alasan)}${namaKegiatan ? " — " + namaKegiatan : ""}`,
-      substituteOlehUid: currentProfile.uid,
-      substituteOlehNama: currentProfile.nama || "",
-      substituteCreatedAt: new Date().toISOString()
-    });
-    logAudit("UPDATE","jilid",j.id,{ klaimOleh: penggantiUid, viaIzin: ref.id });
-  }
-  
-  if(jilidDiampu.length){
-    const keterangan = $("izinKeterangan")?.value.trim() || "";
-    const alasanFull = `${labelAlasan(alasan)}${namaKegiatan ? " — " + namaKegiatan : ""}`;
-    const kadaluarsa = new Date(selesai + "T23:59:59+07:00").toISOString();
-    
-    // ===== 1) PENGUMUMAN PRIVAT ke ustadzah pengganti =====
-    await addCollectionData("pengumuman", {
-      judul: `🔄 Anda menggantikan kelas: ${daftarJilidNama}`,
-      isi: `${currentProfile.nama || "Ustadzah"} mengajukan izin dan mengklaimkan kelasnya kepada Anda.\n\n📚 Kelas: ${daftarJilidNama}\n👤 Dari: ${currentProfile.nama || "Ustadzah"}\n📅 Periode: ${mulai} s/d ${selesai}\n📝 Alasan: ${alasanFull}${keterangan ? `\n💬 Keterangan: ${keterangan}` : ""}\n\nMohon dikonfirmasi kesediaannya. Jika tidak bisa, silakan hubungi ${currentProfile.nama || "yang bersangkutan"} untuk mencari pengganti lain.\n\nTerima kasih.`,
-      aktif: true,
-      berlakuSampai: kadaluarsa,
-      targetUids: [penggantiUid],
-      sumber: "klaimKelas",
-      dariUid: currentProfile.uid,
-      dariNama: currentProfile.nama || "",
-      jilidNamaList: daftarJilidNama
-    });
-    
-    // ===== 2) PENGUMUMAN UMUM ke SEMUA ustadzah (transparansi) =====
-    // Dapatkan semua ustadzah aktif kecuali A (yang izin) dan B (yang diklaimkan)
-    const semuaUstadzah = await getCollectionData("ustadzah");
-    const targetUmum = semuaUstadzah
-      .filter(u => u.aktif !== false && u.id !== currentProfile.uid && u.id !== penggantiUid)
-      .map(u => u.id);
-    
-    if(targetUmum.length){
-      await addCollectionData("pengumuman", {
-        judul: `📢 Info Kelas: ${currentProfile.nama || "Ustadzah"} izin`,
-        isi: `Diberitahukan bahwa ${currentProfile.nama || "Ustadzah"} sedang izin dan kelasnya akan digantikan sementara.\n\n👤 Ustadzah izin: ${currentProfile.nama || "Ustadzah"}\n📚 Kelas yang digantikan: ${daftarJilidNama}\n🔄 Pengganti: ${penggantiNama}\n📅 Periode: ${mulai} s/d ${selesai}\n📝 Alasan: ${alasanFull}\n\nMohon kerja samanya untuk memantau kelancaran kegiatan belajar selama masa penggantian.\n\nTerima kasih atas perhatiannya.`,
-        aktif: true,
-        berlakuSampai: kadaluarsa,
-        targetUids: targetUmum,
-        sumber: "klaimKelasUmum",
-        dariUid: currentProfile.uid,
-        dariNama: currentProfile.nama || "",
-        penggantiUid: penggantiUid,
-        penggantiNama: penggantiNama,
-        jilidNamaList: daftarJilidNama
-      });
-    }
-  }
-}
+        if(penggantiUid){
+          const penggantiNama = $("izinKlaimUstadzah").selectedOptions[0]?.textContent || "";
+          const jilidDiampu = (await fresh("jilid")).filter(j => getJilidUstadzahIds(j).includes(currentProfile.uid));
+          for(const j of jilidDiampu){
+            await updateCollectionData("jilid", j.id, { substituteUid: penggantiUid, substituteNama: penggantiNama, substituteFrom: mulai, substituteUntil: selesai, substituteAlasan: `Izin ${labelAlasan(alasan)}${namaKegiatan ? " — " + namaKegiatan : ""}` });
+            logAudit("UPDATE","jilid",j.id,{ klaimOleh: penggantiUid, viaIzin: ref.id });
+          }
+        }
         logAudit("CREATE","izin",ref.id,{ alasan, mulai, selesai });
         showToast(pesanSuksesIzin(alasan));
         renderDashboard();
@@ -1304,22 +1251,7 @@ if(penggantiUid){
   });
 }
 function riwayatIzinCard(list){
-  return `<div class="card"><h3>📋 Riwayat izin</h3><div style="margin-top:10px">${dataTable("", 
-    ["No.","Untuk","Tanggal","Alasan","Pengganti","Status"], 
-    list.map((z,i) => {
-      let penggantiInfo = `<span class="muted small">—</span>`;
-      if(z.jenis === "ustadzah" && z.penggantiNama){
-        penggantiInfo = `<b>${esc(z.penggantiNama)}</b>`;
-      }
-      return `<tr>
-        <td>${i+1}</td>
-        <td>${z.jenis === "ustadzah" ? "👩‍🏫" : "👨‍🎓"} <b>${esc(z.santriNama || "-")}</b></td>
-        <td>${esc(rangeText(z))}</td>
-        <td>${badgeAlasan(z.alasan)}${z.alasan === "kegiatan" && z.namaKegiatan ? ` ${esc(z.namaKegiatan)}` : ""}</td>
-        <td>${penggantiInfo}</td>
-        <td>${z.aktif === false ? badge("Dibatalkan","gray") : badge("Aktif","green")}</td>
-      </tr>`;
-    }), "Belum ada riwayat izin.")}</div></div>`;
+  return `<div class="card"><h3>📋 Riwayat izin</h3><div style="margin-top:10px">${dataTable("", ["No.","Untuk","Tanggal","Alasan","Status"], list.map((z,i) => `<tr><td>${i+1}</td><td>${z.jenis === "ustadzah" ? "👩‍🏫" : "👨‍🎓"} <b>${esc(z.santriNama || "-")}</b></td><td>${esc(rangeText(z))}</td><td>${badgeAlasan(z.alasan)}${z.alasan === "kegiatan" && z.namaKegiatan ? ` ${esc(z.namaKegiatan)}` : ""}</td><td>${z.aktif === false ? badge("Dibatalkan","gray") : badge("Aktif","green")}</td></tr>`), "Belum ada riwayat izin.")}</div></div>`;
 }
 
 /* ============ JILID & USTADZAH ============ */
@@ -1722,18 +1654,7 @@ function openPengeluaranModal(onSaved){
 
 /* ============ PENGUMUMAN HELPER ============ */
 const isPengumumanKadaluarsa = p => { const d = toDate(p?.berlakuSampai); return !!d && d.getTime() < Date.now(); };
-const isPengumumanTampil = p => {
-  if(!p) return false;
-  if(p.aktif === false) return false;
-  if(p.manualHidden === true) return false;
-  if(isPengumumanKadaluarsa(p)) return false;
-  // Kalau ada targetUids, cek apakah user termasuk target
-  if(Array.isArray(p.targetUids) && p.targetUids.length){
-    if(!currentProfile?.uid) return false;
-    if(!p.targetUids.includes(currentProfile.uid)) return false;
-  }
-  return true;
-};
+const isPengumumanTampil = p => !!p && p.aktif !== false && p.manualHidden !== true && !isPengumumanKadaluarsa(p);
 function badgeStatusPengumuman(p){
   if(p.aktif === false) return badge("Nonaktif","gray");
   if(p.manualHidden === true) return badge("Disembunyikan","gray");
@@ -2328,37 +2249,8 @@ ${(() => {
     <div class="menu-panel" id="panel-kelas">
       <div class="card">
         <h3>Kelas Anda hari ini</h3>
-${klaimAktif.length ? `<div class="notice notice-warn" style="margin-top:10px;background:#fffbeb;border-left:3px solid #d97706">
-  <b>🔄 Anda menggantikan kelas berikut:</b>
-  <div style="margin-top:8px;display:grid;gap:10px">
-    ${klaimAktif.map(j => {
-      const pengampuAsli = getJilidUstadzahIds(j).filter(id => id !== currentProfile.uid);
-      const namaAsli = pengampuAsli.map(id => {
-        const u = ustadzahList.find(x => x.id === id);
-        return u ? (u.nama || u.email) : "Ustadzah";
-      }).join(", ");
-      const sudahKonfirmasi = !!j.substituteConfirmedAt;
-      return `<div style="padding:10px;background:#fff;border-radius:8px;border:1px solid #fde68a">
-        <div style="font-weight:700;color:#92400e">📚 ${esc(j.nama)}</div>
-        ${namaAsli ? `<div class="muted small" style="margin-top:4px">Menggantikan: <b>${esc(namaAsli)}</b></div>` : ""}
-        ${j.substituteAlasan ? `<div class="muted small">Alasan: <b>${esc(j.substituteAlasan)}</b></div>` : ""}
-        ${j.substituteFrom || j.substituteUntil ? `<div class="muted small">Periode: <b>${esc(j.substituteFrom || "-")} s/d ${esc(j.substituteUntil || "-")}</b></div>` : ""}
-        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          ${sudahKonfirmasi 
-            ? `<span class="badge badge-green">✅ Sudah dikonfirmasi</span>` 
-            : `<span class="badge badge-yellow">⏳ Belum dikonfirmasi</span>`}
-          ${!sudahKonfirmasi ? `<button class="btn btn-sm btn-success" data-konfirmasi-klaim="${esc(j.id)}">✅ Bersedia</button>` : ""}
-          ${!sudahKonfirmasi ? `<button class="btn btn-sm btn-warning" data-tolak-klaim="${esc(j.id)}">❌ Tidak bisa</button>` : ""}
-          <button class="btn btn-sm btn-danger" data-lepas="${esc(j.id)}">🗑 Lepas</button>
-        </div>
-      </div>`;
-    }).join("")}
-  </div>
-  <div class="muted small" style="margin-top:8px">
-    💡 Silakan konfirmasi kesediaan Anda untuk transparansi bersama.
-  </div>
-</div>` : `<p class="muted small" style="margin:6px 0 0">${jilidNames.length ? jilidNames.map(esc).join(", ") : "Belum ada kelas."}</p>`}
-${daftarKelasBisaKlaim.length ? `<hr style="border:0;border-top:1px solid var(--border);margin:14px 0"><h4 style="margin:0 0 6px">Klaim kelas pengganti</h4><p class="muted small" style="margin:0 0 8px">Kelas yang bisa Anda gantikan hari ini:</p><div style="display:grid;gap:6px">${daftarKelasBisaKlaim.map(j => `<button class="btn btn-light btn-full" data-klaim="${esc(j.id)}" style="justify-content:space-between"><span>${esc(j.nama)}</span><span>+ Klaim</span></button>`).join("")}</div>` : ""}
+        ${klaimAktif.length ? `<div class="notice" style="margin-top:10px"><b>Anda menggantikan:</b><br>${klaimAktif.map(j => `• ${esc(j.nama)}${j.substituteAlasan ? ` — ${esc(j.substituteAlasan)}` : ""}<button class="btn btn-sm btn-danger" data-lepas="${esc(j.id)}" style="margin-left:6px">Lepas</button>`).join("<br>")}</div>` : `<p class="muted small" style="margin:6px 0 0">${jilidNames.length ? jilidNames.map(esc).join(", ") : "Belum ada kelas."}</p>`}
+        ${daftarKelasBisaKlaim.length ? `<hr style="border:0;border-top:1px solid var(--border);margin:14px 0"><h4 style="margin:0 0 6px">Klaim kelas pengganti</h4><p class="muted small" style="margin:0 0 8px">Kelas yang bisa Anda gantikan hari ini:</p><div style="display:grid;gap:6px">${daftarKelasBisaKlaim.map(j => `<button class="btn btn-light btn-full" data-klaim="${esc(j.id)}" style="justify-content:space-between"><span>${esc(j.nama)}</span><span>+ Klaim</span></button>`).join("")}</div>` : ""}
       </div>
     </div>
 
@@ -2438,95 +2330,7 @@ ${daftarKelasBisaKlaim.length ? `<hr style="border:0;border-top:1px solid var(--
 
     <div class="menu-panel" id="panel-pengumuman"><div class="card empty">Memuat...</div></div>
   `;
-// ===== Konfirmasi kesediaan =====
-$("page").querySelectorAll("[data-konfirmasi-klaim]").forEach(b => b.addEventListener("click", async () => {
-  const jid = b.dataset.konfirmasiKlaim;
-  const j = jilidList.find(x => x.id === jid);
-  if(!j) return;
-  if(!confirm(`Konfirmasi bahwa Anda bersedia menggantikan kelas "${j.nama}"?`)) return;
-  try{
-    await updateCollectionData("jilid", jid, {
-      substituteConfirmedAt: new Date().toISOString(),
-      substituteConfirmedBy: currentProfile.uid,
-      substituteConfirmedNama: currentProfile.nama || ""
-    });
-    
-    // Beri tahu ustadzah asli
-    if(j.substituteOlehUid){
-      await addCollectionData("pengumuman", {
-        judul: `✅ ${currentProfile.nama || "Ustadzah"} bersedia menggantikan`,
-        isi: `Kelas ${j.nama} akan digantikan oleh ${currentProfile.nama || "Ustadzah"}.\n\n📅 Periode: ${j.substituteFrom || "-"} s/d ${j.substituteUntil || "-"}\n\nTerima kasih atas konfirmasinya.`,
-        aktif: true,
-        berlakuSampai: new Date((j.substituteUntil || todayStr()) + "T23:59:59+07:00").toISOString(),
-        targetUids: [j.substituteOlehUid],
-        sumber: "konfirmasiKlaim"
-      });
-    }
-    
-    showToast("✅ Konfirmasi terkirim. Terima kasih!");
-    renderDashboardUstadzah();
-  }catch(err){ showToast(firebaseError(err), true); }
-}));
 
-// ===== Tolak / tidak bisa =====
-$("page").querySelectorAll("[data-tolak-klaim]").forEach(b => b.addEventListener("click", async () => {
-  const jid = b.dataset.tolakKlaim;
-  const j = jilidList.find(x => x.id === jid);
-  if(!j) return;
-  const alasan = prompt("Alasan tidak bisa menggantikan? (opsional, boleh dikosongkan)");
-  if(alasan === null) return; // user cancel
-  if(!confirm(`Konfirmasi: Anda TIDAK BISA menggantikan kelas "${j.nama}"?`)) return;
-  try{
-    const ustadzahAsli = j.substituteOlehUid;
-    const namaAsli = j.substituteOlehNama || "Ustadzah";
-    
-    // Update jilid — lepas klaim + catat penolakan
-    await updateCollectionData("jilid", jid, {
-      substituteUid: null,
-      substituteNama: null,
-      substituteFrom: null,
-      substituteUntil: null,
-      substituteAlasan: "",
-      substituteRejectedAt: new Date().toISOString(),
-      substituteRejectedBy: currentProfile.uid,
-      substituteRejectedNama: currentProfile.nama || "",
-      substituteRejectedAlasan: alasan || "",
-      substituteOlehUid: null,
-      substituteOlehNama: null
-    });
-    
-    // Beri tahu ustadzah asli
-    if(ustadzahAsli){
-      await addCollectionData("pengumuman", {
-        judul: `❌ ${currentProfile.nama || "Ustadzah"} tidak bisa menggantikan`,
-        isi: `${currentProfile.nama || "Ustadzah"} tidak bisa menggantikan kelas ${j.nama}.\n${alasan ? `\n💬 Alasan: ${alasan}\n` : ""}\nMohon cari pengganti lain atau hubungi admin.\n\nTerima kasih.`,
-        aktif: true,
-        berlakuSampai: new Date(Date.now() + 3 * 86400000).toISOString(), // 3 hari
-        targetUids: [ustadzahAsli],
-        sumber: "tolakKlaim"
-      });
-      
-      // Info ke semua ustadzah (transparansi)
-      const semuaUstadzah = await getCollectionData("ustadzah");
-      const targetUmum = semuaUstadzah
-        .filter(u => u.aktif !== false && u.id !== currentProfile.uid && u.id !== ustadzahAsli)
-        .map(u => u.id);
-      if(targetUmum.length){
-        await addCollectionData("pengumuman", {
-          judul: `📢 Update Kelas: ${j.nama} perlu pengganti baru`,
-          isi: `Kelas ${j.nama} (${namaAsli}) membutuhkan pengganti baru karena ${currentProfile.nama || "Ustadzah"} tidak bisa menggantikan.\n${alasan ? `\n💬 Alasan: ${alasan}\n` : ""}\nBagi ustadzah yang bisa membantu, silakan hubungi ${namaAsli} atau admin.\n\nTerima kasih atas kerja samanya.`,
-          aktif: true,
-          berlakuSampai: new Date(Date.now() + 7 * 86400000).toISOString(),
-          targetUids: targetUmum,
-          sumber: "tolakKlaimUmum"
-        });
-      }
-    }
-    
-    showToast("Kelas dilepas. Pemberitahuan terkirim ke ustadzah lain.");
-    renderDashboardUstadzah();
-  }catch(err){ showToast(firebaseError(err), true); }
-}));
   $("page").querySelectorAll("[data-lepas]").forEach(b => b.addEventListener("click", async () => {
     if(!confirm("Lepas klaim kelas ini?")) return;
     try{
