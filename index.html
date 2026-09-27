@@ -284,9 +284,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc,
-  updateDoc, deleteDoc, collection, serverTimestamp, writeBatch
+  updateDoc, deleteDoc, collection, serverTimestamp, writeBatch,
+  query, where, orderBy, limit, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
 /* ============ KONFIGURASI ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyBUM53K-Av3DkwkW6NNQg0wKQ-ehtVZ428",
@@ -299,36 +299,41 @@ const firebaseConfig = {
 
 const APP_CONFIG = {
   maxPdfSize: 60 * 1024 * 1024,
-  maxHalamanBytes: 180 * 1024,
+  maxHalamanBytes: 60 * 1024,      // ✅ 60 KB (dari 180)
   pdfJsScriptUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
   pdfJsWorkerUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
   sessionTimeoutMs: 30 * 60 * 1000,
   cacheTtlMs: 30_000,
   cacheTtl: {
-    santri: 5 * 60_000,     // 5 menit — jarang berubah
+    santri: 5 * 60_000,
     ustadzah: 5 * 60_000,
     wali: 5 * 60_000,
     jilid: 5 * 60_000,
     users: 5 * 60_000,
-    settings: 60_000,       // 1 menit
-    tagihanSantri: 60_000,  // 1 menit
-    tabungan: 60_000,
+    settings: 60_000,
+    tagihanSantri: 2 * 60_000,     // ✅ 2 menit (dari 1)
+    tabungan: 2 * 60_000,          // ✅ 2 menit
     pengumuman: 2 * 60_000,
-    izin: 60_000,
-    riwayat: 60_000,
-    progress: 60_000
+    izin: 2 * 60_000,              // ✅ 2 menit
+    riwayat: 2 * 60_000,           // ✅ 2 menit
+    progress: 2 * 60_000           // ✅ 2 menit
   },
   batasIzinJam: 15,
   batasAlphaJam: 18,
   batasAlphaHari: 2,
   jumlahHariRekap: 7,
-  pdfMaxDim: 1400,
+  pdfMaxDim: 1000,                 // ✅ 1000 (dari 1400)
   imageMime: "image/webp",
-  imageQualityAwal: 0.78,
-  imageQualityMin: 0.4,
+  imageQualityAwal: 0.68,          // ✅ 0.68 (dari 0.78)
+  imageQualityMin: 0.35,           // ✅ 0.35 (dari 0.4)
   jamaahJamMulai: 13,
   jamaahJamSelesai: 20,
-  jamaahSholatDefault: ["Dhuhur", "Ashar", "Maghrib", "Isya"]
+  jamaahSholatDefault: ["Dhuhur", "Ashar", "Maghrib", "Isya"],
+  // ===== IndexedDB cache config =====
+  idbName: "tpqCache",
+  idbVersion: 1,
+  idbStore: "halaman",
+  idbMaxAgeDays: 30
 };
 
 const NAMA_BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -493,6 +498,105 @@ const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const auth = getAuth(primaryApp);
 const secondaryAuth = getAuth(secondaryApp);
 const db = getFirestore(primaryApp);
+
+/* ============ INDEXEDDB CACHE ============ */
+let idbPromise = null;
+function openIDB(){
+  if(idbPromise) return idbPromise;
+  idbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(APP_CONFIG.idbName, APP_CONFIG.idbVersion);
+    req.onupgradeneeded = () => {
+      const database = req.result;
+      if(!database.objectStoreNames.contains(APP_CONFIG.idbStore)){
+        database.createObjectStore(APP_CONFIG.idbStore, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return idbPromise;
+}
+
+async function idbGet(id){
+  try{
+    const database = await openIDB();
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readonly");
+      const req = tx.objectStore(APP_CONFIG.idbStore).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  }catch{ return null; }
+}
+
+async function idbSet(id, gambar){
+  try{
+    const database = await openIDB();
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readwrite");
+      tx.objectStore(APP_CONFIG.idbStore).put({ id, gambar, cachedAt: Date.now() });
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  }catch{ return false; }
+}
+
+async function idbDelete(id){
+  try{
+    const database = await openIDB();
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readwrite");
+      tx.objectStore(APP_CONFIG.idbStore).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  }catch{ return false; }
+}
+
+async function idbCount(){
+  try{
+    const database = await openIDB();
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readonly");
+      const req = tx.objectStore(APP_CONFIG.idbStore).count();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(0);
+    });
+  }catch{ return 0; }
+}
+
+async function idbClear(){
+  try{
+    const database = await openIDB();
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readwrite");
+      tx.objectStore(APP_CONFIG.idbStore).clear();
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  }catch{ return false; }
+}
+
+async function idbClearOlderThan(days){
+  try{
+    const database = await openIDB();
+    const cutoff = Date.now() - days * 86400000;
+    return new Promise((resolve) => {
+      const tx = database.transaction(APP_CONFIG.idbStore, "readwrite");
+      const store = tx.objectStore(APP_CONFIG.idbStore);
+      const req = store.openCursor();
+      req.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if(cursor){
+          if((cursor.value.cachedAt || 0) < cutoff) cursor.delete();
+          cursor.continue();
+        }
+      };
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  }catch{ return false; }
+}
 
 let currentUser = null;
 let currentProfile = null;
@@ -682,20 +786,127 @@ document.addEventListener("keydown", e => { if(e.key === "Escape" && !$("modal")
 
 /* ============ LAYANAN DATA ============ */
 const cache = new Map();
-async function getCollectionData(name, { forceRefresh=false } = {}){
-  const cached = cache.get(name);
+
+async function getCollectionData(name, { forceRefresh=false, maxDocs=1000 } = {}){
+  const cacheKey = `${name}::${maxDocs}`;
+  const cached = cache.get(cacheKey);
   const ttl = APP_CONFIG.cacheTtl?.[name] || APP_CONFIG.cacheTtlMs;
   if(!forceRefresh && cached && Date.now() - cached.time < ttl) return cached.data;
-  const snap = await getDocs(collection(db, name));
+  const snap = await getDocs(query(collection(db, name), limit(maxDocs)));
   const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  cache.set(name, { data, time: Date.now() });
+  cache.set(cacheKey, { data, time: Date.now() });
   return data;
 }
-const fresh = name => getCollectionData(name, { forceRefresh:true });
-const invalidateCache = name => cache.delete(name);
+const fresh = (name, maxDocs=1000) => getCollectionData(name, { forceRefresh:true, maxDocs });
+const invalidateCache = name => {
+  for(const key of cache.keys()){
+    if(key === name || key.startsWith(`${name}::`)) cache.delete(key);
+  }
+};
 async function getDocument(name, id){
   const snap = await getDoc(doc(db, name, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+/* ============ QUERY TERFILTER (server-side) ============ */
+async function queryCollection(name, filters = [], opts = {}){
+  const parts = [collection(db, name)];
+  filters.forEach(([field, op, value]) => parts.push(where(field, op, value)));
+  if(opts.orderByField) parts.push(orderBy(opts.orderByField, opts.orderDir || "desc"));
+  if(opts.limitCount) parts.push(limit(opts.limitCount));
+  const snap = await getDocs(query(...parts));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function getSantriByWali(waliUid){
+  return queryCollection("santri", [
+    ["waliUid", "==", waliUid],
+    ["aktif", "==", true]
+  ]);
+}
+
+async function getSantriByJilidIds(jilidIds){
+  if(!jilidIds.length) return [];
+  const chunks = [];
+  for(let i = 0; i < jilidIds.length; i += 30) chunks.push(jilidIds.slice(i, i + 30));
+  const hasil = [];
+  for(const chunk of chunks){
+    const rows = await queryCollection("santri", [
+      ["jilidId", "in", chunk],
+      ["aktif", "==", true]
+    ]);
+    hasil.push(...rows);
+  }
+  return hasil;
+}
+
+async function getTagihanBySantriIds(santriIds){
+  if(!santriIds.length) return [];
+  const chunks = [];
+  for(let i = 0; i < santriIds.length; i += 30) chunks.push(santriIds.slice(i, i + 30));
+  const hasil = [];
+  for(const chunk of chunks){
+    const rows = await queryCollection("tagihanSantri", [["santriId", "in", chunk]]);
+    hasil.push(...rows);
+  }
+  return hasil;
+}
+
+async function getTabunganBySantriIds(santriIds){
+  if(!santriIds.length) return [];
+  const chunks = [];
+  for(let i = 0; i < santriIds.length; i += 30) chunks.push(santriIds.slice(i, i + 30));
+  const hasil = [];
+  for(const chunk of chunks){
+    const rows = await queryCollection("tabungan", [["santriId", "in", chunk]]);
+    hasil.push(...rows);
+  }
+  return hasil;
+}
+
+async function getRiwayatBySantriIds(santriIds, maxPerSantri = 30){
+  if(!santriIds.length) return [];
+  const hasil = [];
+  for(const sid of santriIds){
+    const rows = await queryCollection("riwayat",
+      [["santriId", "==", sid]],
+      { orderByField: "createdAt", orderDir: "desc", limitCount: maxPerSantri }
+    );
+    hasil.push(...rows);
+  }
+  return hasil;
+}
+
+async function getProgressBySantriIds(santriIds){
+  if(!santriIds.length) return [];
+  const chunks = [];
+  for(let i = 0; i < santriIds.length; i += 30) chunks.push(santriIds.slice(i, i + 30));
+  const hasil = [];
+  for(const chunk of chunks){
+    const rows = await queryCollection("progress", [["santriId", "in", chunk]]);
+    hasil.push(...rows);
+  }
+  return hasil;
+}
+
+async function getIzinBySantriIds(santriIds, ustadzahId = null){
+  const hasil = [];
+  if(ustadzahId){
+    const own = await queryCollection("izin", [
+      ["jenis", "==", "ustadzah"],
+      ["ustadzahId", "==", ustadzahId]
+    ]);
+    hasil.push(...own);
+  }
+  if(santriIds.length){
+    const chunks = [];
+    for(let i = 0; i < santriIds.length; i += 30) chunks.push(santriIds.slice(i, i + 30));
+    for(const chunk of chunks){
+      const rows = await queryCollection("izin", [["santriId", "in", chunk]]);
+      hasil.push(...rows);
+    }
+  }
+  return hasil;
 }
 async function addCollectionData(name, data){
   const ref = await addDoc(collection(db, name), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
@@ -830,12 +1041,29 @@ function badgeStatusHarian(st){
 }
 const periodeRekapText = s => `${s.mulaiPembelajaran ? `Sejak ${s.mulaiPembelajaran}` : "Seluruh periode"} · ${jumlahHariRekap(s)} hari terakhir`;
 
-async function loadKehadiranContext(){
-  // PAKAI CACHE — jangan fresh() di sini
+async function loadKehadiranContext(santriIds = [], ustadzahId = null){
+  // Mode admin: load semua tapi dibatasi
+  if(!santriIds.length && !ustadzahId){
+    const [izinList, riwayat, settings] = await Promise.all([
+      queryCollection("izin", [], { limitCount: 2000 }),
+      queryCollection("riwayat", [], { orderByField: "createdAt", orderDir: "desc", limitCount: 2000 }),
+      getAppSettings()
+    ]);
+    const index = new Set();
+    riwayat.forEach(r => {
+      const key = tsKey(r.createdAt || r.updatedAt);
+      if(!key) return;
+      if(r.santriId) index.add(`s:${r.santriId}:${key}`);
+      if(r.ustadzahUid) index.add(`u:${r.ustadzahUid}:${key}`);
+    });
+    return { izinList, index, settings };
+  }
+
+  // Mode santri/ustadzah spesifik: query terfilter
   const [izinList, riwayat, progress, settings] = await Promise.all([
-    getCollectionData("izin"),        // cache 30 detik
-    getCollectionData("riwayat"),     // cache 30 detik
-    getCollectionData("progress"),    // cache 30 detik
+    getIzinBySantriIds(santriIds, ustadzahId),
+    getRiwayatBySantriIds(santriIds),
+    getProgressBySantriIds(santriIds),
     getAppSettings()
   ]);
   const index = new Set();
@@ -1053,10 +1281,10 @@ async function getEffectiveJilidIds(profile){
 async function getSantriUstadzah(){
   const ids = await getEffectiveJilidIds(currentProfile);
   if(!ids.length) return [];
-  return (await getCollectionData("santri")).filter(s => ids.includes(s.jilidId));
+  return getSantriByJilidIds(ids);
 }
 async function getSantriWali(){
-  return (await getCollectionData("santri")).filter(s => s.waliUid === currentProfile.uid && s.aktif !== false);
+  return getSantriByWali(currentProfile.uid);
 }
 
 /* ============ KEUANGAN HELPER ============ */
@@ -1101,24 +1329,43 @@ async function ensureSppBulanIni(){
   if(sppEnsuredPeriode === periode) return;
 
   try{
-    // Cek di SETTINGS (bukan variable global) — biar tahan refresh
+    const lockRef = doc(db, "settings", "sppLock");
+    let perluGenerate = false;
+
+    // TRANSACTION: hanya 1 client yang boleh klaim
+    await runTransaction(db, async (tx) => {
+      const lockSnap = await tx.get(lockRef);
+      const lockData = lockSnap.exists() ? lockSnap.data() : {};
+      if(lockData.periode === periode && lockData.done === true){
+        perluGenerate = false;
+        return;
+      }
+      tx.set(lockRef, {
+        periode, done: false,
+        claimedAt: serverTimestamp(),
+        claimedBy: currentProfile?.uid || "-"
+      }, { merge: true });
+      perluGenerate = true;
+    });
+
+    if(!perluGenerate){ sppEnsuredPeriode = periode; return; }
+
     const settings = await getAppSettings();
-    if(settings.sppEnsuredPeriode === periode){
+    const nominal = num(settings.sppNominal);
+    if(nominal <= 0){
+      await setDoc(lockRef, { periode, done: true }, { merge: true });
       sppEnsuredPeriode = periode;
       return;
     }
 
-    const nominal = num(settings.sppNominal);
-    if(nominal <= 0){ sppEnsuredPeriode = periode; return; }
-
-    // Cek tagihan bulan ini saja
     const [santriList, bills] = await Promise.all([
       getCollectionData("santri"),
-      getCollectionData("tagihanSantri")
+      queryCollection("tagihanSantri", [
+        ["jenis", "==", "SPP"],
+        ["periode", "==", periode]
+      ])
     ]);
-    // Filter hanya SPP bulan ini
-    const sppBulanIni = bills.filter(b => b.jenis === "SPP" && b.periode === periode);
-    const sudahAda = new Set(sppBulanIni.map(b => b.santriId));
+    const sudahAda = new Set(bills.map(b => b.santriId));
     const baru = santriList.filter(s => s.aktif !== false && !sudahAda.has(s.id));
 
     for(let i = 0; i < baru.length; i += 450){
@@ -1126,8 +1373,8 @@ async function ensureSppBulanIni(){
       baru.slice(i, i + 450).forEach(s => {
         batch.set(doc(db, "tagihanSantri", `spp_${s.id}_${periode}`), {
           santriId: s.id, santriNama: s.nama || "-",
-          jenis:"SPP", judul:`SPP ${formatPeriodeLabel(periode)}`,
-          periode, kegiatanId:null, nominal, terbayar:0, status:"belum", riwayat:[],
+          jenis: "SPP", judul: `SPP ${formatPeriodeLabel(periode)}`,
+          periode, kegiatanId: null, nominal, terbayar: 0, status: "belum", riwayat: [],
           createdAt: serverTimestamp(), updatedAt: serverTimestamp()
         });
       });
@@ -1136,8 +1383,11 @@ async function ensureSppBulanIni(){
 
     if(baru.length) invalidateCache("tagihanSantri");
 
-    // Simpan flag di settings — ustadzah lain tidak perlu generate lagi
-    await saveSettings({ sppEnsuredPeriode: periode });
+    await setDoc(lockRef, {
+      periode, done: true,
+      finishedAt: serverTimestamp(),
+      totalDibuat: baru.length
+    }, { merge: true });
     sppEnsuredPeriode = periode;
   }catch(err){
     console.warn("Gagal SPP otomatis:", err);
@@ -1444,27 +1694,57 @@ const totalHalamanJilid = (jilid, tipe) => num(tipe === "hafalan" ? jilid?.total
 /* ============ PDF PER HALAMAN ============ */
 const halamanImageCache = new Map();
 const halamanDocId = (jilidId, tipe, halaman) => `${jilidId}_${tipe}_${halaman}`;
+
 function validatePdfFile(file){
   if(!file) throw new Error("File PDF belum dipilih.");
   if(!(file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) throw new Error("File harus berformat PDF.");
   if(file.size > APP_CONFIG.maxPdfSize) throw new Error(`Ukuran PDF maksimal ${formatFileSize(APP_CONFIG.maxPdfSize)}.`);
 }
+
+/**
+ * Ambil gambar halaman dengan 3 lapis cache:
+ * 1. Memory Map (instan)
+ * 2. IndexedDB (offline + hemat reads)
+ * 3. Firestore (fallback)
+ */
 async function fetchHalamanGambar(jilidId, tipe, halaman){
   if(!jilidId || !tipe || !halaman) return null;
   const id = halamanDocId(jilidId, tipe, halaman);
+
+  // Lapis 1: memory
   if(halamanImageCache.has(id)) return halamanImageCache.get(id);
-  const snap = await getDoc(doc(db, "jilidHalaman", id));
-  const gambar = snap.exists() ? (snap.data().gambar || null) : null;
-  if(gambar) halamanImageCache.set(id, gambar);
-  return gambar;
+
+  // Lapis 2: IndexedDB
+  const idbData = await idbGet(id);
+  if(idbData?.gambar){
+    halamanImageCache.set(id, idbData.gambar);
+    return idbData.gambar;
+  }
+
+  // Lapis 3: Firestore
+  try{
+    const snap = await getDoc(doc(db, "jilidHalaman", id));
+    const gambar = snap.exists() ? (snap.data().gambar || null) : null;
+    if(gambar){
+      halamanImageCache.set(id, gambar);
+      idbSet(id, gambar); // background
+    }
+    return gambar;
+  }catch(err){
+    console.warn("Gagal ambil halaman:", err);
+    return null;
+  }
 }
+
 async function deleteHalamanRange(jilidId, tipe, dari, sampai){
   for(let p = dari; p <= sampai; p++){
     const id = halamanDocId(jilidId, tipe, p);
     halamanImageCache.delete(id);
+    idbDelete(id); // background
     try{ await deleteDoc(doc(db, "jilidHalaman", id)); }catch{}
   }
 }
+
 let pdfJsPromise = null;
 async function loadPdfJs(){
   const resolve = () => window.pdfjsLib || window["pdfjs-dist/build/pdf"] || null;
@@ -1482,6 +1762,7 @@ async function loadPdfJs(){
   lib.GlobalWorkerOptions.workerSrc = APP_CONFIG.pdfJsWorkerUrl;
   return lib;
 }
+
 function canvasKeDataUrl(canvas, mime, quality){
   try{
     const url = canvas.toDataURL(mime, quality);
@@ -1489,40 +1770,68 @@ function canvasKeDataUrl(canvas, mime, quality){
     return url;
   }catch{ return null; }
 }
+
 async function renderPageToDataUrl(pdfPage, maxBytes){
   const baseViewport = pdfPage.getViewport({ scale: 1 });
   const maxDimAwal = APP_CONFIG.pdfMaxDim;
   const skalaAwal = Math.min(2, maxDimAwal / Math.max(baseViewport.width, baseViewport.height));
-  let scale = Math.max(0.6, skalaAwal);
+  let scale = Math.max(0.5, skalaAwal);
   let quality = APP_CONFIG.imageQualityAwal;
   let last = null;
   const mime = APP_CONFIG.imageMime;
-  for(let i = 0; i < 8; i++){
+
+  for(let i = 0; i < 10; i++){
     const viewport = pdfPage.getViewport({ scale });
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(viewport.width));
     canvas.height = Math.max(1, Math.round(viewport.height));
     const ctx = canvas.getContext("2d", { alpha:false });
-    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-    const url = canvasKeDataUrl(canvas, mime, quality);
-    last = url || canvas.toDataURL("image/jpeg", quality);
+
+    let url = canvasKeDataUrl(canvas, mime, quality);
+    if(!url){
+      url = canvas.toDataURL("image/jpeg", quality);
+    }
+    last = url;
+
     if(Math.ceil(last.length * 0.75) <= maxBytes) return last;
-    if(quality > APP_CONFIG.imageQualityMin) quality = Math.max(APP_CONFIG.imageQualityMin, quality - 0.1);
-    else scale = Math.max(0.55, scale - 0.15);
+
+    if(quality > APP_CONFIG.imageQualityMin){
+      quality = Math.max(APP_CONFIG.imageQualityMin, quality - 0.08);
+    } else {
+      scale = Math.max(0.45, scale - 0.12);
+    }
   }
   return last;
 }
+
 async function uploadPdfPerPage(file, jilidId, tipe, onProgress){
   validatePdfFile(file);
   const pdfjs = await loadPdfJs();
   const pdfDoc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+
   for(let p = 1; p <= pdfDoc.numPages; p++){
     const dataUrl = await renderPageToDataUrl(await pdfDoc.getPage(p), APP_CONFIG.maxHalamanBytes);
     if(!dataUrl) throw new Error(`Gagal memproses halaman ${p}.`);
+
     const id = halamanDocId(jilidId, tipe, p);
-    await setDoc(doc(db, "jilidHalaman", id), { jilidId, tipe, halaman: p, gambar: dataUrl, updatedAt: serverTimestamp() });
+    const byteSize = Math.ceil(dataUrl.length * 0.75);
+
+    if(byteSize > 900 * 1024){
+      console.warn(`Halaman ${p} masih besar: ${formatFileSize(byteSize)} (mendekati limit 1 MB)`);
+    }
+
+    await setDoc(doc(db, "jilidHalaman", id), {
+      jilidId, tipe, halaman: p,
+      gambar: dataUrl, byteSize,
+      updatedAt: serverTimestamp()
+    });
+
     halamanImageCache.set(id, dataUrl);
+    idbSet(id, dataUrl);
+
     onProgress?.(p, pdfDoc.numPages);
   }
   return pdfDoc.numPages;
@@ -1701,6 +2010,15 @@ onAuthStateChanged(auth, async user => {
     navigate("dashboard");
     resetIdleTimer();
     logAudit("LOGIN","users",user.uid,{ email: user.email });
+
+    // Bersihkan cache IndexedDB > 30 hari, sekali sehari
+    const lastCleanup = localStorage.getItem("tpq_last_cache_cleanup");
+    const todayCleanup = new Date().toDateString();
+    if(lastCleanup !== todayCleanup){
+      idbClearOlderThan(APP_CONFIG.idbMaxAgeDays).then(() => {
+        localStorage.setItem("tpq_last_cache_cleanup", todayCleanup);
+      });
+    }
   }catch(err){
     console.error(err);
     showToast("Gagal membaca profil: " + firebaseError(err), true);
@@ -1819,7 +2137,8 @@ function renderDashboard(){
 /* ===== DASHBOARD USTADZAH ===== */
 async function renderDashboardUstadzah(){
   await ensureSppBulanIni();
-  const [santri, jilidList, ustadzahList, ctx] = await Promise.all([getSantriUstadzah(), getCollectionData("jilid"), getCollectionData("ustadzah"), loadKehadiranContext()]);
+  const [santri, jilidList, ustadzahList] = await Promise.all([getSantriUstadzah(), getCollectionData("jilid"), getCollectionData("ustadzah")]);
+  const ctx = await loadKehadiranContext(santri.map(s => s.id), currentProfile.uid);
   const { settings, izinList } = ctx;
   const efektifIds = await getEffectiveJilidIds(currentProfile);
   const jilidNames = jilidList.filter(j => efektifIds.includes(j.id)).map(j => j.nama);
@@ -2074,7 +2393,8 @@ async function renderPembelajaranUstadzahInline(santriId, tipe){
   if(!jilid) return showToast("Jilid santri belum diatur.", true);
   const total = totalHalamanJilid(jilid, tipe);
   if(total <= 0) return showToast(`Buku ${tipe} belum diupload.`, true);
-  const progress = (await getCollectionData("progress")).find(x => x.santriId === santriId && x.tipe === tipe);
+  const progressList = await getProgressBySantriIds([santriId]);
+  const progress = progressList.find(x => x.tipe === tipe);
   let current = Math.min(total, Math.max(1, num(progress?.halaman) || 1));
 
   openModal(`${tipe === "hafalan" ? "🧠 Buku Hafalan" : "📖 Buku Baca"} — ${esc(santri.nama)}`, `
@@ -2169,12 +2489,11 @@ function openKonfirmasiPesanModal({ santri, tipe, jilid, halaman, status, pesanA
 async function openKeuanganSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
-  const [settings, tagihan, tabunganList] = await Promise.all([
+  const [settings, bills, tabunganList] = await Promise.all([
     getAppSettings(),
-    getCollectionData("tagihanSantri"),    // ← bukan fresh
-    getCollectionData("tabungan")          // ← bukan fresh
+    getTagihanBySantriIds([santriId]),
+    getTabunganBySantriIds([santriId])
   ]);
-  const bills = tagihan.filter(x => x.santriId === santriId);
   const editable = currentProfile.role !== "wali";
   openModal(`💰 Keuangan — ${esc(santri.nama)}`, `<div id="keuanganModalContent">${keuanganSantriHtml({ bills, tabunganList, santriId, settings, editable })}</div>`);
   const bind = (billsNow, tabunganNow) => {
@@ -2221,12 +2540,11 @@ else if(aksi === "backfill"){
 async function openRiwayatSantriModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
-  const [riwayatList, jilidList] = await Promise.all([
-    getCollectionData("riwayat"),      // ← bukan fresh
+  const [riwayat, jilidList] = await Promise.all([
+    getRiwayatBySantriIds([santriId], 100),
     getCollectionData("jilid")
   ]);
   const jilid = jilidList.find(j => j.id === santri.jilidId) || null;
-  const riwayat = riwayatList.filter(r => r.santriId === santriId).sort(byCreatedDesc);
   const rekap = hitungRekapPembelajaran(riwayat);
   openModal(`📊 Riwayat — ${esc(santri.nama)}`, `
     <div class="grid grid-3" style="margin-bottom:12px">${statCard("📚","Catatan", rekap.total)}${statCard("⬆️","Naik", rekap.naik)}${statCard("🎯","% Naik", rekap.persenNaik + "%")}</div>
@@ -2237,7 +2555,8 @@ async function openRiwayatSantriModal(santriId){
 
 /* ===== DASHBOARD WALI ===== */
 async function renderDashboardWali(){
-  const [santri, jilidList, ustadzahList, ctx] = await Promise.all([getSantriWali(), getCollectionData("jilid"), getCollectionData("ustadzah"), loadKehadiranContext()]);
+  const [santri, jilidList, ustadzahList] = await Promise.all([ getSantriWali(), getCollectionData("jilid"), getCollectionData("ustadzah")  ]);
+  const ctx = await loadKehadiranContext(santri.map(s => s.id), null);
   const { settings, izinList } = ctx;
   const today = todayStr();
   const rekap = hitungRekap(santri, "santri", ctx);
@@ -2443,10 +2762,14 @@ async function openPembelajaranWaliModal(santriId){
   const santri = (await getCollectionData("santri")).find(x => x.id === santriId);
   if(!santri) return showToast("Santri tidak ditemukan.", true);
   if(santri.waliUid !== currentProfile.uid) return showToast("Akses ditolak.", true);
-  const [jilidList, ustadzahList, progress, riwayatList] = await Promise.all([getCollectionData("jilid"), getCollectionData("ustadzah"), getCollectionData("progress"), getCollectionData("riwayat")]);
+  const [jilidList, ustadzahList, progress, riwayat] = await Promise.all([
+    getCollectionData("jilid"),
+    getCollectionData("ustadzah"),
+    getProgressBySantriIds([santri.id]),
+    getRiwayatBySantriIds([santri.id], 10)
+  ]);
   const jilid = jilidList.find(j => j.id === santri.jilidId) || null;
   const pendamping = jilid ? namaPengampu(jilid, ustadzahList).join(", ") : "";
-  const riwayat = riwayatList.filter(r => r.santriId === santri.id).sort(byCreatedDesc).slice(0, 10);
   const kartu = (title, tipe) => {
     const p = progress.find(x => x.santriId === santri.id && x.tipe === tipe);
     const total = totalHalamanJilid(jilid, tipe);
@@ -2463,7 +2786,17 @@ async function openPembelajaranWaliModal(santriId){
 /* ===== DASHBOARD ADMIN ===== */
 async function renderDashboardAdmin(){
   await ensureSppBulanIni();
-  const [santri, wali, ustadzah, jilid, ctx, tagihan, infaqList, pengeluaranList, tabunganList] = await Promise.all([getCollectionData("santri"), getCollectionData("wali"), getCollectionData("ustadzah"), getCollectionData("jilid"), loadKehadiranContext(), getCollectionData("tagihanSantri"), getCollectionData("infaq"), getCollectionData("pengeluaran"), getCollectionData("tabungan")]);
+  const [santri, wali, ustadzah, jilid, ctx, tagihan, infaqList, pengeluaranList, tabunganList] = await Promise.all([
+    getCollectionData("santri"),
+    getCollectionData("wali"),
+    getCollectionData("ustadzah"),
+    getCollectionData("jilid"),
+    loadKehadiranContext(), // otomatis mode admin (limit 2000)
+    getCollectionData("tagihanSantri", { maxDocs: 5000 }),
+    getCollectionData("infaq", { maxDocs: 2000 }),
+    getCollectionData("pengeluaran", { maxDocs: 2000 }),
+    getCollectionData("tabungan", { maxDocs: 5000 })
+  ]);
   const aktif = list => list.filter(x => x.aktif !== false);
   const rekap = hitungRekap(aktif(ustadzah), "ustadzah", ctx);
   const saldo = hitungSaldoKas({ tagihan, infaqList, tabunganList, pengeluaranList });
@@ -2896,7 +3229,15 @@ async function openJilidForm(item, onSaved){
 async function renderKeuanganAdmin(){
   if(!requireRole("admin")) return;
   await ensureSppBulanIni();
-  const [settings, tagihan, tabunganList, infaqList, donaturList, pengeluaranList, santriAll] = await Promise.all([getAppSettings(), getCollectionData("tagihanSantri"), getCollectionData("tabungan"), getCollectionData("infaq"), getCollectionData("donatur"), getCollectionData("pengeluaran"), getCollectionData("santri")]);
+  const [settings, tagihan, tabunganList, infaqList, donaturList, pengeluaranList, santriAll] = await Promise.all([
+    getAppSettings(),
+    getCollectionData("tagihanSantri", { maxDocs: 5000 }),
+    getCollectionData("tabungan", { maxDocs: 5000 }),
+    getCollectionData("infaq", { maxDocs: 2000 }),
+    getCollectionData("donatur", { maxDocs: 1000 }),
+    getCollectionData("pengeluaran", { maxDocs: 2000 }),
+    getCollectionData("santri")
+  ]);
   const tgl = num(settings.sppTanggalPeringatan || 10);
   const { key: periodeIni } = getPeriodeSekarang();
   const santriAktif = santriAll.filter(s => s.aktif !== false);
@@ -3882,11 +4223,13 @@ $("btnResetKurikulum").addEventListener("click", async () => {
       </div>
       <div class="toolbar"><h3 style="margin:0">🎉 Iuran Kegiatan</h3><button class="btn btn-sm" id="btnTambahKegiatan">+ Buat Iuran</button></div>
       ${dataTable("", ["No","Nama","Nominal","Periode","Target","Status",""], kegiatanList.map((k,i) => `<tr><td>${i+1}</td><td><b>${esc(k.nama)}</b></td><td>${formatRupiah(k.nominal)}</td><td>${esc(k.tanggalMulai || "-")} s/d ${esc(k.tanggalSelesai || "-")}</td><td>${esc(k.targetNama || "Semua")}</td><td>${badgeAktif(k)}</td><td>${k.aktif === false ? "" : `<button class="btn btn-sm btn-danger" data-remove-kegiatan="${esc(k.id)}">🗑</button>`}</td></tr>`), "Belum ada iuran kegiatan.")}`;
-    onSave("sppSettingsForm","sppSettingsSaveBtn", async () => {
-      await saveSettings({ sppNominal: num($("sppNominal").value), sppTanggalPeringatan: num($("sppTanggalPeringatan").value) || 10 });
-      sppEnsuredPeriode = null;
-      logAudit("UPDATE","settings","app",{ spp:true });
-    }, "Pengaturan SPP disimpan.");
+onSave("sppSettingsForm","sppSettingsSaveBtn", async () => {
+  await saveSettings({ sppNominal: num($("sppNominal").value), sppTanggalPeringatan: num($("sppTanggalPeringatan").value) || 10 });
+  // Reset lock supaya generate ulang
+  await setDoc(doc(db, "settings", "sppLock"), { periode: null, done: false }, { merge: true });
+  sppEnsuredPeriode = null;
+  logAudit("UPDATE","settings","app",{ spp:true });
+}, "Pengaturan SPP disimpan.");
     $("btnTambahKegiatan").addEventListener("click", () => openKegiatanForm(jilidList, renderTabTagihan));
     $("pengaturanContent").querySelectorAll("[data-remove-kegiatan]").forEach(b => b.addEventListener("click", async () => {
       if(!confirm("Nonaktifkan iuran ini?")) return;
@@ -3897,21 +4240,43 @@ $("btnResetKurikulum").addEventListener("click", async () => {
     }));
   }
 
-  async function renderTabAkun(){
+async function renderTabAkun(){
     $("pengaturanContent").innerHTML = `
       <div class="card" style="margin-bottom:12px">
         <h3>👤 Akun Anda</h3>
         <div class="row" style="margin-top:12px">${fg("Nama", `<input value="${esc(currentProfile.nama)}" disabled>`)}${fg("Email", `<input value="${esc(currentProfile.email || currentUser.email)}" disabled>`)}${fg("Role", `<input value="${esc(roleLabel(currentProfile.role))}" disabled>`)}${fg("Status", `<input value="${currentProfile.aktif === false ? "Nonaktif" : "Aktif"}" disabled>`)}</div>
         <button class="btn" id="btnResetPassword">📧 Kirim email reset password</button>
       </div>
+      <div class="card" style="margin-bottom:12px">
+        <h3>💾 Cache Buku</h3>
+        <p class="muted small">Gambar halaman buku yang tersimpan di HP untuk mempercepat akses offline.</p>
+        <div id="cacheInfo" class="notice" style="margin-top:10px">Menghitung...</div>
+        <button class="btn btn-light" id="btnBersihkanCache">🗑 Bersihkan Cache Buku</button>
+      </div>
       <div class="card"><h3>🛠 Tools</h3><p class="muted small">Migrasi struktur data & lihat log audit.</p><div class="actions"><button class="btn btn-light" id="btnMigrasiData">🔄 Migrasi Multi-Ustadzah</button><button class="btn btn-light" id="btnLihatAudit">📜 Lihat Log Audit</button></div></div>`;
+
     $("btnResetPassword").addEventListener("click", () => kirimResetPassword($("btnResetPassword")));
     $("btnMigrasiData").addEventListener("click", jalankanMigrasiMultiUstadzah);
+
+    // ===== Cache info & clear =====
+    idbCount().then(count => {
+      const info = $("cacheInfo");
+      if(info) info.innerHTML = `<b>${count}</b> halaman tersimpan di HP.`;
+    });
+    $("btnBersihkanCache").addEventListener("click", async () => {
+      if(!confirm("Hapus semua cache buku di HP? Buku akan diunduh ulang saat dibuka.")) return;
+      await idbClear();
+      halamanImageCache.clear();
+      showToast("Cache buku dibersihkan.");
+      $("cacheInfo").innerHTML = `<b>0</b> halaman tersimpan di HP.`;
+    });
+
+    // ===== Lihat audit (tidak berubah) =====
     $("btnLihatAudit").addEventListener("click", async () => {
       const audit = (await fresh("audit")).sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || "")).slice(0, 100);
       openModal("📜 Log Audit (100 terbaru)", `${dataTable("", ["Waktu","User","Aksi","Entitas","ID"], audit.map(a => `<tr><td class="small">${esc(a.timestamp ? new Date(a.timestamp).toLocaleString("id-ID") : "-")}</td><td>${esc(a.userNama || "-")}</td><td>${badge(a.action || "-", "blue")}</td><td>${esc(a.entity || "-")}</td><td class="small">${esc(a.entityId || "-")}</td></tr>`), "Belum ada log.")}`);
     });
-  }
+}
 }
 
 function editLiburEvent(idx, onSaved){
@@ -4029,7 +4394,11 @@ async function jalankanMigrasiMultiUstadzah(){
 /* ============ PEMBELAJARAN ============ */
 async function saveProgress({ santriId, tipe, halaman, status, pesan }){
   try{
-    const existing = (await getCollectionData("progress")).find(x => x.santriId === santriId && x.tipe === tipe);
+    const progressList = await queryCollection("progress", [
+      ["santriId", "==", santriId],
+      ["tipe", "==", tipe]
+    ]);
+    const existing = progressList[0] || null;
     const payload = { santriId, tipe, halaman: Math.max(1, num(halaman) || 1), status: status || "mengulang", pesan: pesan || "", ustadzahUid: currentProfile.uid, ustadzahNama: currentProfile.nama || "" };
     if(existing) await updateCollectionData("progress", existing.id, payload);
     else await addCollectionData("progress", payload);
