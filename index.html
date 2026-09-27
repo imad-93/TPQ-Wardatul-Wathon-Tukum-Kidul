@@ -531,7 +531,8 @@ const UI_REGISTRY = {
     "ustadzah.kelas.klaimList":  { label: "🤝 Daftar Klaim",   grup: "Ustadzah · Panel Kelas", default: true },
     "ustadzah.kelas.lepas":      { label: "🚪 Tombol Lepas",   grup: "Ustadzah · Panel Kelas", default: true },
     "ustadzah.kelas.klaim":      { label: "➕ Tombol Klaim",    grup: "Ustadzah · Panel Kelas", default: true },
-
+    "ustadzah.notifIzin.banner":  { label: "📢 Banner - Info Izin Ustadzah",  grup: "Ustadzah · Notifikasi Izin", default: true },
+    "ustadzah.notifIzin.popup":   { label: "📢 Popup - Info Izin Ustadzah",   grup: "Ustadzah · Notifikasi Izin", default: true },
     "ustadzah.baca.aktivitas":    { label: "📚 Notice Aktivitas",  grup: "Ustadzah · Panel Baca", default: true },
     "ustadzah.baca.search":       { label: "🔍 Search",            grup: "Ustadzah · Panel Baca", default: true },
     "ustadzah.baca.tabel":        { label: "📋 Tabel Santri",      grup: "Ustadzah · Panel Baca", default: true },
@@ -685,6 +686,7 @@ const HAK_AKSES_REGISTRY = {
     ustadzah: [
       { id: "kelas.klaim", label: "🤝 Klaim Kelas", grup: "Kelas", default: true,
         batas: { max: 3, satuan: "kelas/hari" } },
+      { id: "kelas.klaimDariNotifIzin", label: "🤝 Klaim dari Notif Izin", grup: "Kelas", default: true },
       { id: "kelas.lepas", label: "🚪 Lepas Kelas", grup: "Kelas", default: true },
       { id: "kelas.scope", label: "🔒 Scope Data",  grup: "Kelas", default: "kelas_sendiri",
         scope: ["kelas_sendiri", "semua_kelas"] },
@@ -1585,6 +1587,185 @@ function riwayatIzinCard(list){
 }
 
 /* ============ JILID & USTADZAH ============ */
+
+async function getUstadzahIzinHariIni(){
+  try{
+    const today = todayStr();
+    const [izinList, jilidList, ustadzahList] = await Promise.all([
+      queryCollection("izin", [["jenis", "==", "ustadzah"], ["aktif", "==", true]]),
+      getCollectionData("jilid"),
+      getCollectionData("ustadzah")
+    ]);
+
+    // Filter izin yang mencakup hari ini
+    const izinHariIni = izinList.filter(z =>
+      today >= z.tanggalMulai && today <= z.tanggalSelesai
+    );
+
+    // Jangan tampilkan diri sendiri
+    const izinLain = izinHariIni.filter(z => z.ustadzahId !== currentProfile.uid);
+    if(!izinLain.length) return [];
+
+    return izinLain.map(z => {
+      const u = ustadzahList.find(x => x.id === z.ustadzahId);
+      const nama = u?.nama || z.santriNama || "Ustadzah";
+
+      // Cari jilid yang diampu oleh ustadzah ini
+      const jilidDiampu = jilidList
+        .filter(j => j.aktif !== false && getJilidUstadzahIds(j).includes(z.ustadzahId))
+        .map(j => {
+          const sudahDiklaim = isSubstituteActive(j) && j.substituteUid && j.substituteUid !== z.ustadzahId;
+          return {
+            id: j.id,
+            nama: j.nama || "Kelas",
+            sudahDiklaim,
+            pengklaimUid: sudahDiklaim ? j.substituteUid : null,
+            pengklaimNama: sudahDiklaim ? (j.substituteNama || "Ustadzah") : null
+          };
+        });
+
+      // Apakah semua jilid sudah diklaim?
+      const semuaDiklaim = jilidDiampu.length > 0 && jilidDiampu.every(j => j.sudahDiklaim);
+      const adaBelumDiklaim = jilidDiampu.some(j => !j.sudahDiklaim);
+
+      return {
+        izinId: z.id,
+        ustadzahId: z.ustadzahId,
+        ustadzahNama: nama,
+        alasan: z.alasan || "lainnya",
+        alasanLabel: labelAlasan(z.alasan),
+        namaKegiatan: z.namaKegiatan || "",
+        keterangan: z.keterangan || "",
+        tanggalMulai: z.tanggalMulai,
+        tanggalSelesai: z.tanggalSelesai,
+        jilidDiampu,
+        semuaDiklaim,
+        adaBelumDiklaim
+      };
+    });
+  }catch(err){
+    console.warn("[getUstadzahIzinHariIni]", err);
+    return [];
+  }
+}
+
+/** Banner info izin — tampil ke semua ustadzah lain */
+function renderBannerIzinUstadzah(list){
+  if(!list.length) return "";
+  return `<div class="card" data-notif-izin-banner style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:0;margin-bottom:12px;box-shadow:0 6px 20px rgba(217,119,6,.3)">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="font-size:36px;line-height:1">📢</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">Info Izin Ustadzah Hari Ini</div>
+        ${list.map(x => `
+          <div style="margin-bottom:10px;${list.length > 1 ? "padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.2)" : ""}">
+            <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">👩‍🏫 ${esc(x.ustadzahNama)}</div>
+            <div style="font-size:12.5px;opacity:.95;line-height:1.6">
+              <div>📅 ${esc(rangeText({ tanggalMulai: x.tanggalMulai, tanggalSelesai: x.tanggalSelesai }))}</div>
+              <div>📝 ${esc(x.alasanLabel)}${x.namaKegiatan ? ` — ${esc(x.namaKegiatan)}` : ""}</div>
+              ${x.jilidDiampu.length ? `<div>📚 Kelas: ${x.jilidDiampu.map(j => esc(j.nama)).join(", ")}</div>` : ""}
+              ${x.semuaDiklaim ? `<div style="margin-top:4px">✅ Semua kelas sudah diklaim</div>` : ""}
+              ${x.adaBelumDiklaim ? `<div style="margin-top:4px">⚠️ Ada ${x.jilidDiampu.filter(j => !j.sudahDiklaim).length} kelas belum diklaim</div>` : ""}
+            </div>
+          </div>
+        `).join("")}
+        <div class="actions" style="margin-top:6px">
+          <button class="btn btn-sm" style="background:#fff;color:#d97706;font-weight:700" id="btnBukaPopupIzin">📋 Lihat Detail</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/** Popup detail izin */
+async function showPopupIzinUstadzah(force = false){
+  if(!uiAktif("ustadzah.notifIzin.popup")) return;
+
+  const SESSION_KEY = "tpq_notif_izin_shown";
+  if(!force && sessionStorage.getItem(SESSION_KEY) === "1") return;
+
+  const list = await getUstadzahIzinHariIni();
+  if(!list.length) return;
+
+  sessionStorage.setItem(SESSION_KEY, "1");
+
+  openModal("📢 Info Izin Ustadzah", `
+    <div class="notice notice-warn" style="margin-bottom:14px">
+      <b>Ada ${list.length} ustadzah yang izin hari ini:</b>
+      <div class="muted small" style="margin-top:4px">Mohon cek apakah ada kelas yang perlu Anda gantikan.</div>
+    </div>
+
+    <div style="display:grid;gap:12px">
+      ${list.map(x => `
+        <div style="padding:12px;border:1.5px solid var(--border);border-radius:12px;background:#fff">
+          <div style="font-weight:700;font-size:14px">👩‍🏫 ${esc(x.ustadzahNama)}</div>
+          <div class="muted small" style="margin-top:6px;line-height:1.6">
+            <div>📅 ${esc(rangeText({ tanggalMulai: x.tanggalMulai, tanggalSelesai: x.tanggalSelesai }))}</div>
+            <div>📝 ${esc(x.alasanLabel)}${x.namaKegiatan ? ` — ${esc(x.namaKegiatan)}` : ""}</div>
+          </div>
+          ${x.jilidDiampu.length ? `
+            <div style="margin-top:10px">
+              <div style="font-size:12.5px;font-weight:600;color:var(--text-soft);margin-bottom:6px">Kelas yang diampu:</div>
+              <div style="display:grid;gap:6px">
+                ${x.jilidDiampu.map(j => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${j.sudahDiklaim ? "#f0fdf4" : "#fef3c7"};border:1px solid ${j.sudahDiklaim ? "#bbf7d0" : "#fde68a"}">
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:600;font-size:13px">${esc(j.nama)}</div>
+                      <div class="muted" style="font-size:11px">
+                        ${j.sudahDiklaim
+                          ? `✅ Sudah diklaim oleh ${esc(j.pengklaimNama)}`
+                          : "⚠️ Belum diklaim"}
+                      </div>
+                    </div>
+                    ${!j.sudahDiklaim && bisaTombol("kelas.klaimDariNotifIzin")
+                      ? `<button class="btn btn-sm btn-warning btn-klaim-cepat" data-jilid="${esc(j.id)}" data-nama="${esc(j.nama)}">🤝 Klaim</button>`
+                      : ""}
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          ` : `<div class="muted small" style="margin-top:8px">Tidak ada kelas yang diampu.</div>`}
+        </div>
+      `).join("")}
+    </div>
+
+    <button class="btn btn-full" id="btnTutupNotifIzin" style="margin-top:14px">Mengerti</button>
+  `);
+
+  $("btnTutupNotifIzin").addEventListener("click", closeModal);
+  $("modalContent").querySelectorAll(".btn-klaim-cepat").forEach(b => b.addEventListener("click", async () => {
+    const jilidId = b.dataset.jilid;
+    const jilidNama = b.dataset.nama;
+    if(!confirm(`Klaim kelas "${jilidNama}" untuk hari ini?`)) return;
+    await busy(b, "Klaim...", async () => {
+      try{
+        const today = todayStr();
+        await updateCollectionData("jilid", jilidId, {
+          substituteUid: currentProfile.uid,
+          substituteNama: currentProfile.nama || "",
+          substituteFrom: today,
+          substituteUntil: today,
+          substituteAlasan: "Klaim dari notif izin"
+        });
+        logAudit("kelas.klaimDariNotifIzin", "jilid", jilidId, { via: "popup-izin" });
+        showToast(`✅ Kelas "${jilidNama}" diklaim. Terima kasih!`);
+        closeModal();
+        renderDashboard();
+      }catch(err){
+        console.error(err);
+        showToast("Gagal klaim: " + firebaseError(err), true);
+      }
+    });
+  }));
+}
+
+/** Dipanggil di dashboard ustadzah */
+async function renderNotifIzinUstadzah(){
+  if(currentProfile.role !== "ustadzah") return "";
+  if(!uiAktif("ustadzah.notifIzin.banner")) return "";
+  const list = await getUstadzahIzinHariIni();
+  return renderBannerIzinUstadzah(list);
+}
 function getJilidUstadzahIds(jilid){
   if(Array.isArray(jilid?.ustadzahIds) && jilid.ustadzahIds.length) return jilid.ustadzahIds.filter(Boolean);
   return jilid?.ustadzahId ? [jilid.ustadzahId] : [];
@@ -2446,6 +2627,7 @@ async function renderDashboardUstadzah(){
 
   $("page").innerHTML = `
     ${ui("ustadzah.welcomeBanner", welcomeBanner())}
+    ${await renderNotifIzinUstadzah()}
     ${ui("ustadzah.kelasCard", `
       <div class="card balance">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -2650,7 +2832,24 @@ async function renderDashboardUstadzah(){
 
   bindIzinForm({ isUstadzah:true, santriList:[], settings });
   bindMenuGrid("menuUstadzah");
+    // Binding tombol "Lihat Detail" di banner
+  $("btnBukaPopupIzin")?.addEventListener("click", () => showPopupIzinUstadzah(true));
 
+  // Auto-show popup sekali per sesi
+  setTimeout(() => showPopupIzinUstadzah(false), 800);
+    // Auto-refresh banner izin setiap 60 detik
+  if(window.__notifIzinInterval) clearInterval(window.__notifIzinInterval);
+  window.__notifIzinInterval = setInterval(async () => {
+    if(currentProfile?.role !== "ustadzah" || !document.getElementById("page")){
+      clearInterval(window.__notifIzinInterval);
+      return;
+    }
+    const bannerAda = document.querySelector("[data-notif-izin-banner]");
+    const list = await getUstadzahIzinHariIni();
+    // Refresh kalau status berubah (ada yang izin baru atau klaim baru)
+    if(list.length && !bannerAda) renderDashboardUstadzah();
+    if(!list.length && bannerAda) renderDashboardUstadzah();
+  }, 60000);
   $("menuUstadzah").querySelector('[data-menu="pengumuman"]')?.addEventListener("click", () => lazyPanel("panel-pengumuman", async panel => {
     try{
       const list = (await fresh("pengumuman")).filter(isPengumumanTampil).sort(byCreatedDesc);
